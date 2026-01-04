@@ -1,0 +1,23 @@
+{
+    "year": 2026,
+    "min_wage": 8000,
+    "pm_able": 3200,
+    "pm_child_6": 2563,
+    "pm_child_18": 3196,
+    "pm_disable": 2361,
+    
+    "budget_law_name": "ЗУ про Бюджет (Ст. 7 — Цифри)",
+    "budget_law_url": "https://zakon.rada.gov.ua/laws/show/2026-budget#St7",
+    
+    "court_fee_law_name": "ЗУ про судовий збір (Ст. 4 — Ставки)",
+    "court_fee_law_url": "https://zakon.rada.gov.ua/laws/show/3674-17#n35",
+    
+    "cc_law_name": "Цивільний кодекс (Ст. 625 — Борги)",
+    "cc_law_url": "https://zakon.rada.gov.ua/laws/show/435-15#n4301",
+
+    "family_law_name": "Сімейний кодекс (Ст. 182 — Аліменти)",
+    "family_law_url": "https://zakon.rada.gov.ua/laws/show/2947-14#n865",
+
+    "tax_code_name": "Податковий кодекс (Ст. 291 — Ліміти ФОП)",
+    "tax_code_url": "https://zakon.rada.gov.ua/laws/show/2755-17#n6624"
+}

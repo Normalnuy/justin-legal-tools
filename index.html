@@ -13,6 +13,7 @@
             --secondary-bg: var(--tg-theme-secondary-bg-color, #f0f0f0);
             --accent: var(--tg-theme-button-color, #2481cc);
             --green: #34c759;
+            --link-color: #2481cc;
         }
         body {
             background-color: var(--bg-color); color: var(--text-color);
@@ -38,7 +39,7 @@
         /* CONTENT */
         .content { padding: 20px 16px; flex: 1; overflow-y: auto; display: none; }
         .content.active { display: block; }
-        /* FORMS */
+        /* UI */
         h2 { margin: 0 0 12px 0; font-size: 19px; font-weight: 700; }
         label { font-size: 13px; color: var(--hint-color); margin-bottom: 6px; display: block; font-weight: 500; }
         select, input {
@@ -83,18 +84,34 @@
         }
         input:checked + .slider { background-color: var(--green); }
         input:checked + .slider:before { transform: translateX(20px); }
-        /* OTHER */
+        /* INFO & LINKS */
         .currency-card {
             display: flex; justify-content: space-between; align-items: center;
             padding: 14px; background: var(--secondary-bg);
             border-radius: 12px; margin-bottom: 10px; font-weight: 500;
         }
-        .flag { font-size: 20px; margin-right: 10px; }
         .rate-val { font-weight: 800; color: var(--text-color); font-size: 18px;}
+        .flag { font-size: 20px; margin-right: 10px; }
         .btn-calc {
             width: 100%; padding: 14px; background: var(--accent); color: #fff; 
             border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer;
         }
+        #loadStatus { font-size:12px; color:var(--hint-color); text-align:center; margin-bottom:10px; }
+        
+        /* СТИЛІ ДЛЯ ПОСИЛАНЬ */
+        .source-link {
+            display: block; font-size: 13px; color: var(--link-color); text-decoration: none;
+            margin-bottom: 15px; text-align: right;
+        }
+        .source-link:hover { text-decoration: underline; }
+        .legal-list { margin-top: 10px; }
+        .legal-item {
+            display: flex; align-items: center; padding: 12px; background: var(--secondary-bg);
+            border-radius: 10px; margin-bottom: 8px; text-decoration: none; color: var(--text-color);
+        }
+        .legal-item:active { opacity: 0.7; }
+        .legal-icon { margin-right: 10px; font-size: 18px; }
+        .legal-text { font-size: 14px; font-weight: 500; }
     </style>
 </head>
 <body>
@@ -104,8 +121,11 @@
         <div class="tab" onclick="switchTab('debt', this)">📉 Борги</div>
         <div class="tab" onclick="switchTab('vacation', this)">🏖 Відпустка</div>
         <div class="tab" onclick="switchTab('curr', this)">💲 Валюта</div>
+        <div class="tab" onclick="switchTab('info', this)">ℹ️ Інфо</div>
         <div class="tab" onclick="switchTab('dates', this)">📅 Строки</div>
     </div>
+    
+    <div id="loadStatus">Завантаження стандартів...</div>
 
     <div id="tab-court" class="content active">
         <label>Категорія вашої справи:</label>
@@ -116,7 +136,6 @@
                 <option value="money">Визнання права власності (Майно)</option>
                 <option value="inheritance_prop">Спадщина (Майновий спір)</option>
             </optgroup>
-            
             <optgroup label="👨‍👩‍👧 Сім'я та Діти">
                 <option value="divorce">Розірвання шлюбу (Розлучення)</option>
                 <option value="alimony">Аліменти (Стягнення/Зміна)</option>
@@ -124,31 +143,26 @@
                 <option value="paternity">Встановлення батьківства</option>
                 <option value="adoption">Усиновлення дитини</option>
             </optgroup>
-
             <optgroup label="🛍 Захист прав споживачів">
                 <option value="consumer">Неякісний товар / послуга</option>
                 <option value="consumer">Спори з ЖКГ (Комуналка)</option>
                 <option value="consumer">Спори з банками (Кредити)</option>
             </optgroup>
-
             <optgroup label="💼 Робота та Пенсії">
                 <option value="labor_salary">Невиплата зарплати (Стягнення)</option>
                 <option value="labor_renew">Поновлення на роботі</option>
                 <option value="social">Пенсії, виплати, субсидії</option>
             </optgroup>
-
             <optgroup label="🏠 Житло та Земля">
                 <option value="housing_evict">Виселення / Визнання втрати права</option>
                 <option value="housing_order">Усунення перешкод у користуванні</option>
                 <option value="land_non_money">Земельні спори (Межі, користування)</option>
             </optgroup>
-
             <optgroup label="📄 Документи та Факти">
                 <option value="fact">Встановлення факту (смерті, родинних зв'язків)</option>
                 <option value="non_money">Визнання договору недійсним</option>
                 <option value="non_money">Інша немайнова вимога</option>
             </optgroup>
-
             <optgroup label="⚖️ Штрафи та Інше">
                 <option value="traffic">Скасування штрафу ПДР</option>
                 <option value="admin_fine">Скасування іншого адмін. штрафу</option>
@@ -239,6 +253,87 @@
         </div>
     </div>
 
+    <div id="tab-info" class="content">
+        <h2 id="stdYear">📊 Стандарти</h2>
+        <a id="linkBudget" href="#" target="_blank" class="source-link" style="display:none">📜 Закон про Бюджет 🔗</a>
+        
+        <div class="currency-card">
+            <div>💰 Мін. зарплата (МЗП)</div>
+            <div class="rate-val" id="valMinWage">...</div>
+        </div>
+        <div class="currency-card">
+            <div>🧑 Прожитковий (Працездатні)</div>
+            <div class="rate-val" id="valPmAble">...</div>
+        </div>
+
+        <details style="margin-bottom:15px; background:var(--secondary-bg); padding:10px; border-radius:12px;">
+            <summary style="font-weight:500; cursor:pointer;">Інші прожиткові мінімуми</summary>
+            <div style="margin-top:10px; font-size:14px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                    <span>👶 Діти до 6 років:</span> <b id="valPm6">...</b>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                    <span>🧒 Діти 6-18 років:</span> <b id="valPm18">...</b>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <span>👴 Непрацездатні:</span> <b id="valPmDisable">...</b>
+                </div>
+            </div>
+        </details>
+
+        <h2>💼 ФОП (Спрощена система)</h2>
+        <div class="result-box" style="display:block; text-align:left; margin-top:0;">
+            <div style="font-size:12px; color:var(--hint-color); margin-bottom:10px; text-align:center">Ставки податків (місяць)</div>
+            <div class="detail-row"><span>ЄСВ (22%):</span> <span id="taxESV" style="font-weight:bold">...</span></div>
+            <div class="detail-row"><span>ЄП (1 група, 10% ПМ):</span> <span id="taxEP1" style="font-weight:bold">...</span></div>
+            <div class="detail-row"><span>ЄП (2 група, 20% МЗП):</span> <span id="taxEP2" style="font-weight:bold">...</span></div>
+        </div>
+        <div class="result-box" style="display:block; text-align:left;">
+            <div style="font-size:12px; color:var(--hint-color); margin-bottom:10px; text-align:center">Річні ліміти доходу</div>
+            <div class="detail-row"><span>1 група (167 МЗП):</span> <span id="limFop1" style="font-weight:bold">...</span></div>
+            <div class="detail-row"><span>2 група (834 МЗП):</span> <span id="limFop2" style="font-weight:bold">...</span></div>
+            <div class="detail-row"><span>3 група (1167 МЗП):</span> <span id="limFop3" style="font-weight:bold">...</span></div>
+        </div>
+
+        <h2 style="margin-top:20px">👶 Аліменти</h2>
+        <label>Дохід платника (грн)</label>
+        <input type="number" id="alimIncome" placeholder="15000" inputmode="decimal" oninput="calcAlim()">
+        
+        <label>Кількість дітей</label>
+        <select id="alimCount" onchange="calcAlim()">
+            <option value="1">Одна дитина (1/4 доходу)</option>
+            <option value="2">Дві дитини (1/3 доходу)</option>
+            <option value="3">Три і більше (1/2 доходу)</option>
+        </select>
+
+        <div class="result-box" id="resAlim" style="display:block; text-align:left">
+            <div class="detail-row">
+                <span>Частка від доходу:</span> 
+                <span id="alimShare" style="font-weight:bold">0 грн</span>
+            </div>
+            <div class="detail-row">
+                <span>Мінімальний гарантований*:</span> 
+                <span id="alimMin" style="font-weight:bold; color:var(--hint-color)">-</span>
+            </div>
+            <div style="font-size:11px; color:var(--hint-color); margin-top:5px">
+                *Не менше 50% ПМ для дитини відповідного віку.
+            </div>
+        </div>
+
+        <h2 style="margin-top:25px">📚 Нормативна база</h2>
+        <div class="legal-list">
+            <a id="linkCourt" href="#" target="_blank" class="legal-item" style="display:none">
+                <span class="legal-icon">⚖️</span> <span class="legal-text" id="txtCourt">Закон про судовий збір</span>
+            </a>
+            <a id="linkCC" href="#" target="_blank" class="legal-item" style="display:none">
+                <span class="legal-icon">📜</span> <span class="legal-text" id="txtCC">ЦК України (ст. 625)</span>
+            </a>
+            <a id="linkFamily" href="#" target="_blank" class="legal-item" style="display:none">
+                <span class="legal-icon">👨‍👩‍👧</span> <span class="legal-text" id="txtFamily">Сімейний кодекс (Аліменти)</span>
+            </a>
+        </div>
+    </div>
+
     <div id="tab-dates" class="content">
         <label>Початкова дата</label>
         <input type="date" id="dateCalc1">
@@ -267,27 +362,96 @@
         tg.ready(); 
         tg.expand();
         const mainButton = tg.MainButton;
-        const PM = 3328; // ПМ 2026
+        
+        // --- ДИНАМІЧНІ ЗМІННІ ---
+        let STD = {
+            year: 2026,
+            min_wage: 8000,
+            pm_able: 3200,      
+            pm_child_6: 2563,   
+            pm_child_18: 3196,  
+            pm_disable: 2361    
+        };
 
-        // --- GLOBAL CALLBACK HOLDER (FIX FOR BUG) ---
-        // Зберігаємо посилання на актуальну функцію кліку тут
-        let currentClickCallback = null;
-
-        function sendBtn(data) {
-            mainButton.setText("ВІДПРАВИТИ В ЧАТ"); 
-            mainButton.show();
-
-            // 1. Видаляємо СТАРИЙ обробник (якщо він був)
-            if (currentClickCallback) {
-                mainButton.offClick(currentClickCallback);
+        // Функція завантаження
+        async function loadStandards() {
+            try {
+                let response = await fetch('standards.json');
+                if (response.ok) {
+                    let data = await response.json();
+                    STD = data; 
+                    document.getElementById("loadStatus").innerText = `Стандарти на ${STD.year} рік завантажено ✅`;
+                    updateInfoTab(data);
+                    
+                    let activeTab = document.querySelector('.content.active').id;
+                    if(activeTab === 'tab-court') calcCourt();
+                    if(activeTab === 'tab-info') calcAlim();
+                } else {
+                    document.getElementById("loadStatus").innerText = "Помилка завантаження (використано кеш)";
+                    updateInfoTab(STD); // Оновити тим, що є
+                }
+            } catch (e) {
+                console.log("JSON load error", e);
+                document.getElementById("loadStatus").innerText = "Офлайн режим (стандартні значення)";
+                updateInfoTab(STD);
             }
+        }
+        
+        function updateInfoTab(data) {
+            document.getElementById("stdYear").innerText = `📊 Стандарти ${STD.year}`;
+            document.getElementById("valMinWage").innerText = `${STD.min_wage} грн`;
+            document.getElementById("valPmAble").innerText = `${STD.pm_able} грн`;
+            document.getElementById("valPm6").innerText = `${STD.pm_child_6} грн`;
+            document.getElementById("valPm18").innerText = `${STD.pm_child_18} грн`;
+            document.getElementById("valPmDisable").innerText = `${STD.pm_disable} грн`;
 
-            // 2. Створюємо НОВИЙ обробник з актуальними даними
-            currentClickCallback = function() {
-                tg.sendData(JSON.stringify(data));
-            };
+            // ФОП Податки
+            let esv = STD.min_wage * 0.22;
+            let ep1 = STD.pm_able * 0.1;
+            let ep2 = STD.min_wage * 0.2;
+            document.getElementById("taxESV").innerText = `${esv.toFixed(2)} грн`;
+            document.getElementById("taxEP1").innerText = `${ep1.toFixed(2)} грн`;
+            document.getElementById("taxEP2").innerText = `${ep2.toFixed(2)} грн`;
 
-            // 3. Вішаємо його на кнопку
+            // ФОП Ліміти
+            const fmt = num => num.toLocaleString('uk-UA').replace(/,/g, " ");
+            document.getElementById("limFop1").innerText = `${fmt(STD.min_wage * 167)} грн`;
+            document.getElementById("limFop2").innerText = `${fmt(STD.min_wage * 834)} грн`;
+            document.getElementById("limFop3").innerText = `${fmt(STD.min_wage * 1167)} грн`;
+
+            // Посилання
+            if(data.budget_law_url) {
+                let lnk = document.getElementById("linkBudget");
+                lnk.href = data.budget_law_url;
+                lnk.innerText = `📜 ${data.budget_law_name || "Закон про Бюджет"} 🔗`;
+                lnk.style.display = "block";
+            }
+            if(data.court_fee_law_url) {
+                let lnk = document.getElementById("linkCourt");
+                lnk.href = data.court_fee_law_url;
+                document.getElementById("txtCourt").innerText = data.court_fee_law_name || "Закон про судовий збір";
+                lnk.style.display = "flex";
+            }
+            if(data.cc_law_url) {
+                let lnk = document.getElementById("linkCC");
+                lnk.href = data.cc_law_url;
+                document.getElementById("txtCC").innerText = data.cc_law_name || "ЦК України (ст. 625)";
+                lnk.style.display = "flex";
+            }
+            if(data.family_law_url) {
+                let lnk = document.getElementById("linkFamily");
+                lnk.href = data.family_law_url;
+                document.getElementById("txtFamily").innerText = data.family_law_name || "Сімейний кодекс";
+                lnk.style.display = "flex";
+            }
+        }
+
+        // --- GLOBAL CLICK ---
+        let currentClickCallback = null;
+        function sendBtn(data) {
+            mainButton.setText("ВІДПРАВИТИ В ЧАТ"); mainButton.show();
+            if (currentClickCallback) mainButton.offClick(currentClickCallback);
+            currentClickCallback = function() { tg.sendData(JSON.stringify(data)); };
             mainButton.onClick(currentClickCallback);
         }
 
@@ -302,6 +466,7 @@
 
         // --- 1. COURT FEE ---
         function calcCourt() {
+            let PM = STD.pm_able; 
             let type = document.getElementById("claimType").value;
             let price = parseFloat(document.getElementById("courtPrice").value);
             let fee = 0; let desc = ""; let isFree = false;
@@ -313,23 +478,23 @@
             switch(type) {
                 case "money":
                 case "inheritance_prop":
-                    if(price > 0) { fee = Math.max(PM * 0.4, Math.min(price * 0.01, PM * 5)); desc = "1% (мін. 1280 грн)"; }
+                    if(price > 0) { fee = Math.max(PM * 0.4, Math.min(price * 0.01, PM * 5)); desc = "1% (мін. 0.4 ПМ)"; }
                     break;
                 case "division":
                     if(price > 0) { fee = Math.max(PM * 0.4, Math.min(price * 0.01, PM * 3)); desc = "1% (макс. 3 ПМ)"; }
                     break;
-                case "divorce": fee = PM * 0.4; desc = "Фіксовано 0.4 ПМ"; break;
-                case "alimony": isFree = true; desc = "Звільнено від сплати"; break;
-                case "paternity": fee = PM * 0.4; desc = "0.4 ПМ (Немайновий)"; break;
-                case "adoption": fee = PM * 0.2; desc = "0.2 ПМ (Окреме провадження)"; break;
-                case "consumer": isFree = true; desc = "Звільнено (Захист прав)"; break;
+                case "divorce": fee = PM * 0.4; desc = "0.4 ПМ"; break;
+                case "alimony": isFree = true; desc = "Звільнено"; break;
+                case "paternity": fee = PM * 0.4; desc = "0.4 ПМ"; break;
+                case "adoption": fee = PM * 0.2; desc = "0.2 ПМ"; break;
+                case "consumer": isFree = true; desc = "Звільнено"; break;
                 case "labor_salary":
-                case "labor_renew": isFree = true; desc = "Звільнено (Трудові)"; break;
+                case "labor_renew": isFree = true; desc = "Звільнено"; break;
                 case "social": fee = PM * 0.4; desc = "Пільги"; break;
                 case "housing_evict": 
                 case "housing_order":
                 case "land_non_money": 
-                case "non_money": fee = PM * 0.4; desc = "0.4 ПМ (Немайнова)"; break;
+                case "non_money": fee = PM * 0.4; desc = "0.4 ПМ"; break;
                 case "fact": 
                 case "traffic": 
                 case "admin_fine": fee = PM * 0.2; desc = "0.2 ПМ"; break;
@@ -347,7 +512,6 @@
             
             document.getElementById("courtDesc").innerText = desc;
             document.getElementById("resCourt").style.display = "block";
-            
             sendBtn({type:"court_fee", fee: isFree ? "0.00" : fee.toFixed(2), desc: typeText});
         }
 
@@ -357,29 +521,19 @@
             let s = parseFloat(document.getElementById("debtSum").value);
             let d1 = new Date(document.getElementById("dStart").value); let d2 = new Date(document.getElementById("dEnd").value);
             document.getElementById("infIdx").style.display = document.getElementById("chkInf").checked ? "block" : "none";
-            
             if(!s || isNaN(d1) || isNaN(d2)) return;
             let days = Math.ceil((d2 - d1) / (86400000)); if(days < 0) days = 0;
-            
             let p3 = document.getElementById("chk3").checked ? s * 0.03 * (days/365) : 0;
             let idx = parseFloat(document.getElementById("infIdx").value);
             let inf = (document.getElementById("chkInf").checked && idx > 100) ? s*(idx/100)-s : 0;
             let rate = parseFloat(document.getElementById("penyRate").value);
             let peny = (document.getElementById("chkPeny").checked && rate) ? s*(rate/100)*(days/365) : 0;
-            
             let total = s + p3 + inf + peny;
-            document.getElementById("outBody").innerText = s.toFixed(2); 
-            document.getElementById("out3").innerText = p3.toFixed(2);
-            document.getElementById("outInf").innerText = inf.toFixed(2); 
-            document.getElementById("outPeny").innerText = peny.toFixed(2);
+            document.getElementById("outBody").innerText = s.toFixed(2); document.getElementById("out3").innerText = p3.toFixed(2);
+            document.getElementById("outInf").innerText = inf.toFixed(2); document.getElementById("outPeny").innerText = peny.toFixed(2);
             document.getElementById("debtTotal").innerText = total.toFixed(2) + " грн";
             document.getElementById("resDebt").style.display = "block";
-            
-            sendBtn({
-                type:"debt_calc", 
-                total:total.toFixed(2), 
-                details: `Тіло: ${s.toFixed(2)}\n3%: ${p3.toFixed(2)}\nІнфл: ${inf.toFixed(2)}\nПеня: ${peny.toFixed(2)}`
-            });
+            sendBtn({type:"debt_calc", total:total.toFixed(2), details: `Тіло: ${s.toFixed(2)}\n3%: ${p3.toFixed(2)}\nІнфл: ${inf.toFixed(2)}\nПеня: ${peny.toFixed(2)}`});
         }
 
         // --- 3. VACATION ---
@@ -412,9 +566,28 @@
             let ret = new Date(current); ret.setDate(ret.getDate()+1);
             while(ret.getDay()===0 || ret.getDay()===6) ret.setDate(ret.getDate()+1);
             document.getElementById("vacReturn").innerText = ret.toLocaleDateString('uk-UA');
-            
-            // Відправка
             sendBtn({type:"vacation_calc", returnDate: document.getElementById("vacReturn").innerText});
+        }
+
+        // --- 6. ALIMONY ---
+        function calcAlim() {
+            let income = parseFloat(document.getElementById("alimIncome").value);
+            let count = parseInt(document.getElementById("alimCount").value);
+            if(!income) return;
+
+            let share = 0.25; if(count === 2) share = 0.3333; if(count >= 3) share = 0.5;
+            let result = income * share;
+            let minGuaranteed = STD.pm_child_18 * 0.5 * count; 
+
+            document.getElementById("alimShare").innerText = result.toFixed(2) + " грн";
+            document.getElementById("alimMin").innerText = minGuaranteed.toFixed(2) + " грн";
+            if(result < minGuaranteed) {
+                document.getElementById("alimShare").style.color = "red";
+                document.getElementById("alimShare").innerText += " (< Мін!)";
+            } else {
+                document.getElementById("alimShare").style.color = "var(--text-color)";
+            }
+            sendBtn({type:"alim_calc", total: result.toFixed(2), min: minGuaranteed.toFixed(2), kids: count});
         }
 
         // --- 4. CURRENCY ---
@@ -452,11 +625,13 @@
             }
         }
 
-        // --- INIT DEFAULTS ---
+        // --- INIT ---
         let today = new Date().toISOString().split('T')[0];
         document.getElementById('currDate').value = today;
         document.getElementById('dStart').value = today; document.getElementById('dEnd').value = today;
         document.getElementById('vacStart').value = today; document.getElementById('dateCalc1').value = today;
+        
+        loadStandards(); // ЗАПУСК
     </script>
 </body>
 </html>
