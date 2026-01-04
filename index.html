@@ -263,10 +263,35 @@
     </div>
 
     <script>
-        let tg = window.Telegram.WebApp; tg.ready(); tg.expand();
+        let tg = window.Telegram.WebApp; 
+        tg.ready(); 
+        tg.expand();
         const mainButton = tg.MainButton;
-        const PM = 3200; // ПМ 2026
+        const PM = 3328; // ПМ 2026
 
+        // --- GLOBAL CALLBACK HOLDER (FIX FOR BUG) ---
+        // Зберігаємо посилання на актуальну функцію кліку тут
+        let currentClickCallback = null;
+
+        function sendBtn(data) {
+            mainButton.setText("ВІДПРАВИТИ В ЧАТ"); 
+            mainButton.show();
+
+            // 1. Видаляємо СТАРИЙ обробник (якщо він був)
+            if (currentClickCallback) {
+                mainButton.offClick(currentClickCallback);
+            }
+
+            // 2. Створюємо НОВИЙ обробник з актуальними даними
+            currentClickCallback = function() {
+                tg.sendData(JSON.stringify(data));
+            };
+
+            // 3. Вішаємо його на кнопку
+            mainButton.onClick(currentClickCallback);
+        }
+
+        // --- TABS ---
         function switchTab(id, elem) {
             document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.content').forEach(el => el.classList.remove('active'));
@@ -275,18 +300,17 @@
             if(id === 'curr') fetchRates();
         }
 
-        // --- COURT FEE LOGIC (FULL) ---
+        // --- 1. COURT FEE ---
         function calcCourt() {
             let type = document.getElementById("claimType").value;
             let price = parseFloat(document.getElementById("courtPrice").value);
             let fee = 0; let desc = ""; let isFree = false;
+            let typeText = document.getElementById("claimType").options[document.getElementById("claimType").selectedIndex].text;
 
-            // Які категорії потребують введення ціни?
             let needsPrice = ["money", "division", "moral", "inheritance_prop"].includes(type);
             document.getElementById("courtPriceBlock").style.display = needsPrice ? "block" : "none";
 
             switch(type) {
-                // Майнові
                 case "money":
                 case "inheritance_prop":
                     if(price > 0) { fee = Math.max(PM * 0.4, Math.min(price * 0.01, PM * 5)); desc = "1% (мін. 1280 грн)"; }
@@ -294,37 +318,24 @@
                 case "division":
                     if(price > 0) { fee = Math.max(PM * 0.4, Math.min(price * 0.01, PM * 3)); desc = "1% (макс. 3 ПМ)"; }
                     break;
-                
-                // Сімейні
                 case "divorce": fee = PM * 0.4; desc = "Фіксовано 0.4 ПМ"; break;
-                case "alimony": isFree = true; desc = "Звільнено від сплати (ст. 5)"; break;
+                case "alimony": isFree = true; desc = "Звільнено від сплати"; break;
                 case "paternity": fee = PM * 0.4; desc = "0.4 ПМ (Немайновий)"; break;
                 case "adoption": fee = PM * 0.2; desc = "0.2 ПМ (Окреме провадження)"; break;
-
-                // Споживачі (ВАЖЛИВО: Безкоштовно)
-                case "consumer": isFree = true; desc = "Звільнено (Захист прав споживачів)"; break;
-
-                // Робота / Соціалка
+                case "consumer": isFree = true; desc = "Звільнено (Захист прав)"; break;
                 case "labor_salary":
-                case "labor_renew": isFree = true; desc = "Звільнено (Трудові спори)"; break;
-                case "social": fee = PM * 0.4; desc = "Або безкоштовно для пільговиків"; break;
-
-                // Житло
+                case "labor_renew": isFree = true; desc = "Звільнено (Трудові)"; break;
+                case "social": fee = PM * 0.4; desc = "Пільги"; break;
                 case "housing_evict": 
                 case "housing_order":
-                case "land_non_money": fee = PM * 0.4; desc = "0.4 ПМ (Немайнова)"; break;
-
-                // Факти / Інше
-                case "fact": fee = PM * 0.2; desc = "0.2 ПМ (Встановлення факту)"; break;
+                case "land_non_money": 
                 case "non_money": fee = PM * 0.4; desc = "0.4 ПМ (Немайнова)"; break;
-                
-                // Адмінка
-                case "traffic": fee = PM * 0.2; desc = "0.2 ПМ (Оскарження постанови)"; break;
-                case "admin_fine": fee = PM * 0.2; desc = "0.2 ПМ (Адміністративний)"; break;
-
+                case "fact": 
+                case "traffic": 
+                case "admin_fine": fee = PM * 0.2; desc = "0.2 ПМ"; break;
                 case "moral":
                     if(price > 0) {
-                        if(price <= PM*5) { fee = PM * 0.4; desc = "0.4 ПМ (як немайновий)"; }
+                        if(price <= PM*5) { fee = PM * 0.4; desc = "0.4 ПМ"; }
                         else { fee = Math.max(PM, price * 0.015); desc = "1.5% (мін 1 ПМ)"; }
                     }
                     break;
@@ -337,32 +348,41 @@
             document.getElementById("courtDesc").innerText = desc;
             document.getElementById("resCourt").style.display = "block";
             
-            let typeText = document.getElementById("claimType").options[document.getElementById("claimType").selectedIndex].text;
             sendBtn({type:"court_fee", fee: isFree ? "0.00" : fee.toFixed(2), desc: typeText});
         }
 
-        // --- DEBT ---
+        // --- 2. DEBT ---
         function toggleInput(id, cb) { document.getElementById(id).style.display = cb.checked ? "block" : "none"; calcDebt(); }
         function calcDebt() {
             let s = parseFloat(document.getElementById("debtSum").value);
             let d1 = new Date(document.getElementById("dStart").value); let d2 = new Date(document.getElementById("dEnd").value);
             document.getElementById("infIdx").style.display = document.getElementById("chkInf").checked ? "block" : "none";
+            
             if(!s || isNaN(d1) || isNaN(d2)) return;
             let days = Math.ceil((d2 - d1) / (86400000)); if(days < 0) days = 0;
+            
             let p3 = document.getElementById("chk3").checked ? s * 0.03 * (days/365) : 0;
             let idx = parseFloat(document.getElementById("infIdx").value);
             let inf = (document.getElementById("chkInf").checked && idx > 100) ? s*(idx/100)-s : 0;
             let rate = parseFloat(document.getElementById("penyRate").value);
             let peny = (document.getElementById("chkPeny").checked && rate) ? s*(rate/100)*(days/365) : 0;
+            
             let total = s + p3 + inf + peny;
-            document.getElementById("outBody").innerText = s.toFixed(2); document.getElementById("out3").innerText = p3.toFixed(2);
-            document.getElementById("outInf").innerText = inf.toFixed(2); document.getElementById("outPeny").innerText = peny.toFixed(2);
+            document.getElementById("outBody").innerText = s.toFixed(2); 
+            document.getElementById("out3").innerText = p3.toFixed(2);
+            document.getElementById("outInf").innerText = inf.toFixed(2); 
+            document.getElementById("outPeny").innerText = peny.toFixed(2);
             document.getElementById("debtTotal").innerText = total.toFixed(2) + " грн";
             document.getElementById("resDebt").style.display = "block";
-            sendBtn({type:"debt_calc", total:total.toFixed(2), details: `3%: ${p3.toFixed(2)}\nІнфл: ${inf.toFixed(2)}\nПеня: ${peny.toFixed(2)}`});
+            
+            sendBtn({
+                type:"debt_calc", 
+                total:total.toFixed(2), 
+                details: `Тіло: ${s.toFixed(2)}\n3%: ${p3.toFixed(2)}\nІнфл: ${inf.toFixed(2)}\nПеня: ${peny.toFixed(2)}`
+            });
         }
 
-        // --- VACATION ---
+        // --- 3. VACATION ---
         function getEasterDate(year) {
             let a = year%19, b=year%4, c=year%7, d=(19*a+15)%30, e=(2*b+4*c+6*d+6)%7, f=d+e;
             let day = (f+4>30)?(f+4-30):(f+4), month = (f+4>30)?4:3; return new Date(year, month, day);
@@ -392,9 +412,12 @@
             let ret = new Date(current); ret.setDate(ret.getDate()+1);
             while(ret.getDay()===0 || ret.getDay()===6) ret.setDate(ret.getDate()+1);
             document.getElementById("vacReturn").innerText = ret.toLocaleDateString('uk-UA');
+            
+            // Відправка
+            sendBtn({type:"vacation_calc", returnDate: document.getElementById("vacReturn").innerText});
         }
 
-        // --- CURRENCY ---
+        // --- 4. CURRENCY ---
         let ratesCache = {};
         async function fetchRates() {
             let dateVal = document.getElementById("currDate").value;
@@ -417,7 +440,7 @@
             if(amt && ratesCache[curr]) document.getElementById("convResult").innerText = (amt * ratesCache[curr]).toFixed(2) + " UAH";
         }
 
-        // --- DATES ---
+        // --- 5. DATES ---
         function calcDateSimple() {
             let d = new Date(document.getElementById("dateCalc1").value);
             let days = parseInt(document.getElementById("dateCalcDays").value);
@@ -429,12 +452,7 @@
             }
         }
 
-        function sendBtn(data) {
-            mainButton.setText("ВІДПРАВИТИ В ЧАТ"); mainButton.show();
-            mainButton.offClick(sendDataCb); mainButton.onClick(sendDataCb);
-            function sendDataCb() { tg.sendData(JSON.stringify(data)); }
-        }
-
+        // --- INIT DEFAULTS ---
         let today = new Date().toISOString().split('T')[0];
         document.getElementById('currDate').value = today;
         document.getElementById('dStart').value = today; document.getElementById('dEnd').value = today;
