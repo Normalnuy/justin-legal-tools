@@ -12,28 +12,22 @@
             --hint-color: var(--tg-theme-hint-color, #888);
             --secondary-bg: var(--tg-theme-secondary-bg-color, #f0f0f0);
             --accent: var(--tg-theme-button-color, #2481cc);
-            --green: #34c759; /* iOS Green */
+            --green: #34c759;
         }
-
         body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            background-color: var(--bg-color); color: var(--text-color);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             margin: 0; display: flex; flex-direction: column; height: 100vh;
             -webkit-tap-highlight-color: transparent;
         }
-
-        /* --- TABS (MENU) --- */
+        /* TABS */
         .tabs {
             display: flex; overflow-x: auto; white-space: nowrap;
             background-color: var(--secondary-bg);
             border-bottom: 1px solid rgba(0,0,0,0.1);
-            scrollbar-width: none;
-            padding: 0 5px;
-            flex-shrink: 0;
+            scrollbar-width: none; padding: 0 5px; flex-shrink: 0;
         }
         .tabs::-webkit-scrollbar { display: none; }
-        
         .tab {
             padding: 14px 16px; text-align: center;
             font-size: 15px; font-weight: 500; color: var(--hint-color);
@@ -41,72 +35,55 @@
             cursor: pointer; transition: color 0.2s;
         }
         .tab.active { color: var(--accent); border-bottom: 3px solid var(--accent); }
-
-        /* --- CONTENT AREA --- */
+        /* CONTENT */
         .content { padding: 20px 16px; flex: 1; overflow-y: auto; display: none; }
         .content.active { display: block; }
-
-        /* --- FORM ELEMENTS --- */
+        /* FORMS */
         h2 { margin: 0 0 12px 0; font-size: 19px; font-weight: 700; }
         label { font-size: 13px; color: var(--hint-color); margin-bottom: 6px; display: block; font-weight: 500; }
-        
         select, input {
             width: 100%; padding: 12px; border-radius: 12px;
-            border: 1px solid var(--hint-color); /* Fallback */
-            border: 1px solid rgba(128,128,128, 0.3);
-            background-color: var(--secondary-bg);
-            color: var(--text-color);
-            font-size: 17px; outline: none; margin-bottom: 16px;
+            border: 1px solid var(--hint-color); background-color: var(--secondary-bg);
+            color: var(--text-color); font-size: 16px; outline: none; margin-bottom: 16px;
             box-sizing: border-box; -webkit-appearance: none;
         }
-        input:focus { border-color: var(--accent); }
-
+        optgroup { color: var(--accent); font-weight: bold; }
+        option { color: #000; }
         .row { display: flex; gap: 12px; }
         .col { flex: 1; }
-
-        /* --- RESULT CARDS --- */
+        /* RESULT */
         .result-box {
-            background-color: var(--secondary-bg);
-            padding: 16px; border-radius: 14px;
+            background-color: var(--secondary-bg); padding: 16px; border-radius: 14px;
             margin-top: 8px; text-align: center; display: none;
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
         .price { font-size: 28px; font-weight: 800; color: var(--accent); margin: 5px 0; }
+        .price.free { color: var(--green); } 
         .detail-row {
-            display: flex; justify-content: space-between;
-            font-size: 14px; margin-top: 8px; 
-            border-bottom: 1px dashed rgba(128,128,128, 0.3);
-            padding-bottom: 4px;
+            display: flex; justify-content: space-between; font-size: 14px; margin-top: 8px; 
+            border-bottom: 1px dashed rgba(128,128,128, 0.3); padding-bottom: 4px;
         }
-
-        /* --- TOGGLES (iOS Style) --- */
+        /* TOGGLES */
         .setting-row {
             display: flex; justify-content: space-between; align-items: center;
             margin-bottom: 12px; background: var(--secondary-bg);
             padding: 12px 16px; border-radius: 12px;
         }
         .setting-label { font-size: 16px; font-weight: 500; }
-
         .switch { position: relative; display: inline-block; width: 50px; height: 30px; flex-shrink: 0; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider {
-            position: absolute; cursor: pointer;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #e0e0e0; transition: .3s;
-            border-radius: 34px;
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #e0e0e0; transition: .3s; border-radius: 34px;
         }
         .slider:before {
-            position: absolute; content: "";
-            height: 26px; width: 26px;
-            left: 2px; bottom: 2px;
-            background-color: white; transition: .3s;
-            border-radius: 50%;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            position: absolute; content: ""; height: 26px; width: 26px;
+            left: 2px; bottom: 2px; background-color: white; transition: .3s;
+            border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
         input:checked + .slider { background-color: var(--green); }
         input:checked + .slider:before { transform: translateX(20px); }
-
-        /* --- CURRENCY CARD --- */
+        /* OTHER */
         .currency-card {
             display: flex; justify-content: space-between; align-items: center;
             padding: 14px; background: var(--secondary-bg);
@@ -114,16 +91,10 @@
         }
         .flag { font-size: 20px; margin-right: 10px; }
         .rate-val { font-weight: 800; color: var(--text-color); font-size: 18px;}
-
-        /* --- BUTTON --- */
         .btn-calc {
-            width: 100%; padding: 14px; 
-            background: var(--accent); color: #fff; 
-            border: none; border-radius: 12px; 
-            font-size: 16px; font-weight: 600; cursor: pointer;
+            width: 100%; padding: 14px; background: var(--accent); color: #fff; 
+            border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer;
         }
-        .btn-calc:active { opacity: 0.8; }
-
     </style>
 </head>
 <body>
@@ -137,110 +108,125 @@
     </div>
 
     <div id="tab-court" class="content active">
-        <label>Категорія справи (ПМ 2026: 3328 грн)</label>
+        <label>Категорія вашої справи:</label>
         <select id="claimType" onchange="calcCourt()">
-            <option value="money">💰 Майновий (Стягнення боргу)</option>
-            <option value="divorce">💔 Розірвання шлюбу</option>
-            <option value="division">🏠 Поділ майна подружжя</option>
-            <option value="non_money">📄 Інший немайновий позов</option>
-            <option value="moral">⚖️ Моральна шкода</option>
+            <optgroup label="💵 Борги, Гроші, Майно">
+                <option value="money">Повернути борг (розписка, позика)</option>
+                <option value="money">Відшкодування збитків (ДТП, залиття)</option>
+                <option value="money">Визнання права власності (Майно)</option>
+                <option value="inheritance_prop">Спадщина (Майновий спір)</option>
+            </optgroup>
+            
+            <optgroup label="👨‍👩‍👧 Сім'я та Діти">
+                <option value="divorce">Розірвання шлюбу (Розлучення)</option>
+                <option value="alimony">Аліменти (Стягнення/Зміна)</option>
+                <option value="division">Поділ майна подружжя</option>
+                <option value="paternity">Встановлення батьківства</option>
+                <option value="adoption">Усиновлення дитини</option>
+            </optgroup>
+
+            <optgroup label="🛍 Захист прав споживачів">
+                <option value="consumer">Неякісний товар / послуга</option>
+                <option value="consumer">Спори з ЖКГ (Комуналка)</option>
+                <option value="consumer">Спори з банками (Кредити)</option>
+            </optgroup>
+
+            <optgroup label="💼 Робота та Пенсії">
+                <option value="labor_salary">Невиплата зарплати (Стягнення)</option>
+                <option value="labor_renew">Поновлення на роботі</option>
+                <option value="social">Пенсії, виплати, субсидії</option>
+            </optgroup>
+
+            <optgroup label="🏠 Житло та Земля">
+                <option value="housing_evict">Виселення / Визнання втрати права</option>
+                <option value="housing_order">Усунення перешкод у користуванні</option>
+                <option value="land_non_money">Земельні спори (Межі, користування)</option>
+            </optgroup>
+
+            <optgroup label="📄 Документи та Факти">
+                <option value="fact">Встановлення факту (смерті, родинних зв'язків)</option>
+                <option value="non_money">Визнання договору недійсним</option>
+                <option value="non_money">Інша немайнова вимога</option>
+            </optgroup>
+
+            <optgroup label="⚖️ Штрафи та Інше">
+                <option value="traffic">Скасування штрафу ПДР</option>
+                <option value="admin_fine">Скасування іншого адмін. штрафу</option>
+                <option value="moral">Моральна шкода</option>
+            </optgroup>
         </select>
         
         <div id="courtPriceBlock">
-            <label>Ціна позову (грн)</label>
+            <label>Ціна позову (сума стягнення / вартість майна)</label>
             <input type="number" id="courtPrice" placeholder="Введіть суму..." inputmode="decimal" oninput="calcCourt()">
         </div>
         
         <div class="result-box" id="resCourt">
-            <div>До сплати:</div>
+            <div style="font-size:13px; color:var(--hint-color)">До сплати в бюджет:</div>
             <div class="price" id="courtTotal">0 грн</div>
-            <div style="font-size:13px; color:var(--hint-color)" id="courtDesc"></div>
+            <div style="font-size:13px; color:var(--hint-color); margin-top:5px" id="courtDesc"></div>
         </div>
     </div>
 
     <div id="tab-debt" class="content">
-        <label>Сума заборгованості</label>
+        <label>Сума боргу</label>
         <input type="number" id="debtSum" placeholder="10000" inputmode="decimal" oninput="calcDebt()">
-        
         <div class="row">
             <div class="col"><label>Початок</label><input type="date" id="dStart" onchange="calcDebt()"></div>
             <div class="col"><label>Кінець</label><input type="date" id="dEnd" onchange="calcDebt()"></div>
         </div>
-
         <div class="setting-row">
-            <span class="setting-label">3% річних (ст. 625)</span>
+            <span class="setting-label">3% річних</span>
             <label class="switch"><input type="checkbox" id="chk3" checked onchange="calcDebt()"><span class="slider"></span></label>
         </div>
-
         <div class="setting-row">
-            <span class="setting-label">Інфляційні втрати</span>
+            <span class="setting-label">Інфляційні</span>
             <label class="switch"><input type="checkbox" id="chkInf" onchange="calcDebt()"><span class="slider"></span></label>
         </div>
         <input type="number" id="infIdx" placeholder="Сукупний індекс (напр. 110.5)" value="100" style="display:none" inputmode="decimal" oninput="calcDebt()">
-
         <div class="setting-row">
             <span class="setting-label">Пеня</span>
             <label class="switch"><input type="checkbox" id="chkPeny" onchange="toggleInput('penyInput', this)"><span class="slider"></span></label>
         </div>
         <div id="penyInput" style="display:none">
-            <label>Ставка пені (% річних)</label>
-            <input type="number" id="penyRate" placeholder="Наприклад подвійна ставка НБУ (25)" inputmode="decimal" oninput="calcDebt()">
+            <label>Ставка пені (%)</label>
+            <input type="number" id="penyRate" placeholder="25" inputmode="decimal" oninput="calcDebt()">
         </div>
-
         <div class="result-box" id="resDebt" style="text-align: left;">
             <div class="detail-row"><span>Тіло боргу:</span> <span id="outBody" style="font-weight:bold">0</span></div>
             <div class="detail-row"><span>3% річних:</span> <span id="out3">0</span></div>
             <div class="detail-row"><span>Інфляційні:</span> <span id="outInf">0</span></div>
             <div class="detail-row"><span>Пеня:</span> <span id="outPeny">0</span></div>
             <div style="text-align:center; margin-top:15px">
-                <span style="font-size:12px; color:var(--hint-color)">РАЗОМ ДО СТЯГНЕННЯ:</span><br>
+                <span style="font-size:12px; color:var(--hint-color)">РАЗОМ:</span><br>
                 <div class="price" id="debtTotal" style="margin-top:0">0 грн</div>
             </div>
         </div>
     </div>
 
     <div id="tab-vacation" class="content">
-        <label>Дата початку відпустки</label>
+        <label>Початок</label>
         <input type="date" id="vacStart" onchange="calcVac()">
-        
         <label>Тривалість (днів)</label>
         <input type="number" id="vacDays" value="14" inputmode="numeric" oninput="calcVac()">
-
         <div class="setting-row">
-            <div>
-                <div class="setting-label">Воєнний стан</div>
-                <div style="font-size:11px; color:var(--hint-color); margin-top:2px">Свята є робочими днями</div>
-            </div>
-            <label class="switch">
-                <input type="checkbox" id="martialLaw" checked onchange="calcVac()">
-                <span class="slider"></span>
-            </label>
+            <div><div class="setting-label">Воєнний стан</div><div style="font-size:11px;color:var(--hint-color)">Всі дні робочі</div></div>
+            <label class="switch"><input type="checkbox" id="martialLaw" checked onchange="calcVac()"><span class="slider"></span></label>
         </div>
-
         <div class="result-box" id="resVac" style="display:block; text-align:left">
-            <div class="detail-row">
-                <span>Останній день відпустки:</span> 
-                <span id="vacLast" style="font-weight:bold">-</span>
-            </div>
-            <div class="detail-row">
-                <span>Перший робочий день:</span> 
-                <span id="vacReturn" style="font-weight:bold; color:var(--accent)">-</span>
-            </div>
+            <div class="detail-row"><span>Останній день:</span> <span id="vacLast" style="font-weight:bold">-</span></div>
+            <div class="detail-row"><span>На роботу:</span> <span id="vacReturn" style="font-weight:bold; color:var(--accent)">-</span></div>
         </div>
     </div>
 
     <div id="tab-curr" class="content">
-        <label>Дата курсу (НБУ)</label>
+        <label>Дата курсу</label>
         <input type="date" id="currDate" onchange="fetchRates()">
-        
-        <div id="loading" style="text-align:center; display:none; margin: 20px 0; color:var(--hint-color)">⏳ Оновлення даних...</div>
+        <div id="loading" style="text-align:center; display:none; margin: 20px 0; color:var(--hint-color)">⏳ Оновлення...</div>
         <div id="ratesList" style="margin-bottom:20px"></div>
-
-        <label>Калькулятор валют</label>
+        <label>Конвертер</label>
         <div class="row">
-            <div class="col" style="flex:2">
-                <input type="number" id="convAmount" placeholder="100" inputmode="decimal" oninput="convert()">
-            </div>
+            <div class="col" style="flex:2"><input type="number" id="convAmount" placeholder="100" inputmode="decimal" oninput="convert()"></div>
             <div class="col" style="flex:1">
                 <select id="convCurr" onchange="convert()">
                     <option value="USD">USD</option>
@@ -254,281 +240,205 @@
     </div>
 
     <div id="tab-dates" class="content">
-        <label>Розрахунок дати закінчення строку</label>
+        <label>Початкова дата</label>
+        <input type="date" id="dateCalc1">
         <div class="row">
-            <div class="col"><label>Від дати</label><input type="date" id="dateCalc1"></div>
-            <div class="col"><label>+ Днів</label><input type="number" id="dateCalcDays" placeholder="10" inputmode="numeric"></div>
+            <div class="col" style="flex:1">
+                <label>Дія</label>
+                <select id="dateOp">
+                    <option value="1">➕ Додати</option>
+                    <option value="-1">➖ Відняти</option>
+                </select>
+            </div>
+            <div class="col" style="flex:2">
+                <label>Кількість днів</label>
+                <input type="number" id="dateCalcDays" placeholder="10" inputmode="numeric">
+            </div>
         </div>
         <button class="btn-calc" onclick="calcDateSimple()">Розрахувати</button>
-        
         <div class="result-box" id="resDateSimple">
-            <div style="font-size:13px; color:var(--hint-color)">Дата закінчення:</div>
+            <div style="font-size:13px; color:var(--hint-color)">Результат:</div>
             <div class="price" id="dateSimpleRes">-</div>
         </div>
     </div>
 
     <script>
-        // --- INIT TELEGRAM ---
-        let tg = window.Telegram.WebApp;
-        tg.ready(); 
-        tg.expand();
+        let tg = window.Telegram.WebApp; tg.ready(); tg.expand();
         const mainButton = tg.MainButton;
-        const PM = 3328; // Прожитковий мінімум 2026
+        const PM = 3200; // ПМ 2026
 
-        // --- TABS LOGIC ---
         function switchTab(id, elem) {
             document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.content').forEach(el => el.classList.remove('active'));
             document.getElementById('tab-'+id).classList.add('active');
             elem.classList.add('active');
-            
-            // Якщо відкрили валюту, оновити курс
             if(id === 'curr') fetchRates();
         }
 
-        // --- 1. COURT FEE ---
+        // --- COURT FEE LOGIC (FULL) ---
         function calcCourt() {
             let type = document.getElementById("claimType").value;
             let price = parseFloat(document.getElementById("courtPrice").value);
-            let fee = 0;
-            let desc = "";
+            let fee = 0; let desc = ""; let isFree = false;
 
-            // Show/Hide price input
-            let needPrice = !(type === "divorce" || type === "non_money");
-            document.getElementById("courtPriceBlock").style.display = needPrice ? "block" : "none";
+            // Які категорії потребують введення ціни?
+            let needsPrice = ["money", "division", "moral", "inheritance_prop"].includes(type);
+            document.getElementById("courtPriceBlock").style.display = needsPrice ? "block" : "none";
 
-            // Calculation
-            if (type === "money" && price > 0) {
-                fee = Math.max(PM*0.4, Math.min(price*0.01, PM*5));
-                desc = "1% ціни (Min 0.4 ПМ - Max 5 ПМ)";
-            } 
-            else if (type === "divorce") { fee = PM*0.4; desc = "Фіксовано 0.4 ПМ"; }
-            else if (type === "non_money") { fee = PM*0.4; desc = "Фіксовано 0.4 ПМ"; }
-            else if (type === "division" && price > 0) {
-                fee = Math.max(PM*0.4, Math.min(price*0.01, PM*3));
-                desc = "1% ціни (Max 3 ПМ)";
+            switch(type) {
+                // Майнові
+                case "money":
+                case "inheritance_prop":
+                    if(price > 0) { fee = Math.max(PM * 0.4, Math.min(price * 0.01, PM * 5)); desc = "1% (мін. 1280 грн)"; }
+                    break;
+                case "division":
+                    if(price > 0) { fee = Math.max(PM * 0.4, Math.min(price * 0.01, PM * 3)); desc = "1% (макс. 3 ПМ)"; }
+                    break;
+                
+                // Сімейні
+                case "divorce": fee = PM * 0.4; desc = "Фіксовано 0.4 ПМ"; break;
+                case "alimony": isFree = true; desc = "Звільнено від сплати (ст. 5)"; break;
+                case "paternity": fee = PM * 0.4; desc = "0.4 ПМ (Немайновий)"; break;
+                case "adoption": fee = PM * 0.2; desc = "0.2 ПМ (Окреме провадження)"; break;
+
+                // Споживачі (ВАЖЛИВО: Безкоштовно)
+                case "consumer": isFree = true; desc = "Звільнено (Захист прав споживачів)"; break;
+
+                // Робота / Соціалка
+                case "labor_salary":
+                case "labor_renew": isFree = true; desc = "Звільнено (Трудові спори)"; break;
+                case "social": fee = PM * 0.4; desc = "Або безкоштовно для пільговиків"; break;
+
+                // Житло
+                case "housing_evict": 
+                case "housing_order":
+                case "land_non_money": fee = PM * 0.4; desc = "0.4 ПМ (Немайнова)"; break;
+
+                // Факти / Інше
+                case "fact": fee = PM * 0.2; desc = "0.2 ПМ (Встановлення факту)"; break;
+                case "non_money": fee = PM * 0.4; desc = "0.4 ПМ (Немайнова)"; break;
+                
+                // Адмінка
+                case "traffic": fee = PM * 0.2; desc = "0.2 ПМ (Оскарження постанови)"; break;
+                case "admin_fine": fee = PM * 0.2; desc = "0.2 ПМ (Адміністративний)"; break;
+
+                case "moral":
+                    if(price > 0) {
+                        if(price <= PM*5) { fee = PM * 0.4; desc = "0.4 ПМ (як немайновий)"; }
+                        else { fee = Math.max(PM, price * 0.015); desc = "1.5% (мін 1 ПМ)"; }
+                    }
+                    break;
             }
-            else if (type === "moral" && price > 0) {
-                if (price <= PM*5) fee = PM*0.4; // Як немайновий, якщо сума мала
-                else fee = Math.max(PM, price*0.015); // 1.5% але не менше 1 ПМ
-                desc = "1.5% ціни (Min 1 ПМ)";
-            }
 
-            document.getElementById("courtTotal").innerText = fee.toFixed(2) + " грн";
+            let resEl = document.getElementById("courtTotal");
+            if (isFree) { resEl.innerText = "0 грн ✅"; resEl.classList.add("free"); }
+            else { resEl.innerText = fee.toFixed(2) + " грн"; resEl.classList.remove("free"); }
+            
             document.getElementById("courtDesc").innerText = desc;
             document.getElementById("resCourt").style.display = "block";
             
-            sendBtn({type:"court_fee", fee:fee.toFixed(2), desc:type});
+            let typeText = document.getElementById("claimType").options[document.getElementById("claimType").selectedIndex].text;
+            sendBtn({type:"court_fee", fee: isFree ? "0.00" : fee.toFixed(2), desc: typeText});
         }
 
-        // --- 2. DEBT CALC ---
-        function toggleInput(id, cb) {
-            document.getElementById(id).style.display = cb.checked ? "block" : "none";
-            calcDebt();
-        }
-
+        // --- DEBT ---
+        function toggleInput(id, cb) { document.getElementById(id).style.display = cb.checked ? "block" : "none"; calcDebt(); }
         function calcDebt() {
             let s = parseFloat(document.getElementById("debtSum").value);
-            let d1 = new Date(document.getElementById("dStart").value);
-            let d2 = new Date(document.getElementById("dEnd").value);
-            
-            // Show inflation input if checked
+            let d1 = new Date(document.getElementById("dStart").value); let d2 = new Date(document.getElementById("dEnd").value);
             document.getElementById("infIdx").style.display = document.getElementById("chkInf").checked ? "block" : "none";
-
             if(!s || isNaN(d1) || isNaN(d2)) return;
-            
-            let timeDiff = d2.getTime() - d1.getTime();
-            let days = Math.ceil(timeDiff / (1000 * 3600 * 24));
-            if(days < 0) days = 0;
-
-            // 3% Annual
+            let days = Math.ceil((d2 - d1) / (86400000)); if(days < 0) days = 0;
             let p3 = document.getElementById("chk3").checked ? s * 0.03 * (days/365) : 0;
-            
-            // Inflation
             let idx = parseFloat(document.getElementById("infIdx").value);
             let inf = (document.getElementById("chkInf").checked && idx > 100) ? s*(idx/100)-s : 0;
-            
-            // Penalty
             let rate = parseFloat(document.getElementById("penyRate").value);
             let peny = (document.getElementById("chkPeny").checked && rate) ? s*(rate/100)*(days/365) : 0;
-
             let total = s + p3 + inf + peny;
-            
-            document.getElementById("outBody").innerText = s.toFixed(2);
-            document.getElementById("out3").innerText = p3.toFixed(2);
-            document.getElementById("outInf").innerText = inf.toFixed(2);
-            document.getElementById("outPeny").innerText = peny.toFixed(2);
+            document.getElementById("outBody").innerText = s.toFixed(2); document.getElementById("out3").innerText = p3.toFixed(2);
+            document.getElementById("outInf").innerText = inf.toFixed(2); document.getElementById("outPeny").innerText = peny.toFixed(2);
             document.getElementById("debtTotal").innerText = total.toFixed(2) + " грн";
             document.getElementById("resDebt").style.display = "block";
-            
-            sendBtn({
-                type:"debt_calc", 
-                total:total.toFixed(2), 
-                details: `3%: ${p3.toFixed(2)}\nІнфл: ${inf.toFixed(2)}\nПеня: ${peny.toFixed(2)}`
-            });
+            sendBtn({type:"debt_calc", total:total.toFixed(2), details: `3%: ${p3.toFixed(2)}\nІнфл: ${inf.toFixed(2)}\nПеня: ${peny.toFixed(2)}`});
         }
 
-        // --- 3. VACATION (PRO) ---
-        // Функція Пасхалії (Гаусс)
+        // --- VACATION ---
         function getEasterDate(year) {
-            let a = year % 19, b = year % 4, c = year % 7;
-            let d = (19 * a + 15) % 30;
-            let e = (2 * b + 4 * c + 6 * d + 6) % 7;
-            let f = d + e;
-            let day = (f + 4 > 30) ? (f + 4 - 30) : (f + 4);
-            let month = (f + 4 > 30) ? 4 : 3; // JS Month: 0-11 (4 = травень, 3 = квітень)
-            return new Date(year, month, day);
+            let a = year%19, b=year%4, c=year%7, d=(19*a+15)%30, e=(2*b+4*c+6*d+6)%7, f=d+e;
+            let day = (f+4>30)?(f+4-30):(f+4), month = (f+4>30)?4:3; return new Date(year, month, day);
         }
-
         function getHolidays(year) {
-            // Фіксовані (сучасний календар)
-            let h = [
-                `${year}-01-01`, // Новий рік
-                `${year}-03-08`, // 8 березня
-                `${year}-05-01`, // День праці
-                `${year}-05-08`, // День пам'яті
-                `${year}-06-28`, // Конституція
-                `${year}-07-15`, // Державність
-                `${year}-08-24`, // Незалежність
-                `${year}-10-01`, // Захисників
-                `${year}-12-25`  // Різдво
-            ];
-            
-            // Рухомі
-            let easter = getEasterDate(year);
-            // Форматуємо дату YYYY-MM-DD
-            const fmt = d => d.toISOString().split('T')[0];
-            h.push(fmt(easter));
-            
-            let trinity = new Date(easter);
-            trinity.setDate(easter.getDate() + 49);
-            h.push(fmt(trinity));
-            
+            let h = [`${year}-01-01`,`${year}-03-08`,`${year}-05-01`,`${year}-05-08`,`${year}-06-28`,`${year}-07-15`,`${year}-08-24`,`${year}-10-01`,`${year}-12-25`];
+            let easter = getEasterDate(year); const fmt = d => d.toISOString().split('T')[0];
+            h.push(fmt(easter)); let trinity = new Date(easter); trinity.setDate(easter.getDate()+49); h.push(fmt(trinity));
             return h;
         }
-
         function calcVac() {
             let startVal = document.getElementById("vacStart").value;
             let days = parseInt(document.getElementById("vacDays").value);
             let isMartial = document.getElementById("martialLaw").checked;
-            
             if(!startVal || !days) return;
-
-            let current = new Date(startVal);
-            let added = 0;
-            let holidaySet = new Set();
-            
-            // Якщо не воєнний стан, генеруємо свята
+            let current = new Date(startVal); let added = 0; let holidaySet = new Set();
             if(!isMartial) {
-                // Беремо свята на поточний рік і наступний (якщо відпустка на перетині років)
-                let y1 = current.getFullYear();
-                let y2 = y1 + 1;
-                getHolidays(y1).forEach(d => holidaySet.add(d));
-                getHolidays(y2).forEach(d => holidaySet.add(d));
+                let y = current.getFullYear();
+                getHolidays(y).forEach(d => holidaySet.add(d)); getHolidays(y+1).forEach(d => holidaySet.add(d));
             }
-
-            // Логіка: Святкові дні не входять у тривалість відпустки
             while(added < days) {
                 let dateStr = current.toISOString().split('T')[0];
-                
-                // Якщо не воєнний стан І сьогодні свято -> пропускаємо (не додаємо added, але день минає)
-                if(!isMartial && holidaySet.has(dateStr)) {
-                    // Це свято. Воно продовжує відпустку.
-                } else {
-                    added++;
-                }
-                
-                // Якщо це ще не останній врахований день, рухаємось далі
-                if(added < days) {
-                    current.setDate(current.getDate() + 1);
-                }
+                if(!isMartial && holidaySet.has(dateStr)) {} else { added++; }
+                if(added < days) current.setDate(current.getDate() + 1);
             }
-            // current тепер це Останній день відпустки
             document.getElementById("vacLast").innerText = current.toLocaleDateString('uk-UA');
-
-            // Шукаємо день виходу (наступний день)
-            let returnDate = new Date(current);
-            returnDate.setDate(returnDate.getDate() + 1);
-            
-            // Якщо випадає на вихідний -> переносимо на Пн
-            while(returnDate.getDay() === 0 || returnDate.getDay() === 6) {
-                returnDate.setDate(returnDate.getDate() + 1);
-            }
-            document.getElementById("vacReturn").innerText = returnDate.toLocaleDateString('uk-UA');
+            let ret = new Date(current); ret.setDate(ret.getDate()+1);
+            while(ret.getDay()===0 || ret.getDay()===6) ret.setDate(ret.getDate()+1);
+            document.getElementById("vacReturn").innerText = ret.toLocaleDateString('uk-UA');
         }
 
-        // --- 4. CURRENCY (API) ---
+        // --- CURRENCY ---
         let ratesCache = {};
         async function fetchRates() {
             let dateVal = document.getElementById("currDate").value;
-            let dateStr = dateVal.replaceAll('-', '');
-            let url = `https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?date=${dateStr}&json`;
-            
-            document.getElementById("loading").style.display = "block";
-            document.getElementById("ratesList").innerHTML = "";
-
+            let url = `https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?date=${dateVal.replaceAll('-','')}&json`;
+            document.getElementById("loading").style.display = "block"; document.getElementById("ratesList").innerHTML = "";
             try {
-                let resp = await fetch(url);
-                let data = await resp.json();
+                let resp = await fetch(url); let data = await resp.json();
                 document.getElementById("loading").style.display = "none";
-                
-                let usd = data.find(r => r.cc === "USD");
-                let eur = data.find(r => r.cc === "EUR");
+                let usd = data.find(r => r.cc === "USD"); let eur = data.find(r => r.cc === "EUR");
                 ratesCache = { USD: usd?.rate, EUR: eur?.rate };
-
                 let html = "";
                 if(usd) html += `<div class="currency-card"><div><span class="flag">🇺🇸</span>USD</div><div class="rate-val">${usd.rate.toFixed(4)}</div></div>`;
                 if(eur) html += `<div class="currency-card"><div><span class="flag">🇪🇺</span>EUR</div><div class="rate-val">${eur.rate.toFixed(4)}</div></div>`;
-                
-                document.getElementById("ratesList").innerHTML = html;
-                convert();
-            } catch(e) {
-                document.getElementById("ratesList").innerHTML = `<div style="color:red">Помилка з'єднання з НБУ</div>`;
-                document.getElementById("loading").style.display = "none";
-            }
+                document.getElementById("ratesList").innerHTML = html; convert();
+            } catch(e) { document.getElementById("ratesList").innerHTML = "Помилка НБУ"; document.getElementById("loading").style.display="none"; }
         }
-
         function convert() {
             let amt = parseFloat(document.getElementById("convAmount").value);
             let curr = document.getElementById("convCurr").value;
-            if(amt && ratesCache[curr]) {
-                document.getElementById("convResult").innerText = (amt * ratesCache[curr]).toFixed(2) + " UAH";
-            }
+            if(amt && ratesCache[curr]) document.getElementById("convResult").innerText = (amt * ratesCache[curr]).toFixed(2) + " UAH";
         }
 
-        // --- 5. DATES ---
+        // --- DATES ---
         function calcDateSimple() {
             let d = new Date(document.getElementById("dateCalc1").value);
-            let add = parseInt(document.getElementById("dateCalcDays").value);
-            if(!isNaN(d.getTime()) && add) {
-                d.setDate(d.getDate() + add);
+            let days = parseInt(document.getElementById("dateCalcDays").value);
+            let op = parseInt(document.getElementById("dateOp").value);
+            if(!isNaN(d.getTime()) && days) {
+                d.setDate(d.getDate() + (days * op));
                 document.getElementById("dateSimpleRes").innerText = d.toLocaleDateString('uk-UA');
                 document.getElementById("resDateSimple").style.display = "block";
             }
         }
 
-        // --- GLOBAL HELPER: SEND BUTTON ---
         function sendBtn(data) {
-            mainButton.setText("ВІДПРАВИТИ В ЧАТ");
-            mainButton.isVisible = true; // Fix visibility logic
-            mainButton.show();
-            mainButton.offClick(sendDataCb);
-            mainButton.onClick(sendDataCb);
-            
-            // Closure wrapper
-            function sendDataCb() {
-                tg.sendData(JSON.stringify(data));
-            }
+            mainButton.setText("ВІДПРАВИТИ В ЧАТ"); mainButton.show();
+            mainButton.offClick(sendDataCb); mainButton.onClick(sendDataCb);
+            function sendDataCb() { tg.sendData(JSON.stringify(data)); }
         }
 
-        // --- DEFAULTS ---
         let today = new Date().toISOString().split('T')[0];
         document.getElementById('currDate').value = today;
-        document.getElementById('dStart').value = today;
-        document.getElementById('dEnd').value = today;
-        document.getElementById('vacStart').value = today;
-        document.getElementById('dateCalc1').value = today;
-
+        document.getElementById('dStart').value = today; document.getElementById('dEnd').value = today;
+        document.getElementById('vacStart').value = today; document.getElementById('dateCalc1').value = today;
     </script>
 </body>
 </html>
