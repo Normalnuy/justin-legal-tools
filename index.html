@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Судовий Збір 2026</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        /* Используем CSS-переменные Telegram, чтобы дизайн подстраивался под тему юзера */
+        body {
+            background-color: var(--tg-theme-bg-color);
+            color: var(--tg-theme-text-color);
+            font-family: sans-serif;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        h2 { margin: 0; font-size: 18px; }
+
+        label {
+            font-size: 14px;
+            color: var(--tg-theme-hint-color);
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid var(--tg-theme-hint-color);
+            background-color: var(--tg-theme-secondary-bg-color);
+            color: var(--tg-theme-text-color);
+            font-size: 16px;
+            box-sizing: border-box; /* Чтобы padding не ломал ширину */
+            outline: none;
+        }
+
+        input:focus {
+            border-color: var(--tg-theme-button-color);
+        }
+
+        .result-box {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: var(--tg-theme-secondary-bg-color);
+            border-radius: 10px;
+            text-align: center;
+            display: none; /* Скрыто по умолчанию */
+        }
+
+        .price-display {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--tg-theme-button-color);
+        }
+    </style>
+</head>
+<body>
+
+    <h2>🏛 Калькулятор судового збору</h2>
+
+    <div>
+        <label>Тип позову</label>
+        <select id="claimType" onchange="calculate()">
+            <option value="money">Майновий (Стягнення коштів)</option>
+            <option value="non_money">Немайновий (Розлучення, тощо)</option>
+            <option value="moral">Відшкодування моральної шкоди</option>
+        </select>
+    </div>
+
+    <div id="priceContainer">
+        <label>Ціна позову (грн)</label>
+        <input type="number" id="claimPrice" placeholder="Наприклад: 100000" oninput="calculate()">
+    </div>
+
+    <div class="result-box" id="resultBox">
+        <div>До сплати:</div>
+        <div class="price-display" id="finalFee">0 грн</div>
+    </div>
+
+    <script>
+        let tg = window.Telegram.WebApp;
+        tg.expand(); // Раскрываем на весь экран
+
+        // Константы на 2026 год (Предположим, ПМ = 3200 грн)
+        const LIVING_WAGE = 3200; 
+        
+        const mainButton = tg.MainButton;
+        mainButton.setText("СФОРМУВАТИ КВИТАНЦІЮ");
+        mainButton.textColor = "#FFFFFF";
+        mainButton.color = "#2cab37"; // Зеленый цвет
+
+        function calculate() {
+            let type = document.getElementById("claimType").value;
+            let priceInput = document.getElementById("claimPrice").value;
+            let price = parseFloat(priceInput);
+            let fee = 0;
+
+            // Логика отображения поля цены
+            if (type === "non_money") {
+                document.getElementById("priceContainer").style.display = "none";
+                fee = LIVING_WAGE * 0.4; // 0.4 размера ПМ
+            } else {
+                document.getElementById("priceContainer").style.display = "block";
+                
+                if (!price || price < 0) {
+                    mainButton.hide();
+                    document.getElementById("resultBox").style.display = "none";
+                    return;
+                }
+
+                // Логика для имущественных исков (1% цены, но не менее 0.4 ПМ и не более 5 ПМ)
+                // *Упрощенная логика для примера*
+                let calculated = price * 0.01;
+                let minFee = LIVING_WAGE * 0.4;
+                let maxFee = LIVING_WAGE * 5;
+                
+                fee = Math.max(minFee, Math.min(calculated, maxFee));
+            }
+
+            // Показываем результат и кнопку Telegram
+            document.getElementById("finalFee").innerText = fee.toFixed(2) + " грн";
+            document.getElementById("resultBox").style.display = "block";
+            
+            // Показываем нативную кнопку внизу
+            if (mainButton.isVisible === false) {
+                mainButton.show();
+            }
+            
+            // Сохраняем данные для отправки боту
+            tg.MainButton.onClick(function() {
+                let data = JSON.stringify({
+                    fee: fee.toFixed(2),
+                    type: type,
+                    price: price || 0
+                });
+                tg.sendData(data);
+            });
+        }
+        
+        // Запуск при старте, чтобы проверить состояние
+        calculate();
+    </script>
+</body>
+</html>
