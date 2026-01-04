@@ -3,21 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Судовий Збір</title>
+    <title>Судовий Збір 2026</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body {
-            /* Добавляем fallback цвет #fff, если переменная не загрузится сразу */
             background-color: var(--tg-theme-bg-color, #ffffff);
             color: var(--tg-theme-text-color, #222222);
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: sans-serif;
             padding: 20px;
-            margin: 0; /* Убираем отступы по умолчанию */
             display: flex;
             flex-direction: column;
             gap: 15px;
         }
-        h2 { margin: 0 0 10px 0; font-size: 20px; text-align: center;}
+        h2 { margin: 0 0 10px 0; font-size: 20px; text-align: center; }
         label { font-size: 14px; color: var(--tg-theme-hint-color, #888); margin-bottom: 5px; display: block; }
         select, input {
             width: 100%; padding: 12px; border-radius: 12px;
@@ -25,7 +23,6 @@
             background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
             color: var(--tg-theme-text-color, #222222);
             font-size: 16px; box-sizing: border-box; outline: none;
-            -webkit-appearance: none; /* Фикс для Safari/iOS */
         }
         .result-box {
             margin-top: 20px; padding: 20px;
@@ -36,6 +33,7 @@
     </style>
 </head>
 <body>
+
     <h2>🏛 Калькулятор збору</h2>
 
     <div>
@@ -49,7 +47,7 @@
 
     <div id="priceContainer">
         <label>Ціна позову (сума в грн)</label>
-        <input type="number" id="claimPrice" placeholder="100000" oninput="calculate()" inputmode="decimal">
+        <input type="number" id="claimPrice" placeholder="100000" oninput="calculate()">
     </div>
 
     <div class="result-box" id="resultBox">
@@ -58,77 +56,81 @@
     </div>
 
     <script>
-        // Ждем полной загрузки DOM перед запуском
-        document.addEventListener('DOMContentLoaded', function() {
-            let tg = window.Telegram.WebApp;
-            
-            // 1. Сообщаем Телеграму, что приложение готово (убирает загрузчик)
-            tg.ready(); 
-            // 2. Раскрываем на весь экран
-            tg.expand(); 
+        // --- ГЛОБАЛЬНЫЙ БЛОК ---
+        // Инициализация Telegram WebApp
+        let tg = window.Telegram.WebApp;
+        
+        // 1. Сообщаем, что приложение готово (убирает загрузку на телефоне)
+        tg.ready();
+        // 2. Разворачиваем на весь экран
+        tg.expand(); 
 
-            const LIVING_WAGE = 3200; 
-            const mainButton = tg.MainButton;
+        // Константы
+        const LIVING_WAGE = 3200; 
+        const mainButton = tg.MainButton;
 
-            mainButton.setText("СФОРМУВАТИ КВИТАНЦІЮ");
-            mainButton.textColor = "#FFFFFF";
-            mainButton.color = "#2cab37"; 
+        // Настройка кнопки
+        mainButton.setText("СФОРМУВАТИ КВИТАНЦІЮ");
+        mainButton.textColor = "#FFFFFF";
+        mainButton.color = "#2cab37";
 
-            // Делаем функцию доступной глобально
-            window.calculate = function() {
-                let type = document.getElementById("claimType").value;
-                let priceVal = document.getElementById("claimPrice").value;
-                let price = parseFloat(priceVal);
-                let fee = 0;
+        // Функция отправки данных (вынесена отдельно)
+        function sendDataToBot() {
+            let data = {
+                fee: document.getElementById("finalFee").innerText.replace(" грн", ""),
+                type: document.getElementById("claimType").value,
+                price: document.getElementById("claimPrice").value
+            };
+            tg.sendData(JSON.stringify(data));
+        }
 
-                // Сброс
-                document.getElementById("resultBox").style.display = "none";
-                mainButton.hide();
+        // Основная функция расчета
+        function calculate() {
+            let type = document.getElementById("claimType").value;
+            let priceVal = document.getElementById("claimPrice").value;
+            let price = parseFloat(priceVal);
+            let fee = 0;
 
-                if (type === "non_money") {
-                    document.getElementById("priceContainer").style.display = "none";
+            // Скрываем результат пока считаем
+            document.getElementById("resultBox").style.display = "none";
+            mainButton.hide();
+
+            // Логика расчета
+            if (type === "non_money") {
+                document.getElementById("priceContainer").style.display = "none";
+                fee = LIVING_WAGE * 0.4;
+            } 
+            else if (type === "money") {
+                document.getElementById("priceContainer").style.display = "block";
+                if (!price || price <= 0) return;
+                
+                let calculated = price * 0.01;
+                fee = Math.max(LIVING_WAGE * 0.4, Math.min(calculated, LIVING_WAGE * 5));
+            } 
+            else if (type === "moral") {
+                document.getElementById("priceContainer").style.display = "block";
+                if (!price || price <= 0) return;
+
+                if (price <= LIVING_WAGE * 5) {
                     fee = LIVING_WAGE * 0.4;
-                } else if (type === "money") {
-                    document.getElementById("priceContainer").style.display = "block";
-                    if (!price || price <= 0) return;
-
-                    let calculatedFee = price * 0.01;
-                    let minFee = LIVING_WAGE * 0.4;
-                    let maxFee = LIVING_WAGE * 5;
-                    fee = Math.max(minFee, Math.min(calculatedFee, maxFee));
-                } else if (type === "moral") {
-                    document.getElementById("priceContainer").style.display = "block";
-                    if (!price || price <= 0) return;
-                    
-                    if (price <= LIVING_WAGE * 5) {
-                        fee = LIVING_WAGE * 0.4;
-                    } else {
-                        fee = price * 0.015;
-                    }
-                }
-
-                document.getElementById("finalFee").innerText = fee.toFixed(2) + " грн";
-                document.getElementById("resultBox").style.display = "block";
-                
-                if (!mainButton.isVisible) {
-                    mainButton.show();
-                }
-                
-                // Важно: переопределяем onClick каждый раз, чтобы данные обновлялись
-                mainButton.offClick(sendData); // Удаляем старый лиснер
-                mainButton.onClick(sendData);  // Добавляем новый
-                
-                function sendData() {
-                    tg.sendData(JSON.stringify({
-                        fee: fee.toFixed(2), 
-                        type: type, 
-                        price: price || 0
-                    }));
+                } else {
+                    fee = price * 0.015;
                 }
             }
+
+            // Показываем итог
+            document.getElementById("finalFee").innerText = fee.toFixed(2) + " грн";
+            document.getElementById("resultBox").style.display = "block";
             
-            window.calculate();
-        });
+            // Показываем кнопку и обновляем обработчик нажатия
+            mainButton.show();
+            mainButton.offClick(sendDataToBot); // Удаляем старый, чтобы не дублировать
+            mainButton.onClick(sendDataToBot);  // Ставим новый
+        }
+
+        // Запуск при загрузке
+        calculate();
+
     </script>
 </body>
 </html>
