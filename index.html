@@ -1,76 +1,134 @@
-<script>
-        let tg = window.Telegram.WebApp;
-        tg.expand(); 
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Судовий Збір</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            /* Добавляем fallback цвет #fff, если переменная не загрузится сразу */
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #222222);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            padding: 20px;
+            margin: 0; /* Убираем отступы по умолчанию */
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        h2 { margin: 0 0 10px 0; font-size: 20px; text-align: center;}
+        label { font-size: 14px; color: var(--tg-theme-hint-color, #888); margin-bottom: 5px; display: block; }
+        select, input {
+            width: 100%; padding: 12px; border-radius: 12px;
+            border: 1px solid var(--tg-theme-hint-color, #ccc);
+            background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            color: var(--tg-theme-text-color, #222222);
+            font-size: 16px; box-sizing: border-box; outline: none;
+            -webkit-appearance: none; /* Фикс для Safari/iOS */
+        }
+        .result-box {
+            margin-top: 20px; padding: 20px;
+            background-color: var(--tg-theme-secondary-bg-color, #f5f5f5);
+            border-radius: 12px; text-align: center; display: none;
+        }
+        .price { font-size: 28px; font-weight: bold; color: var(--tg-theme-button-color, #2481cc); margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <h2>🏛 Калькулятор збору</h2>
 
-        // ❗️ ВАЖЛИВО: Актуалізуйте цю цифру відповідно до бюджету на 2026 рік
-        const LIVING_WAGE = 3200; 
+    <div>
+        <label>Тип позову</label>
+        <select id="claimType" onchange="calculate()">
+            <option value="money">💰 Майновий (Стягнення боргу)</option>
+            <option value="non_money">📄 Немайновий (Розлучення)</option>
+            <option value="moral">⚖️ Моральна шкода</option>
+        </select>
+    </div>
 
-        const mainButton = tg.MainButton;
-        mainButton.setText("СФОРМУВАТИ КВИТАНЦІЮ");
-        mainButton.textColor = "#FFFFFF";
-        mainButton.color = "#2cab37"; 
+    <div id="priceContainer">
+        <label>Ціна позову (сума в грн)</label>
+        <input type="number" id="claimPrice" placeholder="100000" oninput="calculate()" inputmode="decimal">
+    </div>
 
-        function calculate() {
-            let type = document.getElementById("claimType").value;
-            let priceInput = document.getElementById("claimPrice").value;
-            let price = parseFloat(priceInput);
-            let fee = 0;
+    <div class="result-box" id="resultBox">
+        <div>До сплати:</div>
+        <div class="price" id="finalFee">0 грн</div>
+    </div>
 
-            // Скидаємо відображення
-            document.getElementById("resultBox").style.display = "none";
-            mainButton.hide();
-
-            // 1. НЕМАЙНОВИЙ ПОЗОВ (0.4 ПМ)
-            if (type === "non_money") {
-                document.getElementById("priceContainer").style.display = "none";
-                fee = LIVING_WAGE * 0.4;
-            } 
+    <script>
+        // Ждем полной загрузки DOM перед запуском
+        document.addEventListener('DOMContentLoaded', function() {
+            let tg = window.Telegram.WebApp;
             
-            // 2. МАЙНОВИЙ ПОЗОВ (1% ціни, але є рамки)
-            else if (type === "money") {
-                document.getElementById("priceContainer").style.display = "block";
-                
-                // Перевірка, чи ввів юзер число
-                if (!price || price <= 0) return;
+            // 1. Сообщаем Телеграму, что приложение готово (убирает загрузчик)
+            tg.ready(); 
+            // 2. Раскрываем на весь экран
+            tg.expand(); 
 
-                let calculatedFee = price * 0.01; // 1 відсоток
-                let minFee = LIVING_WAGE * 0.4;   // Мінімальний поріг
-                let maxFee = LIVING_WAGE * 5;     // Максимальний поріг (для фізосіб)
+            const LIVING_WAGE = 3200; 
+            const mainButton = tg.MainButton;
 
-                // Логіка: не менше Min, але й не більше Max
-                fee = Math.max(minFee, Math.min(calculatedFee, maxFee));
-            }
+            mainButton.setText("СФОРМУВАТИ КВИТАНЦІЮ");
+            mainButton.textColor = "#FFFFFF";
+            mainButton.color = "#2cab37"; 
 
-            // 3. МОРАЛЬНА ШКОДА (Складніша логіка)
-            // Якщо ціна позову <= 5 ПМ, то ставка як за немайновий (0.4 ПМ),
-            // якщо більше — 1.5% ціни позову.
-            else if (type === "moral") {
-                document.getElementById("priceContainer").style.display = "block";
-                if (!price || price <= 0) return;
+            // Делаем функцию доступной глобально
+            window.calculate = function() {
+                let type = document.getElementById("claimType").value;
+                let priceVal = document.getElementById("claimPrice").value;
+                let price = parseFloat(priceVal);
+                let fee = 0;
 
-                if (price <= LIVING_WAGE * 5) {
+                // Сброс
+                document.getElementById("resultBox").style.display = "none";
+                mainButton.hide();
+
+                if (type === "non_money") {
+                    document.getElementById("priceContainer").style.display = "none";
                     fee = LIVING_WAGE * 0.4;
-                } else {
-                    fee = price * 0.015; // 1.5%
-                    // У моральної шкоди немає верхньої межі (max)!
+                } else if (type === "money") {
+                    document.getElementById("priceContainer").style.display = "block";
+                    if (!price || price <= 0) return;
+
+                    let calculatedFee = price * 0.01;
+                    let minFee = LIVING_WAGE * 0.4;
+                    let maxFee = LIVING_WAGE * 5;
+                    fee = Math.max(minFee, Math.min(calculatedFee, maxFee));
+                } else if (type === "moral") {
+                    document.getElementById("priceContainer").style.display = "block";
+                    if (!price || price <= 0) return;
+                    
+                    if (price <= LIVING_WAGE * 5) {
+                        fee = LIVING_WAGE * 0.4;
+                    } else {
+                        fee = price * 0.015;
+                    }
+                }
+
+                document.getElementById("finalFee").innerText = fee.toFixed(2) + " грн";
+                document.getElementById("resultBox").style.display = "block";
+                
+                if (!mainButton.isVisible) {
+                    mainButton.show();
+                }
+                
+                // Важно: переопределяем onClick каждый раз, чтобы данные обновлялись
+                mainButton.offClick(sendData); // Удаляем старый лиснер
+                mainButton.onClick(sendData);  // Добавляем новый
+                
+                function sendData() {
+                    tg.sendData(JSON.stringify({
+                        fee: fee.toFixed(2), 
+                        type: type, 
+                        price: price || 0
+                    }));
                 }
             }
-
-            // Відображення результату
-            document.getElementById("finalFee").innerText = fee.toFixed(2) + " грн";
-            document.getElementById("resultBox").style.display = "block";
-            mainButton.show();
             
-            // Передача даних боту
-            mainButton.onClick(function() {
-                tg.sendData(JSON.stringify({
-                    fee: fee.toFixed(2), 
-                    type: type, 
-                    price: price || 0
-                }));
-            });
-        }
-        
-        // Запускаємо розрахунок при старті (для ініціалізації)
-        calculate();
+            window.calculate();
+        });
     </script>
+</body>
+</html>
