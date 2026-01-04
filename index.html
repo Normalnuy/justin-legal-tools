@@ -296,27 +296,35 @@
         </div>
 
         <h2 style="margin-top:20px">👶 Аліменти</h2>
+        
         <label>Дохід платника (грн)</label>
         <input type="number" id="alimIncome" placeholder="15000" inputmode="decimal" oninput="calcAlim()">
         
-        <label>Кількість дітей</label>
-        <select id="alimCount" onchange="calcAlim()">
-            <option value="1">Одна дитина (1/4 доходу)</option>
-            <option value="2">Дві дитини (1/3 доходу)</option>
-            <option value="3">Три і більше (1/2 доходу)</option>
-        </select>
+        <div class="row">
+            <div class="col">
+                <label>Діти до 6 років</label>
+                <input type="number" id="cntChild6" placeholder="0" inputmode="numeric" oninput="calcAlim()">
+            </div>
+            <div class="col">
+                <label>Діти 6-18 років</label>
+                <input type="number" id="cntChild18" placeholder="0" inputmode="numeric" oninput="calcAlim()">
+            </div>
+        </div>
 
         <div class="result-box" id="resAlim" style="display:block; text-align:left">
             <div class="detail-row">
                 <span>Частка від доходу:</span> 
-                <span id="alimShare" style="font-weight:bold">0 грн</span>
+                <span id="alimShare" style="font-weight:bold">0.00 грн</span>
             </div>
             <div class="detail-row">
                 <span>Мінімальний гарантований*:</span> 
-                <span id="alimMin" style="font-weight:bold; color:var(--hint-color)">-</span>
+                <span id="alimMin" style="font-weight:bold; color:var(--hint-color)">0.00 грн</span>
+            </div>
+            <div id="alimAlert" style="font-size:12px; color:red; margin-top:5px; display:none">
+                ⚠️ Сума менша за обов'язковий мінімум!
             </div>
             <div style="font-size:11px; color:var(--hint-color); margin-top:5px">
-                *Не менше 50% ПМ для дитини відповідного віку.
+                *Сума 50% прожиткових мінімумів для дітей відповідного віку.
             </div>
         </div>
 
@@ -580,23 +588,62 @@
 
         // --- 6. ALIMONY ---
         function calcAlim() {
-            let income = parseFloat(document.getElementById("alimIncome").value);
-            let count = parseInt(document.getElementById("alimCount").value);
-            if(!income) return;
+            // Отримуємо дані з полів
+            let income = parseFloat(document.getElementById("alimIncome").value) || 0;
+            let c6 = parseInt(document.getElementById("cntChild6").value) || 0;
+            let c18 = parseInt(document.getElementById("cntChild18").value) || 0;
+            let totalKids = c6 + c18;
 
-            let share = 0.25; if(count === 2) share = 0.3333; if(count >= 3) share = 0.5;
-            let result = income * share;
-            let minGuaranteed = STD.pm_child_18 * 0.5 * count; 
-
-            document.getElementById("alimShare").innerText = result.toFixed(2) + " грн";
-            document.getElementById("alimMin").innerText = minGuaranteed.toFixed(2) + " грн";
-            if(result < minGuaranteed) {
-                document.getElementById("alimShare").style.color = "red";
-                document.getElementById("alimShare").innerText += " (< Мін!)";
-            } else {
-                document.getElementById("alimShare").style.color = "var(--text-color)";
+            // 1. Визначаємо частку від доходу (Сімейний кодекс)
+            let share = 0;
+            let shareText = "0%";
+            
+            if (totalKids === 1) { 
+                share = 0.25; 
+                shareText = "1/4 (25%)"; 
+            } else if (totalKids === 2) { 
+                share = 0.3333; 
+                shareText = "1/3 (33%)"; 
+            } else if (totalKids >= 3) { 
+                share = 0.5; 
+                shareText = "1/2 (50%)"; // Логіка для 3 і більше дітей
             }
-            sendBtn({type:"alim_calc", total: result.toFixed(2), min: minGuaranteed.toFixed(2), kids: count});
+
+            let shareSum = income * share;
+
+            // 2. Рахуємо ГАРАНТОВАНИЙ мінімум (50% ПМ для кожної дитини)
+            // STD.pm_child_6 та STD.pm_child_18 беруться з вашого файлу standards.json
+            let min6 = STD.pm_child_6 * 0.5;
+            let min18 = STD.pm_child_18 * 0.5;
+            
+            let totalMin = (c6 * min6) + (c18 * min18);
+
+            // 3. Виводимо результат
+            let shareEl = document.getElementById("alimShare");
+            let alertBox = document.getElementById("alimAlert");
+
+            shareEl.innerText = `${shareSum.toFixed(2)} грн (${shareText})`;
+            document.getElementById("alimMin").innerText = `${totalMin.toFixed(2)} грн`;
+
+            // Червона зона: якщо частка від зарплати менша за прожитковий мінімум
+            if (income > 0 && shareSum < totalMin) {
+                shareEl.style.color = "red";
+                alertBox.style.display = "block";
+            } else {
+                shareEl.style.color = "var(--text-color)";
+                alertBox.style.display = "none";
+            }
+
+            // 4. Відправка боту (кнопка внизу)
+            if (income > 0 || totalKids > 0) {
+                sendBtn({
+                    type: "alim_calc",
+                    total: shareSum.toFixed(2),
+                    min: totalMin.toFixed(2),
+                    kids: totalKids,
+                    details: `До 6 р: ${c6}, 6-18 р: ${c18}`
+                });
+            }
         }
 
         // --- 4. CURRENCY ---
