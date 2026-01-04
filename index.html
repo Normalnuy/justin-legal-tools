@@ -331,6 +331,9 @@
             <a id="linkFamily" href="#" target="_blank" class="legal-item" style="display:none">
                 <span class="legal-icon">👨‍👩‍👧</span> <span class="legal-text" id="txtFamily">Сімейний кодекс (Аліменти)</span>
             </a>
+            <a id="linkPod" href="#" target="_blank" class="legal-item" style="display:none">
+                <span class="legal-icon">💰</span> <span class="legal-text" id="txtPod">Податковий кодекс (Ліміти ФОП)</span>
+            </a>
         </div>
     </div>
 
@@ -442,6 +445,12 @@
                 let lnk = document.getElementById("linkFamily");
                 lnk.href = data.family_law_url;
                 document.getElementById("txtFamily").innerText = data.family_law_name || "Сімейний кодекс";
+                lnk.style.display = "flex";
+            }
+            if(data.tax_code_url) {
+                let lnk = document.getElementById("linkPod");
+                lnk.href = data.tax_code_url;
+                document.getElementById("txtPod").innerText = data.tax_code_name || "Податковий кодекс";
                 lnk.style.display = "flex";
             }
         }
