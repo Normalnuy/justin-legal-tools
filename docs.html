@@ -3,60 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Final Test</title>
+    <title>Шаблони документів</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
-    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-    <script>eruda.init();</script>
-
     <style>
-        body { padding: 20px; font-family: sans-serif; text-align: center; }
-        button {
-            width: 100%; height: 80px;
-            background: #28a745; color: white;
-            font-size: 24px; border: none; border-radius: 12px;
-            margin-top: 50px; cursor: pointer;
-        }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: var(--tg-theme-bg-color, #fff); color: var(--tg-theme-text-color, #000); padding: 20px; }
+        .menu-item { background: var(--tg-theme-secondary-bg-color, #f0f0f0); padding: 15px; border-radius: 12px; margin-bottom: 10px; cursor: pointer; display: flex; align-items: center; }
+        .menu-item span { font-size: 20px; margin-right: 15px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: var(--tg-theme-hint-color, #888); font-size: 14px;}
+        input, textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; background: var(--tg-theme-bg-color, #fff); color: var(--tg-theme-text-color, #000); box-sizing: border-box; }
+        .main-btn { width: 100%; padding: 15px; background: var(--tg-theme-button-color, #3390ec); color: white; border: none; border-radius: 10px; font-size: 16px; margin-top: 20px; cursor: pointer; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
-    <h1>🚨 ТЕСТ ЗВ'ЯЗКУ 🚨</h1>
-    <p>Натисни зелену кнопку. Якщо вікно закриється — перемога.</p>
+    <div id="screen-menu">
+        <h3>📂 Оберіть шаблон</h3>
+        <div class="menu-item" onclick="openForm('receipt')"><span>📄</span> Розписка про борг</div>
+        <div class="menu-item" onclick="openForm('contract')"><span>🤝</span> Договір послуг</div>
+    </div>
 
-    <button id="sendBtn">ВІДПРАВИТИ ДАНІ</button>
+    <div id="screen-form" class="hidden">
+        <h3 id="form-title">Заповнення</h3>
+
+        <div id="fields-receipt" class="hidden">
+            <div class="form-group"><label>Я (Боржник):</label><input type="text" id="r_name"></div>
+            <div class="form-group"><label>Взяв у (Кредитор):</label><input type="text" id="r_lender"></div>
+            <div class="form-group"><label>Сума (грн):</label><input type="number" id="r_amount"></div>
+            <div class="form-group"><label>Дата повернення:</label><input type="date" id="r_date"></div>
+        </div>
+
+        <div id="fields-contract" class="hidden">
+            <div class="form-group"><label>Замовник:</label><input type="text" id="c_client"></div>
+            <div class="form-group"><label>Виконавець:</label><input type="text" id="c_contractor"></div>
+            <div class="form-group"><label>Послуга:</label><textarea id="c_service" rows="2"></textarea></div>
+            <div class="form-group"><label>Ціна (грн):</label><input type="number" id="c_price"></div>
+        </div>
+
+        <button class="main-btn" onclick="sendData()">Створити документ</button>
+    </div>
 
     <script>
-        // 1. Ініціалізація
         const tg = window.Telegram.WebApp;
-        tg.expand(); // Розгорнути на весь екран
+        tg.expand();
+        let currentDocType = null;
 
-        // Перевірка: чи бачить сайт Телеграм?
-        console.log("WebApp InitData:", tg.initData);
-
-        document.getElementById('sendBtn').addEventListener('click', function() {
-            try {
-                // Хардкод даних для тесту
-                const data = {
-                    action: "generate_receipt",
-                    name: "Final Test User",
-                    lender: "Bank",
-                    amount: "999",
-                    date: "2026-12-31"
-                };
-
-                // 2. ВІДПРАВКА
-                tg.sendData(JSON.stringify(data));
-                
-                // 3. 🔥 ПРИМУСОВЕ ЗАКРИТТЯ (Виправляє проблему) 🔥
-                setTimeout(function() {
-                    tg.close();
-                }, 100); // Невелика затримка, щоб дані встигли піти
-                
-            } catch (e) {
-                alert("Помилка: " + e.message);
-            }
+        // Кнопка "Назад" у заголовку Telegram
+        tg.BackButton.onClick(() => {
+            document.getElementById('screen-form').classList.add('hidden');
+            document.getElementById('screen-menu').classList.remove('hidden');
+            tg.BackButton.hide();
         });
+
+        function openForm(type) {
+            currentDocType = type;
+            document.getElementById('screen-menu').classList.add('hidden');
+            document.getElementById('screen-form').classList.remove('hidden');
+            
+            // Скидаємо видимість полів
+            document.getElementById('fields-receipt').classList.add('hidden');
+            document.getElementById('fields-contract').classList.add('hidden');
+            
+            // Показуємо потрібні
+            document.getElementById(`fields-${type}`).classList.remove('hidden');
+            tg.BackButton.show();
+        }
+
+        function sendData() {
+            let data = {};
+            
+            if (currentDocType === 'receipt') {
+                data = {
+                    action: "generate_receipt",
+                    name: document.getElementById('r_name').value,
+                    lender: document.getElementById('r_lender').value,
+                    amount: document.getElementById('r_amount').value,
+                    date: document.getElementById('r_date').value
+                };
+            } else if (currentDocType === 'contract') {
+                data = {
+                    action: "generate_contract",
+                    client: document.getElementById('c_client').value,
+                    contractor: document.getElementById('c_contractor').value,
+                    service_desc: document.getElementById('c_service').value,
+                    price: document.getElementById('c_price').value
+                };
+            }
+
+            // Відправка і закриття
+            tg.sendData(JSON.stringify(data));
+            setTimeout(() => tg.close(), 100); 
+        }
     </script>
 </body>
 </html>
