@@ -3,62 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test Form</title>
+    <title>Debug Mode</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+    <script>eruda.init();</script>
+
     <style>
-        body { font-family: sans-serif; padding: 20px; }
-        input { width: 100%; padding: 10px; margin-bottom: 10px; display: block; }
-        button { width: 100%; padding: 15px; background: blue; color: white; border: none; font-size: 18px; }
+        body { font-family: sans-serif; padding: 20px; background: #f0f0f0; }
+        .btn { 
+            display: block; width: 100%; padding: 20px; 
+            background: #007bff; color: white; 
+            font-size: 20px; border: none; border-radius: 10px; margin-top: 20px;
+        }
+        input { width: 100%; padding: 10px; margin-top: 5px; box-sizing: border-box; }
     </style>
 </head>
 <body>
 
-    <h2>Тестова форма</h2>
-    
-    <label>ПІБ:</label>
-    <input type="text" id="test_name" value="Тестовий юзер">
+    <h2>🛠 Режим відладки</h2>
+    <p>Внизу екрану має з'явитися іконка ⚙️</p>
 
-    <label>Сума:</label>
-    <input type="number" id="test_amount" value="100">
+    <label>Тестове поле:</label>
+    <input type="text" id="debug_name" value="User Test">
 
-    <button onclick="sendData()">ВІДПРАВИТИ</button>
-    <p id="log" style="color: red;"></p>
+    <button class="btn" onclick="tryToSend()">🔴 НАТИСНИ МЕНЕ</button>
 
     <script>
-        // 2. Ініціалізація
-        let tg = window.Telegram.WebApp;
+        // Ініціалізація
+        const tg = window.Telegram.WebApp;
         tg.expand();
 
-        function sendData() {
-            // Виводимо помилки прямо на екран (для відладки)
-            let log = document.getElementById('log');
-            
-            try {
-                // Збираємо дані
-                let name = document.getElementById('test_name').value;
-                let amount = document.getElementById('test_amount').value;
+        console.log("Скрипт завантажено!"); // Це буде видно в Eruda
 
-                if(!name || !amount) {
-                    alert("Заповніть поля!");
+        function tryToSend() {
+            console.log("Кнопку натиснуто!"); 
+
+            try {
+                const nameVal = document.getElementById("debug_name").value;
+                
+                if (!nameVal) {
+                    console.error("Поле пусте!");
+                    alert("Поле пусте!");
                     return;
                 }
 
-                let data = {
-                    action: "generate_receipt", // Цей action має бути в DocumentManager Python
-                    name: name,
-                    amount: amount,
-                    // Додамо заглушки, щоб Word не ламався, якщо там є інші поля
-                    lender: "Тест Кредитор",
-                    date: "2026-01-01" 
+                const data = {
+                    action: "generate_receipt",
+                    name: nameVal,
+                    // Заглушки для інших полів, щоб Python не лаявся
+                    lender: "Debug Lender",
+                    amount: "100",
+                    date: "2026-01-01"
                 };
 
-                // ВІДПРАВКА
+                console.log("Відправляю дані:", data);
                 tg.sendData(JSON.stringify(data));
-                
-            } catch (e) {
-                // Якщо помилка - пишемо її на екрані
-                log.innerText = "Error: " + e.message;
-                alert("Error: " + e.message);
+
+            } catch (err) {
+                console.error("КРИТИЧНА ПОМИЛКА:", err);
+                alert("ERR: " + err.message);
             }
         }
     </script>
