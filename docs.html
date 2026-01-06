@@ -3,87 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Генератор документів</title>
+    <title>Шаблони документів</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: sans-serif; background: var(--tg-theme-bg-color, #fff); color: var(--tg-theme-text-color, #000); padding: 20px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; background: var(--tg-theme-secondary-bg-color, #f0f0f0); color: var(--tg-theme-text-color, #000); box-sizing: border-box;}
-        button { width: 100%; padding: 15px; background: var(--tg-theme-button-color, #3390ec); color: var(--tg-theme-button-text-color, #fff); border: none; border-radius: 8px; cursor: pointer; margin-top: 10px; font-size: 16px;}
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: var(--tg-theme-bg-color, #fff); color: var(--tg-theme-text-color, #000); padding: 20px; }
         
-        /* Клас для приховування блоків */
-        .hidden { display: none; }
+        /* Стилі для меню карток */
+        .menu-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        .menu-item {
+            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            padding: 20px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: space-between;
+            cursor: pointer; transition: 0.2s;
+            border: 1px solid transparent;
+        }
+        .menu-item:active { opacity: 0.7; }
+        .icon { font-size: 24px; margin-right: 15px; }
+        .title { font-weight: 600; font-size: 16px; }
+
+        /* Стилі форми */
+        .form-container { display: none; } /* Сховано за замовчуванням */
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 500; font-size: 14px; color: var(--tg-theme-hint-color, #888); }
+        input, textarea { width: 100%; padding: 12px; border: 1px solid var(--tg-theme-hint-color, #ccc); border-radius: 8px; background: var(--tg-theme-bg-color, #fff); color: var(--tg-theme-text-color, #000); box-sizing: border-box; outline: none;}
+        input:focus { border-color: var(--tg-theme-button-color, #3390ec); }
+        
+        .main-btn { width: 100%; padding: 15px; background: var(--tg-theme-button-color, #3390ec); color: var(--tg-theme-button-text-color, #fff); border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 20px; }
+
+        .hidden { display: none !important; }
+        h2 { margin-top: 0; }
     </style>
 </head>
 <body>
 
-    <h3 id="form-title">📄 Заповнення документу</h3>
-
-    <div id="block-receipt" class="hidden">
-        <div class="form-group">
-            <label>👤 ПІБ Боржника:</label>
-            <input type="text" id="r_name" placeholder="Іванов Іван">
-        </div>
-        <div class="form-group">
-            <label>👤 ПІБ Кредитора:</label>
-            <input type="text" id="r_lender" placeholder="Петров Петро">
-        </div>
-        <div class="form-group">
-            <label>💰 Сума (грн):</label>
-            <input type="number" id="r_amount">
-        </div>
-        <div class="form-group">
-            <label>📅 Дата повернення:</label>
-            <input type="date" id="r_date">
-        </div>
+    <div id="screen-menu">
+        <h2>📂 Оберіть документ</h2>
+        <div class="menu-grid">
+            <div class="menu-item" onclick="openForm('receipt')">
+                <div><span class="icon">📄</span> <span class="title">Розписка про борг</span></div>
+                <span>›</span>
+            </div>
+            <div class="menu-item" onclick="openForm('contract')">
+                <div><span class="icon">🤝</span> <span class="title">Договір послуг</span></div>
+                <span>›</span>
+            </div>
+            </div>
     </div>
 
-    <div id="block-contract" class="hidden">
-        <div class="form-group">
-            <label>🏢 Замовник (ПІБ/Компанія):</label>
-            <input type="text" id="c_client" placeholder="ТОВ Роги та Копита">
-        </div>
-        <div class="form-group">
-            <label>👨‍💻 Виконавець (ПІБ):</label>
-            <input type="text" id="c_contractor" placeholder="ФОП Іванов">
-        </div>
-        <div class="form-group">
-            <label>🛠 Опис послуги:</label>
-            <textarea id="c_service" rows="3" placeholder="Розробка Telegram бота"></textarea>
-        </div>
-        <div class="form-group">
-            <label>💵 Вартість робіт (грн):</label>
-            <input type="number" id="c_price">
-        </div>
-    </div>
+    <div id="screen-form" class="form-container">
+        <h3 id="form-title">Заповнення</h3>
 
-    <button onclick="sendData()">Створити документ</button>
+        <div id="fields-receipt" class="hidden">
+            <div class="form-group"><label>Я (Боржник):</label><input type="text" id="r_name" placeholder="ПІБ"></div>
+            <div class="form-group"><label>Взяв у (Кредитор):</label><input type="text" id="r_lender" placeholder="ПІБ"></div>
+            <div class="form-group"><label>Сума (грн):</label><input type="number" id="r_amount" placeholder="1000"></div>
+            <div class="form-group"><label>Дата повернення:</label><input type="date" id="r_date"></div>
+        </div>
+
+        <div id="fields-contract" class="hidden">
+            <div class="form-group"><label>Замовник:</label><input type="text" id="c_client" placeholder="Компанія або ПІБ"></div>
+            <div class="form-group"><label>Виконавець:</label><input type="text" id="c_contractor" placeholder="Ваше ПІБ"></div>
+            <div class="form-group"><label>Послуга:</label><textarea id="c_service" rows="3" placeholder="Опис послуг"></textarea></div>
+            <div class="form-group"><label>Ціна (грн):</label><input type="number" id="c_price"></div>
+        </div>
+
+        <button class="main-btn" onclick="sendData()">Створити документ</button>
+    </div>
 
     <script>
         let tg = window.Telegram.WebApp;
         tg.expand();
+        
+        let currentDocType = null;
 
-        // 1. Визначаємо, який документ ми відкрили (читаємо URL ?type=...)
-        const urlParams = new URLSearchParams(window.location.search);
-        const docType = urlParams.get('type'); // 'receipt' або 'contract'
+        // Функція відкриття форми
+        function openForm(type) {
+            currentDocType = type;
 
-        // 2. Показуємо потрібну форму
-        if (docType === 'receipt') {
-            document.getElementById('block-receipt').classList.remove('hidden');
-            document.getElementById('form-title').innerText = "📄 Створення розписки";
-        } else if (docType === 'contract') {
-            document.getElementById('block-contract').classList.remove('hidden');
-            document.getElementById('form-title').innerText = "📝 Створення договору";
-        } else {
-            document.body.innerHTML = "<h3>❌ Помилка: невідомий тип документу</h3>";
+            // 1. Ховаємо меню, показуємо форму
+            document.getElementById('screen-menu').classList.add('hidden');
+            document.getElementById('screen-form').style.display = 'block';
+
+            // 2. Показуємо потрібні поля
+            document.querySelectorAll('[id^="fields-"]').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`fields-${type}`).classList.remove('hidden');
+
+            // 3. Змінюємо заголовок
+            const titles = { 'receipt': '📄 Розписка', 'contract': '🤝 Договір' };
+            document.getElementById('form-title').innerText = titles[type];
+
+            // 4. Вмикаємо нативну кнопку "Назад"
+            tg.BackButton.show();
         }
 
-        // 3. Відправка даних
+        // Обробка натискання кнопки "Назад" у Телеграм
+        tg.BackButton.onClick(function() {
+            // Ховаємо форму, показуємо меню
+            document.getElementById('screen-form').style.display = 'none';
+            document.getElementById('screen-menu').classList.remove('hidden');
+            tg.BackButton.hide();
+            currentDocType = null;
+        });
+
         function sendData() {
             let data = {};
 
-            if (docType === 'receipt') {
+            if (currentDocType === 'receipt') {
                 data = {
                     action: "generate_receipt",
                     name: document.getElementById('r_name').value,
@@ -91,7 +116,7 @@
                     amount: document.getElementById('r_amount').value,
                     date: document.getElementById('r_date').value
                 };
-            } else if (docType === 'contract') {
+            } else if (currentDocType === 'contract') {
                 data = {
                     action: "generate_contract",
                     client: document.getElementById('c_client').value,
@@ -101,9 +126,8 @@
                 };
             }
 
-            // Валідація (проста перевірка на порожнечу)
             if (Object.values(data).some(x => x === "")) {
-                tg.showPopup({message: "Заповніть всі поля!"});
+                tg.showPopup({message: "Будь ласка, заповніть всі поля!"});
                 return;
             }
 
