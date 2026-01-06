@@ -529,7 +529,7 @@
             
             document.getElementById("courtDesc").innerText = desc;
             document.getElementById("resCourt").style.display = "block";
-            sendBtn({type:"court_fee", fee: isFree ? "0.00" : fee.toFixed(2), desc: typeText});
+            sendBtn({type:"tool_court_fee", fee: isFree ? "0.00" : fee.toFixed(2), desc: typeText});
         }
 
         // --- 2. DEBT ---
@@ -550,7 +550,7 @@
             document.getElementById("outInf").innerText = inf.toFixed(2); document.getElementById("outPeny").innerText = peny.toFixed(2);
             document.getElementById("debtTotal").innerText = total.toFixed(2) + " грн";
             document.getElementById("resDebt").style.display = "block";
-            sendBtn({type:"debt_calc", total:total.toFixed(2), details: `Тіло: ${s.toFixed(2)}\n3%: ${p3.toFixed(2)}\nІнфл: ${inf.toFixed(2)}\nПеня: ${peny.toFixed(2)}`});
+            sendBtn({type:"tool_debt_calc", total:total.toFixed(2), details: `Тіло: ${s.toFixed(2)}\n3%: ${p3.toFixed(2)}\nІнфл: ${inf.toFixed(2)}\nПеня: ${peny.toFixed(2)}`});
         }
 
         // --- 3. VACATION ---
@@ -583,7 +583,7 @@
             let ret = new Date(current); ret.setDate(ret.getDate()+1);
             while(ret.getDay()===0 || ret.getDay()===6) ret.setDate(ret.getDate()+1);
             document.getElementById("vacReturn").innerText = ret.toLocaleDateString('uk-UA');
-            sendBtn({type:"vacation_calc", returnDate: document.getElementById("vacReturn").innerText});
+            sendBtn({type:"tool_vacation_calc", returnDate: document.getElementById("vacReturn").innerText});
         }
 
         // --- 6. ALIMONY ---
@@ -637,7 +637,7 @@
             // 4. Відправка боту (кнопка внизу)
             if (income > 0 || totalKids > 0) {
                 sendBtn({
-                    type: "alim_calc",
+                    type: "tool_alim_calc",
                     total: shareSum.toFixed(2),
                     min: totalMin.toFixed(2),
                     kids: totalKids,
@@ -690,4 +690,5 @@
         loadStandards(); // ЗАПУСК
     </script>
 </body>
+
 </html>
