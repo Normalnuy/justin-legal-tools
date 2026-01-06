@@ -75,7 +75,7 @@
             
             if (currentDocType === 'receipt') {
                 data = {
-                    action: "generate_receipt",
+                    action: "doc_receipt",
                     name: document.getElementById('r_name').value,
                     lender: document.getElementById('r_lender').value,
                     amount: document.getElementById('r_amount').value,
@@ -83,7 +83,7 @@
                 };
             } else if (currentDocType === 'contract') {
                 data = {
-                    action: "generate_contract",
+                    action: "doc_contract",
                     client: document.getElementById('c_client').value,
                     contractor: document.getElementById('c_contractor').value,
                     service_desc: document.getElementById('c_service').value,
