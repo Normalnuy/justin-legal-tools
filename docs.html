@@ -106,32 +106,69 @@
         });
 
         function sendData() {
-            let data = {};
+            try {
+                // 1. Перевірка - чи взагалі працює кнопка
+                // Якщо цього вікна не буде - значить HTML зламаний
+                // alert("Починаю збір даних..."); 
 
-            if (currentDocType === 'receipt') {
-                data = {
-                    action: "generate_receipt",
-                    name: document.getElementById('r_name').value,
-                    lender: document.getElementById('r_lender').value,
-                    amount: document.getElementById('r_amount').value,
-                    date: document.getElementById('r_date').value
-                };
-            } else if (currentDocType === 'contract') {
-                data = {
-                    action: "generate_contract",
-                    client: document.getElementById('c_client').value,
-                    contractor: document.getElementById('c_contractor').value,
-                    service_desc: document.getElementById('c_service').value,
-                    price: document.getElementById('c_price').value
-                };
+                let data = {};
+                let isValid = true;
+
+                if (currentDocType === 'receipt') {
+                    // Перевіряємо кожен елемент окремо
+                    let elName = document.getElementById('r_name');
+                    let elLender = document.getElementById('r_lender');
+                    let elAmount = document.getElementById('r_amount');
+                    let elDate = document.getElementById('r_date');
+
+                    // Якщо якогось ID немає в HTML - скрипт впаде тут, і ми побачимо помилку
+                    if (!elName || !elLender || !elAmount || !elDate) {
+                        throw new Error("Не знайдено одне з полів введення (Receipt)!");
+                    }
+
+                    data = {
+                        action: "generate_receipt",
+                        name: elName.value,
+                        lender: elLender.value,
+                        amount: elAmount.value,
+                        date: elDate.value
+                    };
+
+                } else if (currentDocType === 'contract') {
+                    let elClient = document.getElementById('c_client');
+                    let elContractor = document.getElementById('c_contractor');
+                    let elService = document.getElementById('c_service');
+                    let elPrice = document.getElementById('c_price');
+
+                    if (!elClient || !elContractor || !elService || !elPrice) {
+                        throw new Error("Не знайдено одне з полів введення (Contract)!");
+                    }
+
+                    data = {
+                        action: "generate_contract",
+                        client: elClient.value,
+                        contractor: elContractor.value,
+                        service_desc: elService.value,
+                        price: elPrice.value
+                    };
+                } else {
+                    throw new Error("Не обрано тип документу!");
+                }
+
+                // Перевірка на пусті поля
+                if (Object.values(data).some(x => x === "")) {
+                    tg.showPopup({message: "Заповніть всі поля!"});
+                    return;
+                }
+
+                // 2. Якщо дійшли сюди - JS працює, пробуємо відправити
+                // alert("Відправляю: " + JSON.stringify(data));
+                tg.sendData(JSON.stringify(data));
+                
+            } catch (error) {
+                // 3. ОСЬ ТУТ ми побачимо реальну причину
+                alert("🔴 ПОМИЛКА JS: " + error.message);
             }
-
-            if (Object.values(data).some(x => x === "")) {
-                tg.showPopup({message: "Будь ласка, заповніть всі поля!"});
-                return;
-            }
-
-            tg.sendData(JSON.stringify(data));
         }
     </script>
 </body>
