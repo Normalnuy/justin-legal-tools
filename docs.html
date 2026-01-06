@@ -3,68 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Debug Mode</title>
+    <title>Final Test</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     
     <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
     <script>eruda.init();</script>
 
     <style>
-        body { font-family: sans-serif; padding: 20px; background: #f0f0f0; }
-        .btn { 
-            display: block; width: 100%; padding: 20px; 
-            background: #007bff; color: white; 
-            font-size: 20px; border: none; border-radius: 10px; margin-top: 20px;
+        body { padding: 20px; font-family: sans-serif; text-align: center; }
+        button {
+            width: 100%; height: 80px;
+            background: #28a745; color: white;
+            font-size: 24px; border: none; border-radius: 12px;
+            margin-top: 50px; cursor: pointer;
         }
-        input { width: 100%; padding: 10px; margin-top: 5px; box-sizing: border-box; }
     </style>
 </head>
 <body>
 
-    <h2>🛠 Режим відладки</h2>
-    <p>Внизу екрану має з'явитися іконка ⚙️</p>
+    <h1>🚨 ТЕСТ ЗВ'ЯЗКУ 🚨</h1>
+    <p>Натисни зелену кнопку. Якщо вікно закриється — перемога.</p>
 
-    <label>Тестове поле:</label>
-    <input type="text" id="debug_name" value="User Test">
-
-    <button class="btn" onclick="tryToSend()">🔴 НАТИСНИ МЕНЕ</button>
+    <button id="sendBtn">ВІДПРАВИТИ ДАНІ</button>
 
     <script>
-        // Ініціалізація
+        // 1. Ініціалізація
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        console.log("Скрипт завантажено!"); // Це буде видно в Eruda
+        console.log("✅ Скрипт запущено!");
 
-        function tryToSend() {
-            console.log("Кнопку натиснуто!"); 
-
+        // 2. Додаємо обробку кліку через JS (надійніше)
+        document.getElementById('sendBtn').addEventListener('click', function() {
+            console.log("🖱 Кнопку натиснуто!");
+            
             try {
-                const nameVal = document.getElementById("debug_name").value;
-                
-                if (!nameVal) {
-                    console.error("Поле пусте!");
-                    alert("Поле пусте!");
-                    return;
-                }
-
+                // Хардкод даних (ніяких input, щоб виключити помилки з ID)
                 const data = {
                     action: "generate_receipt",
-                    name: nameVal,
-                    // Заглушки для інших полів, щоб Python не лаявся
-                    lender: "Debug Lender",
-                    amount: "100",
+                    name: "Test User",
+                    lender: "Test Lender",
+                    amount: "500",
                     date: "2026-01-01"
                 };
 
-                console.log("Відправляю дані:", data);
+                console.log("📤 Відправляю:", data);
+                alert("Зараз вікно має закритися...");
+                
+                // ВІДПРАВКА
                 tg.sendData(JSON.stringify(data));
-
-            } catch (err) {
-                console.error("КРИТИЧНА ПОМИЛКА:", err);
-                alert("ERR: " + err.message);
+                
+            } catch (e) {
+                console.error("❌ Помилка:", e);
+                alert("Помилка: " + e.message);
             }
-        }
+        });
     </script>
 </body>
 </html>
