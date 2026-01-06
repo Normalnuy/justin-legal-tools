@@ -3,171 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Шаблони документів</title>
+    <title>Test Form</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: var(--tg-theme-bg-color, #fff); color: var(--tg-theme-text-color, #000); padding: 20px; }
-        
-        /* Стилі для меню карток */
-        .menu-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
-        .menu-item {
-            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
-            padding: 20px; border-radius: 12px;
-            display: flex; align-items: center; justify-content: space-between;
-            cursor: pointer; transition: 0.2s;
-            border: 1px solid transparent;
-        }
-        .menu-item:active { opacity: 0.7; }
-        .icon { font-size: 24px; margin-right: 15px; }
-        .title { font-weight: 600; font-size: 16px; }
-
-        /* Стилі форми */
-        .form-container { display: none; } /* Сховано за замовчуванням */
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: 500; font-size: 14px; color: var(--tg-theme-hint-color, #888); }
-        input, textarea { width: 100%; padding: 12px; border: 1px solid var(--tg-theme-hint-color, #ccc); border-radius: 8px; background: var(--tg-theme-bg-color, #fff); color: var(--tg-theme-text-color, #000); box-sizing: border-box; outline: none;}
-        input:focus { border-color: var(--tg-theme-button-color, #3390ec); }
-        
-        .main-btn { width: 100%; padding: 15px; background: var(--tg-theme-button-color, #3390ec); color: var(--tg-theme-button-text-color, #fff); border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 20px; }
-
-        .hidden { display: none !important; }
-        h2 { margin-top: 0; }
+        body { font-family: sans-serif; padding: 20px; }
+        input { width: 100%; padding: 10px; margin-bottom: 10px; display: block; }
+        button { width: 100%; padding: 15px; background: blue; color: white; border: none; font-size: 18px; }
     </style>
 </head>
 <body>
 
-    <div id="screen-menu">
-        <h2>📂 Оберіть документ</h2>
-        <div class="menu-grid">
-            <div class="menu-item" onclick="openForm('receipt')">
-                <div><span class="icon">📄</span> <span class="title">Розписка про борг</span></div>
-                <span>›</span>
-            </div>
-            <div class="menu-item" onclick="openForm('contract')">
-                <div><span class="icon">🤝</span> <span class="title">Договір послуг</span></div>
-                <span>›</span>
-            </div>
-            </div>
-    </div>
+    <h2>Тестова форма</h2>
+    
+    <label>ПІБ:</label>
+    <input type="text" id="test_name" value="Тестовий юзер">
 
-    <div id="screen-form" class="form-container">
-        <h3 id="form-title">Заповнення</h3>
+    <label>Сума:</label>
+    <input type="number" id="test_amount" value="100">
 
-        <div id="fields-receipt" class="hidden">
-            <div class="form-group"><label>Я (Боржник):</label><input type="text" id="r_name" placeholder="ПІБ"></div>
-            <div class="form-group"><label>Взяв у (Кредитор):</label><input type="text" id="r_lender" placeholder="ПІБ"></div>
-            <div class="form-group"><label>Сума (грн):</label><input type="number" id="r_amount" placeholder="1000"></div>
-            <div class="form-group"><label>Дата повернення:</label><input type="date" id="r_date"></div>
-        </div>
-
-        <div id="fields-contract" class="hidden">
-            <div class="form-group"><label>Замовник:</label><input type="text" id="c_client" placeholder="Компанія або ПІБ"></div>
-            <div class="form-group"><label>Виконавець:</label><input type="text" id="c_contractor" placeholder="Ваше ПІБ"></div>
-            <div class="form-group"><label>Послуга:</label><textarea id="c_service" rows="3" placeholder="Опис послуг"></textarea></div>
-            <div class="form-group"><label>Ціна (грн):</label><input type="number" id="c_price"></div>
-        </div>
-
-        <button class="main-btn" onclick="sendData()">Створити документ</button>
-    </div>
+    <button onclick="sendData()">ВІДПРАВИТИ</button>
+    <p id="log" style="color: red;"></p>
 
     <script>
+        // 2. Ініціалізація
         let tg = window.Telegram.WebApp;
         tg.expand();
-        
-        let currentDocType = null;
-
-        // Функція відкриття форми
-        function openForm(type) {
-            currentDocType = type;
-
-            // 1. Ховаємо меню, показуємо форму
-            document.getElementById('screen-menu').classList.add('hidden');
-            document.getElementById('screen-form').style.display = 'block';
-
-            // 2. Показуємо потрібні поля
-            document.querySelectorAll('[id^="fields-"]').forEach(el => el.classList.add('hidden'));
-            document.getElementById(`fields-${type}`).classList.remove('hidden');
-
-            // 3. Змінюємо заголовок
-            const titles = { 'receipt': '📄 Розписка', 'contract': '🤝 Договір' };
-            document.getElementById('form-title').innerText = titles[type];
-
-            // 4. Вмикаємо нативну кнопку "Назад"
-            tg.BackButton.show();
-        }
-
-        // Обробка натискання кнопки "Назад" у Телеграм
-        tg.BackButton.onClick(function() {
-            // Ховаємо форму, показуємо меню
-            document.getElementById('screen-form').style.display = 'none';
-            document.getElementById('screen-menu').classList.remove('hidden');
-            tg.BackButton.hide();
-            currentDocType = null;
-        });
 
         function sendData() {
+            // Виводимо помилки прямо на екран (для відладки)
+            let log = document.getElementById('log');
+            
             try {
-                // 1. Перевірка - чи взагалі працює кнопка
-                // Якщо цього вікна не буде - значить HTML зламаний
-                // alert("Починаю збір даних..."); 
+                // Збираємо дані
+                let name = document.getElementById('test_name').value;
+                let amount = document.getElementById('test_amount').value;
 
-                let data = {};
-                let isValid = true;
-
-                if (currentDocType === 'receipt') {
-                    // Перевіряємо кожен елемент окремо
-                    let elName = document.getElementById('r_name');
-                    let elLender = document.getElementById('r_lender');
-                    let elAmount = document.getElementById('r_amount');
-                    let elDate = document.getElementById('r_date');
-
-                    // Якщо якогось ID немає в HTML - скрипт впаде тут, і ми побачимо помилку
-                    if (!elName || !elLender || !elAmount || !elDate) {
-                        throw new Error("Не знайдено одне з полів введення (Receipt)!");
-                    }
-
-                    data = {
-                        action: "generate_receipt",
-                        name: elName.value,
-                        lender: elLender.value,
-                        amount: elAmount.value,
-                        date: elDate.value
-                    };
-
-                } else if (currentDocType === 'contract') {
-                    let elClient = document.getElementById('c_client');
-                    let elContractor = document.getElementById('c_contractor');
-                    let elService = document.getElementById('c_service');
-                    let elPrice = document.getElementById('c_price');
-
-                    if (!elClient || !elContractor || !elService || !elPrice) {
-                        throw new Error("Не знайдено одне з полів введення (Contract)!");
-                    }
-
-                    data = {
-                        action: "generate_contract",
-                        client: elClient.value,
-                        contractor: elContractor.value,
-                        service_desc: elService.value,
-                        price: elPrice.value
-                    };
-                } else {
-                    throw new Error("Не обрано тип документу!");
-                }
-
-                // Перевірка на пусті поля
-                if (Object.values(data).some(x => x === "")) {
-                    tg.showPopup({message: "Заповніть всі поля!"});
+                if(!name || !amount) {
+                    alert("Заповніть поля!");
                     return;
                 }
 
-                // 2. Якщо дійшли сюди - JS працює, пробуємо відправити
-                // alert("Відправляю: " + JSON.stringify(data));
+                let data = {
+                    action: "generate_receipt", // Цей action має бути в DocumentManager Python
+                    name: name,
+                    amount: amount,
+                    // Додамо заглушки, щоб Word не ламався, якщо там є інші поля
+                    lender: "Тест Кредитор",
+                    date: "2026-01-01" 
+                };
+
+                // ВІДПРАВКА
                 tg.sendData(JSON.stringify(data));
                 
-            } catch (error) {
-                // 3. ОСЬ ТУТ ми побачимо реальну причину
-                alert("🔴 ПОМИЛКА JS: " + error.message);
+            } catch (e) {
+                // Якщо помилка - пишемо її на екрані
+                log.innerText = "Error: " + e.message;
+                alert("Error: " + e.message);
             }
         }
     </script>
