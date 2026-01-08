@@ -66,7 +66,7 @@
             border-radius: 8px; font-weight: 600; font-size: 14px;
         }
 
-        /* UI ELEMENTS (Твій попередній код) */
+        /* UI ELEMENTS */
         h2 { margin: 0 0 12px 0; font-size: 19px; font-weight: 700; }
         label { font-size: 13px; color: var(--hint-color); margin-bottom: 6px; display: block; font-weight: 500; }
         select, input {
@@ -137,17 +137,75 @@
 <body>
 
     <div class="tabs">
-        <div class="tab active" onclick="switchTab('court', this)">🏛 Збір</div>
+        <div class="tab active" onclick="switchTab('info', this)">ℹ️ Інфо</div>
+        <div class="tab" onclick="switchTab('court', this)">🏛 Збір</div>
         <div class="tab" onclick="switchTab('debt', this)">📉 Борги</div>
         <div class="tab" onclick="switchTab('vacation', this)">🏖 Відпустка</div>
         <div class="tab" onclick="switchTab('curr', this)">💲 Валюта</div>
-        <div class="tab" onclick="switchTab('info', this)">ℹ️ Інфо</div>
         <div class="tab" onclick="switchTab('dates', this)">📅 Строки</div>
     </div>
     
     <div id="loadStatus">Завантаження стандартів...</div>
 
-    <div id="tab-court" class="content active">
+    <div id="tab-info" class="content active">
+        <h2 id="stdYear">📊 Стандарти</h2>
+        <a id="linkBudget" href="#" target="_blank" class="source-link" style="display:none">📜 Закон про Бюджет 🔗</a>
+        <div class="currency-card">
+            <div>💰 Мін. зарплата (МЗП)</div><div class="rate-val" id="valMinWage">...</div>
+        </div>
+        <div class="currency-card">
+            <div>🧑 Прожитковий (Працездатні)</div><div class="rate-val" id="valPmAble">...</div>
+        </div>
+        <details style="margin-bottom:15px; background:var(--secondary-bg); padding:10px; border-radius:12px;">
+            <summary style="font-weight:500; cursor:pointer;">Інші прожиткові мінімуми</summary>
+            <div style="margin-top:10px; font-size:14px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                    <span>👶 Діти до 6 років:</span> <b id="valPm6">...</b>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                    <span>🧒 Діти 6-18 років:</span> <b id="valPm18">...</b>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <span>👴 Непрацездатні:</span> <b id="valPmDisable">...</b>
+                </div>
+            </div>
+        </details>
+        <h2>💼 ФОП (Спрощена система)</h2>
+        <div class="result-box" style="display:block; text-align:left; margin-top:0;">
+            <div style="font-size:12px; color:var(--hint-color); margin-bottom:10px; text-align:center">Ставки податків (місяць)</div>
+            <div class="detail-row"><span>ЄСВ (22%):</span> <span id="taxESV" style="font-weight:bold">...</span></div>
+            <div class="detail-row"><span>ЄП (1 група, 10% ПМ):</span> <span id="taxEP1" style="font-weight:bold">...</span></div>
+            <div class="detail-row"><span>ЄП (2 група, 20% МЗП):</span> <span id="taxEP2" style="font-weight:bold">...</span></div>
+        </div>
+        <div class="result-box" style="display:block; text-align:left;">
+            <div style="font-size:12px; color:var(--hint-color); margin-bottom:10px; text-align:center">Річні ліміти доходу</div>
+            <div class="detail-row"><span>1 група (167 МЗП):</span> <span id="limFop1" style="font-weight:bold">...</span></div>
+            <div class="detail-row"><span>2 група (834 МЗП):</span> <span id="limFop2" style="font-weight:bold">...</span></div>
+            <div class="detail-row"><span>3 група (1167 МЗП):</span> <span id="limFop3" style="font-weight:bold">...</span></div>
+        </div>
+        <h2 style="margin-top:20px">👶 Аліменти</h2>
+        <label>Дохід платника (грн)</label>
+        <input type="number" id="alimIncome" placeholder="15000" inputmode="decimal" oninput="calcAlim()">
+        <div class="row">
+            <div class="col"><label>Діти до 6 років</label><input type="number" id="cntChild6" placeholder="0" inputmode="numeric" oninput="calcAlim()"></div>
+            <div class="col"><label>Діти 6-18 років</label><input type="number" id="cntChild18" placeholder="0" inputmode="numeric" oninput="calcAlim()"></div>
+        </div>
+        <div class="result-box" id="resAlim" style="display:block; text-align:left">
+            <div class="detail-row"><span>Частка від доходу:</span> <span id="alimShare" style="font-weight:bold">0.00 грн</span></div>
+            <div class="detail-row"><span>Мінімальний гарантований*:</span> <span id="alimMin" style="font-weight:bold; color:var(--hint-color)">0.00 грн</span></div>
+            <div id="alimAlert" style="font-size:12px; color:red; margin-top:5px; display:none">⚠️ Сума менша за обов'язковий мінімум!</div>
+            <div style="font-size:11px; color:var(--hint-color); margin-top:5px">*Сума 50% прожиткових мінімумів для дітей відповідного віку.</div>
+        </div>
+        <h2 style="margin-top:25px">📚 Нормативна база</h2>
+        <div class="legal-list">
+            <a id="linkCourt" href="#" target="_blank" class="legal-item" style="display:none"><span class="legal-icon">⚖️</span> <span class="legal-text" id="txtCourt">Закон про судовий збір</span></a>
+            <a id="linkCC" href="#" target="_blank" class="legal-item" style="display:none"><span class="legal-icon">📜</span> <span class="legal-text" id="txtCC">ЦК України (ст. 625)</span></a>
+            <a id="linkFamily" href="#" target="_blank" class="legal-item" style="display:none"><span class="legal-icon">👨‍👩‍👧</span> <span class="legal-text" id="txtFamily">Сімейний кодекс (Аліменти)</span></a>
+            <a id="linkPod" href="#" target="_blank" class="legal-item" style="display:none"><span class="legal-icon">💰</span> <span class="legal-text" id="txtPod">Податковий кодекс (Ліміти ФОП)</span></a>
+        </div>
+    </div>
+
+    <div id="tab-court" class="content">
         <label>Категорія вашої справи:</label>
         <select id="claimType" onchange="calcCourt()">
             <optgroup label="💵 Борги, Гроші, Майно">
@@ -273,64 +331,6 @@
         </div>
     </div>
 
-    <div id="tab-info" class="content">
-        <h2 id="stdYear">📊 Стандарти</h2>
-        <a id="linkBudget" href="#" target="_blank" class="source-link" style="display:none">📜 Закон про Бюджет 🔗</a>
-        <div class="currency-card">
-            <div>💰 Мін. зарплата (МЗП)</div><div class="rate-val" id="valMinWage">...</div>
-        </div>
-        <div class="currency-card">
-            <div>🧑 Прожитковий (Працездатні)</div><div class="rate-val" id="valPmAble">...</div>
-        </div>
-        <details style="margin-bottom:15px; background:var(--secondary-bg); padding:10px; border-radius:12px;">
-            <summary style="font-weight:500; cursor:pointer;">Інші прожиткові мінімуми</summary>
-            <div style="margin-top:10px; font-size:14px;">
-                <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                    <span>👶 Діти до 6 років:</span> <b id="valPm6">...</b>
-                </div>
-                <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                    <span>🧒 Діти 6-18 років:</span> <b id="valPm18">...</b>
-                </div>
-                <div style="display:flex; justify-content:space-between;">
-                    <span>👴 Непрацездатні:</span> <b id="valPmDisable">...</b>
-                </div>
-            </div>
-        </details>
-        <h2>💼 ФОП (Спрощена система)</h2>
-        <div class="result-box" style="display:block; text-align:left; margin-top:0;">
-            <div style="font-size:12px; color:var(--hint-color); margin-bottom:10px; text-align:center">Ставки податків (місяць)</div>
-            <div class="detail-row"><span>ЄСВ (22%):</span> <span id="taxESV" style="font-weight:bold">...</span></div>
-            <div class="detail-row"><span>ЄП (1 група, 10% ПМ):</span> <span id="taxEP1" style="font-weight:bold">...</span></div>
-            <div class="detail-row"><span>ЄП (2 група, 20% МЗП):</span> <span id="taxEP2" style="font-weight:bold">...</span></div>
-        </div>
-        <div class="result-box" style="display:block; text-align:left;">
-            <div style="font-size:12px; color:var(--hint-color); margin-bottom:10px; text-align:center">Річні ліміти доходу</div>
-            <div class="detail-row"><span>1 група (167 МЗП):</span> <span id="limFop1" style="font-weight:bold">...</span></div>
-            <div class="detail-row"><span>2 група (834 МЗП):</span> <span id="limFop2" style="font-weight:bold">...</span></div>
-            <div class="detail-row"><span>3 група (1167 МЗП):</span> <span id="limFop3" style="font-weight:bold">...</span></div>
-        </div>
-        <h2 style="margin-top:20px">👶 Аліменти</h2>
-        <label>Дохід платника (грн)</label>
-        <input type="number" id="alimIncome" placeholder="15000" inputmode="decimal" oninput="calcAlim()">
-        <div class="row">
-            <div class="col"><label>Діти до 6 років</label><input type="number" id="cntChild6" placeholder="0" inputmode="numeric" oninput="calcAlim()"></div>
-            <div class="col"><label>Діти 6-18 років</label><input type="number" id="cntChild18" placeholder="0" inputmode="numeric" oninput="calcAlim()"></div>
-        </div>
-        <div class="result-box" id="resAlim" style="display:block; text-align:left">
-            <div class="detail-row"><span>Частка від доходу:</span> <span id="alimShare" style="font-weight:bold">0.00 грн</span></div>
-            <div class="detail-row"><span>Мінімальний гарантований*:</span> <span id="alimMin" style="font-weight:bold; color:var(--hint-color)">0.00 грн</span></div>
-            <div id="alimAlert" style="font-size:12px; color:red; margin-top:5px; display:none">⚠️ Сума менша за обов'язковий мінімум!</div>
-            <div style="font-size:11px; color:var(--hint-color); margin-top:5px">*Сума 50% прожиткових мінімумів для дітей відповідного віку.</div>
-        </div>
-        <h2 style="margin-top:25px">📚 Нормативна база</h2>
-        <div class="legal-list">
-            <a id="linkCourt" href="#" target="_blank" class="legal-item" style="display:none"><span class="legal-icon">⚖️</span> <span class="legal-text" id="txtCourt">Закон про судовий збір</span></a>
-            <a id="linkCC" href="#" target="_blank" class="legal-item" style="display:none"><span class="legal-icon">📜</span> <span class="legal-text" id="txtCC">ЦК України (ст. 625)</span></a>
-            <a id="linkFamily" href="#" target="_blank" class="legal-item" style="display:none"><span class="legal-icon">👨‍👩‍👧</span> <span class="legal-text" id="txtFamily">Сімейний кодекс (Аліменти)</span></a>
-            <a id="linkPod" href="#" target="_blank" class="legal-item" style="display:none"><span class="legal-icon">💰</span> <span class="legal-text" id="txtPod">Податковий кодекс (Ліміти ФОП)</span></a>
-        </div>
-    </div>
-
     <div id="tab-dates" class="content">
         <label>Початкова дата</label>
         <input type="date" id="dateCalc1">
@@ -368,12 +368,12 @@
         const REQ_NAMES = { 1: "Lite", 2: "Pro" };
 
         const TAB_REQ = {
+            'info': 0,     // Free (Перша вкладка)
             'court': 1,    // Lite+
             'debt': 2,     // Pro+
             'vacation': 2, // Pro+
             'curr': 2,     // Pro+
-            'dates': 2,    // Pro+
-            'info': 0      // Free (Всі)
+            'dates': 2     // Pro+
         };
 
         function checkAccess(tabId, contentEl) {
@@ -412,12 +412,8 @@
             if(id === 'curr') fetchRates();
         }
 
-        // --- ДИНАМІЧНІ ЗМІННІ (БЕЗ ЗМІН) ---
+        // --- ДИНАМІЧНІ ЗМІННІ ---
         let STD = { year: 2026, min_wage: 8000, pm_able: 3200, pm_child_6: 2563, pm_child_18: 3196, pm_disable: 2361 };
-        
-        // Решта функцій (calcCourt, calcDebt, loadStandards...) ТУТ ЗАЛИШАЮТЬСЯ ЯК БУЛИ
-        // Щоб не дублювати 300 рядків коду, скопіюй їх зі свого попереднього файлу index.html.
-        // Я додав лише switchTab, checkAccess та стилі.
         
         async function loadStandards() {
             try {
@@ -427,7 +423,8 @@
                     STD = data; 
                     document.getElementById("loadStatus").innerText = `Стандарти на ${STD.year} рік завантажено ✅`;
                     updateInfoTab(data);
-                    // Перерахунок активної вкладки
+                    
+                    // Перерахунок активної вкладки, якщо дані завантажились пізніше
                     let activeTab = document.querySelector('.content.active').id;
                     if(activeTab === 'tab-court') calcCourt();
                     if(activeTab === 'tab-info') calcAlim();
@@ -565,9 +562,9 @@
         
         loadStandards();
         
-        // Перевіряємо першу вкладку на старті
+        // Запускаємо перевірку за замовчуванням для першої вкладки (INFO)
         window.onload = function() {
-             switchTab('court', document.querySelector('.tab'));
+             switchTab('info', document.querySelector('.tab'));
         };
     </script>
 </body>
