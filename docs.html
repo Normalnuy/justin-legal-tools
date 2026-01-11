@@ -20,6 +20,7 @@
             
             --pro-gradient: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
             --shadow: 0 4px 20px rgba(0,0,0,0.05);
+            --error-color: #ff3b30;
         }
 
         body {
@@ -116,7 +117,7 @@
         .sheet-body { overflow-y: auto; padding-bottom: 20px; }
 
         /* FORM */
-        .inp-group { margin-bottom: 16px; }
+        .inp-group { margin-bottom: 16px; transition: all 0.3s ease; }
         .inp-label { display: block; font-size: 13px; font-weight: 600; color: var(--tg-hint); margin-bottom: 6px; text-transform: uppercase; }
         .inp-field {
             width: 100%; padding: 14px; border-radius: var(--radius-input);
@@ -124,7 +125,23 @@
             font-size: 16px; box-sizing: border-box; transition: 0.2s;
         }
         .inp-field:focus { background: var(--tg-bg); border-color: var(--tg-btn); outline: none; }
+        .inp-field.error { border-color: var(--error-color); background: rgba(255, 59, 48, 0.05); }
         textarea.inp-field { min-height: 100px; resize: none; }
+
+        /* CHECKBOX GROUP */
+        .checkbox-row {
+            display: flex; align-items: center; gap: 12px;
+            padding: 14px; background: var(--tg-sec-bg); border-radius: var(--radius-input);
+            cursor: pointer; margin-bottom: 16px;
+        }
+        .checkbox-row input { width: 20px; height: 20px; accent-color: var(--tg-btn); }
+        .checkbox-label { font-size: 16px; font-weight: 600; flex: 1; }
+        
+        .nested-container {
+            margin-left: 12px; padding-left: 12px; border-left: 2px solid var(--tg-btn);
+            display: none; opacity: 0; transition: opacity 0.3s;
+        }
+        .nested-container.open { display: block; opacity: 1; }
 
         .btn { width: 100%; padding: 16px; border-radius: 14px; font-size: 17px; font-weight: 700; border: none; cursor: pointer; margin-top: 10px; color: #fff; }
         .btn-primary { background: var(--tg-btn); box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3); }
@@ -142,7 +159,6 @@
     <!-- LOADING STATE -->
     <div id="loader" class="loader-wrap">
         <div class="skeleton sk-h"></div>
-        <div class="skeleton sk-row"></div>
         <div class="skeleton sk-row"></div>
         <div class="skeleton sk-row"></div>
     </div>
@@ -215,19 +231,16 @@
                     if(!res.ok) throw new Error("JSON Error");
                     this.data = await res.json();
                     
-                    // Hide loader, show app
                     document.getElementById('loader').style.display = 'none';
                     const appDiv = document.getElementById('app');
                     appDiv.style.display = 'block';
                     
-                    // Fade in effect
                     appDiv.style.opacity = 0;
                     setTimeout(() => { 
                         appDiv.style.transition = 'opacity 0.4s'; 
                         appDiv.style.opacity = 1; 
                     }, 50);
 
-                    // Set Badge
                     if(IS_PRO) {
                         const b = document.getElementById('userBadge');
                         b.className = "badge pro"; b.innerText = "PRO";
@@ -244,7 +257,6 @@
                 const container = document.getElementById('list');
                 container.innerHTML = '';
 
-                // Group items
                 const grouped = {};
                 this.data.templates.forEach(t => {
                     if(search && !t.title.toLowerCase().includes(search)) return;
@@ -257,7 +269,6 @@
                     return;
                 }
 
-                // Render groups
                 for(const [catKey, items] of Object.entries(grouped)) {
                     const catTitle = document.createElement('div');
                     catTitle.className = 'cat-name';
@@ -270,7 +281,6 @@
                         el.className = `doc-card ${isLocked ? 'locked' : ''}`;
                         el.onclick = () => this.click(item, isLocked);
                         
-                        // Icon logic (simplified)
                         let icon = '📄';
                         if(catKey === 'civil') icon = '⚖️';
                         if(catKey === 'family') icon = '❤️';
@@ -300,48 +310,98 @@
                 }
             },
 
+            // Функція для побудови одного поля (або групи)
+            renderField(f, container) {
+                // 1. Якщо це чекбокс (група)
+                if (f.type === 'checkbox') {
+                    const groupDiv = document.createElement('div');
+                    
+                    const checkboxRow = document.createElement('div');
+                    checkboxRow.className = 'checkbox-row';
+                    
+                    // ID чекбокса
+                    const checkId = `check_${f.id}`;
+                    
+                    // HTML для рядка
+                    checkboxRow.innerHTML = `
+                        <div class="checkbox-label">${f.label}</div>
+                        <input type="checkbox" id="${checkId}">
+                    `;
+                    
+                    // Контейнер для вкладених полів
+                    const nestedDiv = document.createElement('div');
+                    nestedDiv.className = 'nested-container';
+                    nestedDiv.id = `nested_${f.id}`;
+
+                    // Логіка перемикання
+                    checkboxRow.onclick = (e) => {
+                        // Якщо клікнули не по самому інпуту, перемикаємо його
+                        const checkbox = document.getElementById(checkId);
+                        if (e.target !== checkbox) checkbox.checked = !checkbox.checked;
+                        
+                        if (checkbox.checked) {
+                            nestedDiv.classList.add('open');
+                        } else {
+                            nestedDiv.classList.remove('open');
+                        }
+                    };
+
+                    // Рендеримо вкладені поля (рекурсія, якщо треба, але тут проста)
+                    if (f.nested_fields) {
+                        f.nested_fields.forEach(nf => this.renderField(nf, nestedDiv));
+                    }
+
+                    groupDiv.appendChild(checkboxRow);
+                    groupDiv.appendChild(nestedDiv);
+                    container.appendChild(groupDiv);
+                    return;
+                }
+
+                // 2. Звичайні поля (text, textarea, date)
+                const wrap = document.createElement('div');
+                wrap.className = 'inp-group';
+                
+                const labelText = f.label + (f.required === false ? " (необов'язково)" : "");
+                
+                const lbl = document.createElement('label');
+                lbl.className = 'inp-label';
+                lbl.innerText = labelText;
+                wrap.appendChild(lbl);
+
+                let inp;
+                if(f.type === 'textarea') {
+                    inp = document.createElement('textarea');
+                } else if(f.type === 'date') {
+                    inp = document.createElement('input');
+                    inp.type = 'date';
+                } else {
+                    inp = document.createElement('input');
+                    inp.type = 'text';
+                }
+                
+                inp.className = 'inp-field';
+                inp.id = `in_${f.id}`;
+                inp.placeholder = f.placeholder || '';
+                // Зберігаємо required в data-атрибут для валідації
+                inp.dataset.required = f.required !== false ? "true" : "false"; 
+                
+                wrap.appendChild(inp);
+                container.appendChild(wrap);
+            },
+
             buildForm(item) {
                 this.currentId = item.id;
                 document.getElementById('formTitle').innerText = item.title;
                 const container = document.getElementById('formFields');
                 container.innerHTML = '';
 
-                // 🔥 КЛЮЧОВИЙ МОМЕНТ: Беремо поля ПРЯМО з об'єкта item.fields
-                // Якщо полів немає в item, беремо пустий масив (безпека)
                 const fields = item.fields || [];
-
                 if(fields.length === 0) {
-                    container.innerHTML = `<div style="text-align:center; color:gray;">Для цього шаблону не налаштовано полів введення.</div>`;
+                    container.innerHTML = `<div style="text-align:center; color:gray;">Полів немає.</div>`;
                     return;
                 }
 
-                fields.forEach(f => {
-                    const wrap = document.createElement('div');
-                    wrap.className = 'inp-group';
-                    
-                    const lbl = document.createElement('label');
-                    lbl.className = 'inp-label';
-                    lbl.innerText = f.label;
-                    wrap.appendChild(lbl);
-
-                    let inp;
-                    if(f.type === 'textarea') {
-                        inp = document.createElement('textarea');
-                    } else if(f.type === 'date') {
-                        inp = document.createElement('input');
-                        inp.type = 'date';
-                    } else {
-                        inp = document.createElement('input');
-                        inp.type = 'text';
-                    }
-                    
-                    inp.className = 'inp-field';
-                    inp.id = `in_${f.id}`;
-                    inp.placeholder = f.placeholder || '';
-                    
-                    wrap.appendChild(inp);
-                    container.appendChild(wrap);
-                });
+                fields.forEach(f => this.renderField(f, container));
             },
 
             sheet(id) {
@@ -356,10 +416,36 @@
 
             submit() {
                 const inputs = {};
+                let isValid = true;
+
+                // Збираємо звичайні поля
+                // Ми перебираємо ТІЛЬКИ видимі поля (offsetParent !== null перевіряє видимість)
                 document.querySelectorAll('#formFields .inp-field').forEach(el => {
+                    
+                    // Перевірка видимості (щоб не валідувати закриті чекбокси)
+                    if (el.offsetParent === null) return; 
+
+                    const val = el.value.trim();
+                    const isRequired = el.dataset.required === "true";
+
+                    if (isRequired && !val) {
+                        isValid = false;
+                        el.classList.add('error');
+                        // Прибираємо червоний колір при вводі
+                        el.oninput = () => el.classList.remove('error');
+                    }
+
                     // ID змінної: "in_court" -> "court"
-                    inputs[el.id.replace('in_', '')] = el.value;
+                    if (val) {
+                        inputs[el.id.replace('in_', '')] = val;
+                    }
                 });
+
+                if (!isValid) {
+                    tg.HapticFeedback.notificationOccurred('error');
+                    // Можна додати тост "Заповніть обов'язкові поля"
+                    return;
+                }
 
                 tg.HapticFeedback.notificationOccurred('success');
                 tg.sendData(JSON.stringify({
