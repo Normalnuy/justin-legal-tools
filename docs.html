@@ -19,6 +19,9 @@
             --radius-input: 12px;
             
             --pro-gradient: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            /* Стиль для Адміна */
+            --admin-gradient: linear-gradient(135deg, #ff3b30 0%, #ff2d55 100%);
+            
             --shadow: 0 4px 20px rgba(0,0,0,0.05);
             --error-color: #ff3b30;
         }
@@ -30,7 +33,7 @@
             color: var(--tg-text);
             -webkit-tap-highlight-color: transparent;
             padding-bottom: 50px;
-            overscroll-behavior: none; /* Заборона "гумового" ефекту всієї сторінки */
+            overscroll-behavior: none; 
         }
 
         /* ЗАВАНТАЖЕННЯ */
@@ -48,7 +51,7 @@
         /* ШАПКА */
         header {
             position: sticky; top: 0; z-index: 100;
-            background: rgba(255, 255, 255, 0.95); /* Менш прозорий фон для стабільності */
+            background: rgba(255, 255, 255, 0.95);
             border-bottom: 1px solid rgba(0,0,0,0.05);
             padding: 16px 20px;
         }
@@ -56,9 +59,11 @@
 
         .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
         .app-name { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; }
+        
         .badge { padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; color: #fff; text-transform: uppercase; }
         .badge.lite { background: var(--tg-hint); }
         .badge.pro { background: var(--pro-gradient); color: #000; }
+        .badge.admin { background: var(--admin-gradient); box-shadow: 0 4px 10px rgba(255, 59, 48, 0.4); }
 
         .search-box { position: relative; }
         .search-inp {
@@ -105,17 +110,16 @@
             position: fixed; bottom: 0; left: 0; width: 100%;
             background: var(--tg-bg); 
             border-radius: 20px 20px 0 0;
-            padding: 0; /* Падінг прибираємо з контейнера, додаємо в body */
+            padding: 0; 
             box-sizing: border-box;
             transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
             z-index: 300; 
-            max-height: 92vh; /* Майже на весь екран */
+            max-height: 92vh; 
             height: auto;
             display: flex; flex-direction: column;
         }
         .sheet.visible { transform: translateY(0); }
 
-        /* Заголовок шторки (Фіксований) */
         .sheet-head { 
             display: flex; justify-content: space-between; align-items: center; 
             padding: 20px;
@@ -130,11 +134,10 @@
             display: flex; align-items: center; justify-content: center;
         }
         
-        /* Тіло шторки (Скролиться) */
         .sheet-body { 
             overflow-y: auto; 
             padding: 20px; 
-            overscroll-behavior: contain; /* Скрол не передається на body */
+            overscroll-behavior: contain;
             -webkit-overflow-scrolling: touch;
         }
 
@@ -144,7 +147,6 @@
             display: block; font-size: 13px; font-weight: 600; color: var(--tg-hint); 
             margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;
         }
-        /* Червона зірочка */
         .required-mark { color: var(--error-color); margin-left: 3px; font-weight: bold; font-size: 14px; }
         
         .inp-field {
@@ -244,14 +246,15 @@
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
-        // Вмикаємо підтвердження закриття, щоб випадково не свайпнули
         if (tg.enableClosingConfirmation) tg.enableClosingConfirmation();
 
-        // 🔥 ВАШЕ ПОСИЛАННЯ (RAW JSON)
         const CONFIG_URL = "https://raw.githubusercontent.com/Normalnuy/justin-legal-tools/main/templates.json";
 
         const urlParams = new URLSearchParams(window.location.search);
-        const IS_PRO = urlParams.get('plan') === 'pro';
+        const PLAN = urlParams.get('plan') || 'lite'; // 'lite', 'pro', 'admin'
+        
+        // ADMIN має доступ до всього, як і PRO
+        const HAS_ACCESS = PLAN === 'pro' || PLAN === 'admin';
 
         const app = {
             data: null,
@@ -273,9 +276,17 @@
                         appDiv.style.opacity = 1; 
                     }, 50);
 
-                    if(IS_PRO) {
-                        const b = document.getElementById('userBadge');
-                        b.className = "badge pro"; b.innerText = "PRO";
+                    const badge = document.getElementById('userBadge');
+                    
+                    if (PLAN === 'admin') {
+                        badge.innerText = "ADMIN";
+                        badge.className = "badge admin";
+                    } else if (PLAN === 'pro') {
+                        badge.innerText = "PRO";
+                        badge.className = "badge pro";
+                    } else {
+                        badge.innerText = "Lite";
+                        badge.className = "badge lite";
                     }
 
                     this.render();
@@ -308,7 +319,9 @@
                     container.appendChild(catTitle);
 
                     items.forEach(item => {
-                        const isLocked = item.pro && !IS_PRO;
+                        // Якщо документ PRO, але у юзера немає доступу (ні PRO, ні ADMIN)
+                        const isLocked = item.pro && !HAS_ACCESS;
+                        
                         const el = document.createElement('div');
                         el.className = `doc-card ${isLocked ? 'locked' : ''}`;
                         el.onclick = () => this.click(item, isLocked);
@@ -343,7 +356,7 @@
             },
 
             renderField(f, container) {
-                // 1. Checkbox (Group)
+                // 1. Checkbox
                 if (f.type === 'checkbox') {
                     const groupDiv = document.createElement('div');
                     
@@ -387,8 +400,7 @@
                 const wrap = document.createElement('div');
                 wrap.className = 'inp-group';
                 
-                // 🔥 ЛОГІКА ЗІРОЧКИ
-                const isRequired = f.required !== false; // За замовчуванням true
+                const isRequired = f.required !== false; 
                 const starHtml = isRequired ? '<span class="required-mark">*</span>' : ' <span style="color:var(--tg-hint);font-weight:400;font-size:12px;">(необов.)</span>';
                 
                 const lbl = document.createElement('label');
@@ -410,7 +422,6 @@
                 inp.className = 'inp-field';
                 inp.id = `in_${f.id}`;
                 inp.placeholder = f.placeholder || '';
-                // Зберігаємо статус обов'язковості для валідації
                 inp.dataset.required = isRequired ? "true" : "false";
                 
                 wrap.appendChild(inp);
@@ -448,7 +459,6 @@
                 let firstError = null;
 
                 document.querySelectorAll('#formFields .inp-field').forEach(el => {
-                    // Перевіряємо видимість (батьківський елемент не має бути прихованим)
                     if (el.offsetParent === null) return; 
 
                     const val = el.value.trim();
@@ -468,7 +478,6 @@
 
                 if (!isValid) {
                     tg.HapticFeedback.notificationOccurred('error');
-                    // Скролимо до першої помилки
                     if(firstError) firstError.scrollIntoView({behavior: "smooth", block: "center"});
                     return;
                 }
