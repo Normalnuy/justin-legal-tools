@@ -30,9 +30,10 @@
             color: var(--tg-text);
             -webkit-tap-highlight-color: transparent;
             padding-bottom: 50px;
+            overscroll-behavior: none; /* Заборона "гумового" ефекту всієї сторінки */
         }
 
-        /* LOADERS */
+        /* ЗАВАНТАЖЕННЯ */
         .loader-wrap { padding: 20px; }
         .skeleton {
             background: linear-gradient(90deg, #e1e1e1 25%, #f1f1f1 50%, #e1e1e1 75%);
@@ -44,15 +45,14 @@
         .sk-row { height: 72px; width: 100%; }
         @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
-        /* HEADER */
+        /* ШАПКА */
         header {
             position: sticky; top: 0; z-index: 100;
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            padding: 16px 20px;
+            background: rgba(255, 255, 255, 0.95); /* Менш прозорий фон для стабільності */
             border-bottom: 1px solid rgba(0,0,0,0.05);
+            padding: 16px 20px;
         }
-        @media (prefers-color-scheme: dark) { header { background: rgba(0, 0, 0, 0.6); } }
+        @media (prefers-color-scheme: dark) { header { background: #1c1c1d; border-bottom: 1px solid #38383a; } }
 
         .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
         .app-name { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; }
@@ -69,7 +69,7 @@
         }
         .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); opacity: 0.5; }
 
-        /* LIST */
+        /* СПИСОК */
         .container { padding: 20px; }
         .cat-name { font-size: 13px; text-transform: uppercase; color: var(--tg-hint); font-weight: 600; margin: 24px 0 8px 8px; }
         
@@ -93,53 +93,84 @@
         .doc-title { font-size: 16px; font-weight: 600; line-height: 1.3; }
         .pro-tag { font-size: 10px; font-weight: 900; background: var(--pro-gradient); padding: 2px 5px; border-radius: 4px; margin-left: 6px; color: #000; vertical-align: middle; }
 
-        /* MODALS (SHEETS) */
+        /* МОДАЛКА (ШТОРКА) */
         .overlay {
-            position: fixed; top:0; left:0; w:100%; h:100%; background: rgba(0,0,0,0.4);
+            position: fixed; top:0; left:0; w:100%; h:100%; background: rgba(0,0,0,0.6);
             z-index: 200; opacity: 0; pointer-events: none; transition: 0.3s;
-            backdrop-filter: blur(4px);
+            backdrop-filter: blur(2px);
         }
         .overlay.visible { opacity: 1; pointer-events: auto; }
 
         .sheet {
             position: fixed; bottom: 0; left: 0; width: 100%;
-            background: var(--tg-bg); border-radius: 24px 24px 0 0;
-            padding: 24px; box-sizing: border-box;
-            transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            z-index: 300; max-height: 90vh; display: flex; flex-direction: column;
+            background: var(--tg-bg); 
+            border-radius: 20px 20px 0 0;
+            padding: 0; /* Падінг прибираємо з контейнера, додаємо в body */
+            box-sizing: border-box;
+            transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            z-index: 300; 
+            max-height: 92vh; /* Майже на весь екран */
+            height: auto;
+            display: flex; flex-direction: column;
         }
         .sheet.visible { transform: translateY(0); }
 
-        .sheet-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .sheet-t { font-size: 22px; font-weight: 700; }
-        .close-btn { background: rgba(142,142,147,0.2); border: none; width: 30px; height: 30px; border-radius: 50%; color: var(--tg-hint); font-size: 18px; cursor: pointer; }
+        /* Заголовок шторки (Фіксований) */
+        .sheet-head { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 20px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            background: var(--tg-bg);
+            border-radius: 20px 20px 0 0;
+        }
+        .sheet-t { font-size: 20px; font-weight: 700; max-width: 85%; }
+        .close-btn { 
+            background: rgba(142,142,147,0.15); border: none; width: 32px; height: 32px; 
+            border-radius: 50%; color: var(--tg-hint); font-size: 20px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
         
-        .sheet-body { overflow-y: auto; padding-bottom: 20px; }
+        /* Тіло шторки (Скролиться) */
+        .sheet-body { 
+            overflow-y: auto; 
+            padding: 20px; 
+            overscroll-behavior: contain; /* Скрол не передається на body */
+            -webkit-overflow-scrolling: touch;
+        }
 
-        /* FORM */
-        .inp-group { margin-bottom: 16px; transition: all 0.3s ease; }
-        .inp-label { display: block; font-size: 13px; font-weight: 600; color: var(--tg-hint); margin-bottom: 6px; text-transform: uppercase; }
+        /* ФОРМА */
+        .inp-group { margin-bottom: 18px; transition: all 0.3s ease; }
+        .inp-label { 
+            display: block; font-size: 13px; font-weight: 600; color: var(--tg-hint); 
+            margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        /* Червона зірочка */
+        .required-mark { color: var(--error-color); margin-left: 3px; font-weight: bold; font-size: 14px; }
+        
         .inp-field {
             width: 100%; padding: 14px; border-radius: var(--radius-input);
             border: 1px solid transparent; background: var(--tg-sec-bg); color: var(--tg-text);
             font-size: 16px; box-sizing: border-box; transition: 0.2s;
+            -webkit-appearance: none;
         }
-        .inp-field:focus { background: var(--tg-bg); border-color: var(--tg-btn); outline: none; }
+        .inp-field:focus { background: var(--tg-bg); border-color: var(--tg-btn); outline: none; box-shadow: 0 0 0 2px rgba(0,122,255,0.1); }
         .inp-field.error { border-color: var(--error-color); background: rgba(255, 59, 48, 0.05); }
-        textarea.inp-field { min-height: 100px; resize: none; }
+        textarea.inp-field { min-height: 100px; resize: none; font-family: inherit; }
 
         /* CHECKBOX GROUP */
         .checkbox-row {
             display: flex; align-items: center; gap: 12px;
-            padding: 14px; background: var(--tg-sec-bg); border-radius: var(--radius-input);
+            padding: 16px; background: var(--tg-sec-bg); border-radius: var(--radius-input);
             cursor: pointer; margin-bottom: 16px;
+            border: 1px solid transparent;
         }
-        .checkbox-row input { width: 20px; height: 20px; accent-color: var(--tg-btn); }
+        .checkbox-row.active { background: var(--tg-bg); border-color: var(--tg-btn); }
+        .checkbox-row input { width: 22px; height: 22px; accent-color: var(--tg-btn); }
         .checkbox-label { font-size: 16px; font-weight: 600; flex: 1; }
         
         .nested-container {
-            margin-left: 12px; padding-left: 12px; border-left: 2px solid var(--tg-btn);
-            display: none; opacity: 0; transition: opacity 0.3s;
+            margin-left: 10px; padding-left: 14px; border-left: 3px solid rgba(0,122,255,0.3);
+            display: none; opacity: 0; transition: opacity 0.3s; margin-bottom: 16px;
         }
         .nested-container.open { display: block; opacity: 1; }
 
@@ -148,22 +179,20 @@
         .btn-pro { background: var(--pro-gradient); color: #000; box-shadow: 0 4px 15px rgba(255, 165, 0, 0.3); }
 
         /* PRO Screen */
-        .pro-screen { text-align: center; padding: 20px 0; }
-        .lock-big { font-size: 60px; margin-bottom: 10px; display: inline-block; animation: shake 2s infinite; }
+        .pro-screen { text-align: center; padding: 40px 20px; }
+        .lock-big { font-size: 64px; margin-bottom: 16px; display: inline-block; animation: shake 2s infinite; }
         @keyframes shake { 0%,100%{transform:rotate(0);} 25%{transform:rotate(-10deg);} 75%{transform:rotate(10deg);} }
 
     </style>
 </head>
 <body>
 
-    <!-- LOADING STATE -->
     <div id="loader" class="loader-wrap">
         <div class="skeleton sk-h"></div>
         <div class="skeleton sk-row"></div>
         <div class="skeleton sk-row"></div>
     </div>
 
-    <!-- MAIN INTERFACE -->
     <div id="app" style="display: none;">
         <header>
             <div class="top-row">
@@ -179,7 +208,6 @@
         <div id="list" class="container"></div>
     </div>
 
-    <!-- OVERLAY -->
     <div id="overlay" class="overlay" onclick="app.close()"></div>
 
     <!-- FORM SHEET -->
@@ -190,7 +218,9 @@
         </div>
         <div class="sheet-body">
             <div id="formFields"></div>
+            <div style="height: 20px;"></div> <!-- Spacer -->
             <button class="btn btn-primary" onclick="app.submit()">Створити документ</button>
+            <div style="height: 30px;"></div> <!-- Bottom padding -->
         </div>
     </div>
 
@@ -203,7 +233,7 @@
         <div class="sheet-body pro-screen">
             <div class="lock-big">🔒</div>
             <h3>Тільки для PRO</h3>
-            <p style="color:var(--tg-hint); margin-bottom: 20px;">
+            <p style="color:var(--tg-hint); margin-bottom: 24px; font-size: 16px; line-height: 1.5;">
                 Цей документ вимагає складного AI-аналізу.<br>
                 Оформіть підписку для доступу.
             </p>
@@ -214,8 +244,10 @@
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
+        // Вмикаємо підтвердження закриття, щоб випадково не свайпнули
+        if (tg.enableClosingConfirmation) tg.enableClosingConfirmation();
 
-        // 🔥 ЗАМІНІТЬ ЦЕ ПОСИЛАННЯ НА СВОЄ (Raw JSON з GitHub)
+        // 🔥 ВАШЕ ПОСИЛАННЯ (RAW JSON)
         const CONFIG_URL = "https://raw.githubusercontent.com/Normalnuy/justin-legal-tools/main/templates.json";
 
         const urlParams = new URLSearchParams(window.location.search);
@@ -310,43 +342,37 @@
                 }
             },
 
-            // Функція для побудови одного поля (або групи)
             renderField(f, container) {
-                // 1. Якщо це чекбокс (група)
+                // 1. Checkbox (Group)
                 if (f.type === 'checkbox') {
                     const groupDiv = document.createElement('div');
                     
                     const checkboxRow = document.createElement('div');
                     checkboxRow.className = 'checkbox-row';
-                    
-                    // ID чекбокса
                     const checkId = `check_${f.id}`;
                     
-                    // HTML для рядка
                     checkboxRow.innerHTML = `
                         <div class="checkbox-label">${f.label}</div>
                         <input type="checkbox" id="${checkId}">
                     `;
                     
-                    // Контейнер для вкладених полів
                     const nestedDiv = document.createElement('div');
                     nestedDiv.className = 'nested-container';
                     nestedDiv.id = `nested_${f.id}`;
 
-                    // Логіка перемикання
                     checkboxRow.onclick = (e) => {
-                        // Якщо клікнули не по самому інпуту, перемикаємо його
                         const checkbox = document.getElementById(checkId);
                         if (e.target !== checkbox) checkbox.checked = !checkbox.checked;
                         
                         if (checkbox.checked) {
                             nestedDiv.classList.add('open');
+                            checkboxRow.classList.add('active');
                         } else {
                             nestedDiv.classList.remove('open');
+                            checkboxRow.classList.remove('active');
                         }
                     };
 
-                    // Рендеримо вкладені поля (рекурсія, якщо треба, але тут проста)
                     if (f.nested_fields) {
                         f.nested_fields.forEach(nf => this.renderField(nf, nestedDiv));
                     }
@@ -357,15 +383,17 @@
                     return;
                 }
 
-                // 2. Звичайні поля (text, textarea, date)
+                // 2. Normal Inputs
                 const wrap = document.createElement('div');
                 wrap.className = 'inp-group';
                 
-                const labelText = f.label + (f.required === false ? " (необов'язково)" : "");
+                // 🔥 ЛОГІКА ЗІРОЧКИ
+                const isRequired = f.required !== false; // За замовчуванням true
+                const starHtml = isRequired ? '<span class="required-mark">*</span>' : ' <span style="color:var(--tg-hint);font-weight:400;font-size:12px;">(необов.)</span>';
                 
                 const lbl = document.createElement('label');
                 lbl.className = 'inp-label';
-                lbl.innerText = labelText;
+                lbl.innerHTML = f.label + starHtml;
                 wrap.appendChild(lbl);
 
                 let inp;
@@ -382,8 +410,8 @@
                 inp.className = 'inp-field';
                 inp.id = `in_${f.id}`;
                 inp.placeholder = f.placeholder || '';
-                // Зберігаємо required в data-атрибут для валідації
-                inp.dataset.required = f.required !== false ? "true" : "false"; 
+                // Зберігаємо статус обов'язковості для валідації
+                inp.dataset.required = isRequired ? "true" : "false";
                 
                 wrap.appendChild(inp);
                 container.appendChild(wrap);
@@ -417,12 +445,10 @@
             submit() {
                 const inputs = {};
                 let isValid = true;
+                let firstError = null;
 
-                // Збираємо звичайні поля
-                // Ми перебираємо ТІЛЬКИ видимі поля (offsetParent !== null перевіряє видимість)
                 document.querySelectorAll('#formFields .inp-field').forEach(el => {
-                    
-                    // Перевірка видимості (щоб не валідувати закриті чекбокси)
+                    // Перевіряємо видимість (батьківський елемент не має бути прихованим)
                     if (el.offsetParent === null) return; 
 
                     const val = el.value.trim();
@@ -431,11 +457,10 @@
                     if (isRequired && !val) {
                         isValid = false;
                         el.classList.add('error');
-                        // Прибираємо червоний колір при вводі
+                        if(!firstError) firstError = el;
                         el.oninput = () => el.classList.remove('error');
                     }
 
-                    // ID змінної: "in_court" -> "court"
                     if (val) {
                         inputs[el.id.replace('in_', '')] = val;
                     }
@@ -443,7 +468,8 @@
 
                 if (!isValid) {
                     tg.HapticFeedback.notificationOccurred('error');
-                    // Можна додати тост "Заповніть обов'язкові поля"
+                    // Скролимо до першої помилки
+                    if(firstError) firstError.scrollIntoView({behavior: "smooth", block: "center"});
                     return;
                 }
 
