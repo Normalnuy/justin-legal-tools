@@ -1,0 +1,94 @@
+{
+  "categories": {
+    "civil": "1. Цивільні позови",
+    "family": "2. Сімейні спори",
+    "procedural": "3. Процесуальні заяви",
+    "appeals": "4. Апеляція та Касація",
+    "execution": "5. Виконавче провадження",
+    "new_circ": "6. Нововиявлені обставини"
+  },
+  "presets": {
+    "general": [
+      {"k": "court", "l": "Суд (Куди)", "p": "Назва суду"},
+      {"k": "plaintiff", "l": "Позивач (Ви)", "p": "ПІБ, адреса, ІПН"},
+      {"k": "defendant", "l": "Відповідач", "p": "ПІБ, адреса"},
+      {"k": "details", "l": "Опишіть ситуацію", "t": "area", "p": "Наприклад: не повертає борг..."}
+    ],
+    "family": [
+      {"k": "court", "l": "Суд", "p": ""},
+      {"k": "plaintiff", "l": "Позивач", "p": "ПІБ"},
+      {"k": "defendant", "l": "Відповідач", "p": "ПІБ"},
+      {"k": "marriage_date", "l": "Дата шлюбу", "t": "date"},
+      {"k": "children", "l": "Діти", "t": "area", "p": "ПІБ та дати народження"},
+      {"k": "details", "l": "Причина", "t": "area", "p": "Наприклад: зловживає алкоголем..."}
+    ],
+    "motion": [
+      {"k": "court", "l": "Суд", "p": ""},
+      {"k": "case_number", "l": "№ Справи", "p": "757/..."},
+      {"k": "applicant", "l": "Заявник", "p": "ПІБ"},
+      {"k": "details", "l": "Суть прохання", "t": "area", "p": "Прошу..."}
+    ],
+    "appeal": [
+       {"k": "court", "l": "Суд вищої інстанції", "p": ""},
+       {"k": "court_first", "l": "Суд 1-ї інстанції", "p": ""},
+       {"k": "case_number", "l": "№ Справи", "p": ""},
+       {"k": "date_decision", "l": "Дата рішення", "t": "date"},
+       {"k": "details", "l": "Аргументи", "t": "area", "p": ""}
+    ],
+    "execution": [
+       {"k": "dvs", "l": "Орган ДВС / Суд", "p": ""},
+       {"k": "vp_num", "l": "№ Провадження / Листа", "p": ""},
+       {"k": "details", "l": "Суть", "t": "area", "p": ""}
+    ]
+  },
+  "templates": [
+    {
+      "id": "01_Pozovna_materialna_moralna_shkoda",
+      "filename": "01_Pozovna_materialna_moralna_shkoda.docx",
+      "title": "Відшкодування шкоди",
+      "cat": "civil",
+      "preset": "general",
+      "pro": true
+    },
+    {
+      "id": "02_Vidzyv_na_pozovnu_zayavu",
+      "filename": "02_Vidzyv_na_pozovnu_zayavu.docx",
+      "title": "Відзив на позов",
+      "cat": "civil",
+      "preset": "general",
+      "pro": false
+    },
+    {
+      "id": "05_Pozov_rozirvannya_shlyubu_alimenty",
+      "filename": "05_Pozov_rozirvannya_shlyubu_alimenty.docx",
+      "title": "Розлучення та аліменти",
+      "cat": "family",
+      "preset": "family",
+      "pro": false
+    },
+    {
+      "id": "08_Zayava_vyklyk_svidkiv",
+      "filename": "08_Zayava_vyklyk_svidkiv.docx",
+      "title": "Виклик свідків",
+      "cat": "procedural",
+      "preset": "motion",
+      "pro": false
+    },
+    {
+      "id": "28_Apelyatsiyna_skarga",
+      "filename": "28_Apelyatsiyna_skarga.docx",
+      "title": "Апеляційна скарга",
+      "cat": "appeals",
+      "preset": "appeal",
+      "pro": true
+    },
+    {
+      "id": "48_Vydacha_vykonavchogo_lysta",
+      "filename": "48_Vydacha_vykonavchogo_lysta.docx",
+      "title": "Видача виконавчого листа",
+      "cat": "execution",
+      "preset": "execution",
+      "pro": false
+    }
+  ]
+}
