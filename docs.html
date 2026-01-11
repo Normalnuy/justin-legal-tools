@@ -6,7 +6,7 @@
     <title>Legal AI</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        /* --- THEME VARS --- */
+        /* --- iOS 17 STYLE VARIABLES --- */
         :root {
             --tg-bg: var(--tg-theme-bg-color, #ffffff);
             --tg-sec-bg: var(--tg-theme-secondary-bg-color, #f2f2f7);
@@ -15,282 +15,148 @@
             --tg-btn: var(--tg-theme-button-color, #007aff);
             --tg-btn-text: var(--tg-theme-button-text-color, #ffffff);
             
-            --radius-l: 24px;
-            --radius-m: 16px;
-            --radius-s: 12px;
+            --radius-card: 16px;
+            --radius-input: 12px;
             
             --pro-gradient: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-            --shadow-soft: 0 4px 20px rgba(0,0,0,0.05);
+            --shadow: 0 4px 20px rgba(0,0,0,0.05);
         }
 
         body {
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0; padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Helvetica, Arial, sans-serif;
             background-color: var(--tg-sec-bg);
             color: var(--tg-text);
             -webkit-tap-highlight-color: transparent;
-            padding-bottom: 40px;
+            padding-bottom: 50px;
         }
 
-        /* --- SKELETON LOADER --- */
-        .skeleton-wrapper { padding: 20px; }
+        /* LOADERS */
+        .loader-wrap { padding: 20px; }
         .skeleton {
-            background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
+            background: linear-gradient(90deg, #e1e1e1 25%, #f1f1f1 50%, #e1e1e1 75%);
             background-size: 200% 100%;
             animation: loading 1.5s infinite;
-            border-radius: var(--radius-s);
-            margin-bottom: 12px;
+            border-radius: 12px; margin-bottom: 12px;
         }
-        .sk-title { height: 32px; width: 60%; margin-bottom: 24px; }
-        .sk-card { height: 70px; width: 100%; }
+        .sk-h { height: 32px; width: 50%; margin-bottom: 20px; }
+        .sk-row { height: 72px; width: 100%; }
         @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
-        /* --- HEADER --- */
+        /* HEADER */
         header {
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            position: sticky; top: 0; z-index: 100;
             background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             padding: 16px 20px;
             border-bottom: 1px solid rgba(0,0,0,0.05);
-            transition: background 0.3s;
         }
-        
-        /* Dark mode adaption for header bg */
-        @media (prefers-color-scheme: dark) {
-            header { background: rgba(0, 0, 0, 0.6); }
-        }
+        @media (prefers-color-scheme: dark) { header { background: rgba(0, 0, 0, 0.6); } }
 
-        .header-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-        }
+        .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .app-name { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; }
+        .badge { padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; color: #fff; text-transform: uppercase; }
+        .badge.lite { background: var(--tg-hint); }
+        .badge.pro { background: var(--pro-gradient); color: #000; }
 
-        .brand {
-            font-size: 28px;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-            background: linear-gradient(45deg, var(--tg-text), var(--tg-hint));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .plan-badge {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: white;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        .plan-badge.lite { background: var(--tg-hint); }
-        .plan-badge.pro { background: var(--pro-gradient); color: #333; }
-
-        /* SEARCH */
-        .search-wrap { position: relative; }
-        .search-input {
-            width: 100%;
-            padding: 12px 16px 12px 44px;
-            border-radius: var(--radius-m);
-            border: none;
+        .search-box { position: relative; }
+        .search-inp {
+            width: 100%; padding: 12px 12px 12px 40px;
+            border-radius: 12px; border: none;
             background: rgba(142, 142, 147, 0.12);
-            color: var(--tg-text);
-            font-size: 17px;
-            box-sizing: border-box;
-            transition: all 0.2s;
+            font-size: 17px; color: var(--tg-text); box-sizing: border-box;
         }
-        .search-input:focus {
-            background: rgba(142, 142, 147, 0.08);
-            outline: none;
-            box-shadow: 0 0 0 2px var(--tg-btn);
-        }
-        .search-icon {
-            position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--tg-hint);
-            pointer-events: none;
-        }
+        .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); opacity: 0.5; }
 
-        /* --- CONTENT LIST --- */
+        /* LIST */
         .container { padding: 20px; }
-
-        .category-block { margin-bottom: 24px; }
-        .cat-title {
-            font-size: 13px;
-            text-transform: uppercase;
-            color: var(--tg-hint);
-            font-weight: 600;
-            margin-bottom: 10px;
-            padding-left: 8px;
-            letter-spacing: 0.8px;
-        }
-
-        .cards-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
+        .cat-name { font-size: 13px; text-transform: uppercase; color: var(--tg-hint); font-weight: 600; margin: 24px 0 8px 8px; }
+        
         .doc-card {
-            background: var(--tg-bg);
-            padding: 16px;
-            border-radius: var(--radius-m);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: var(--shadow-soft);
-            transition: transform 0.1s, opacity 0.2s;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
+            background: var(--tg-bg); padding: 16px;
+            border-radius: var(--radius-card);
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 10px; box-shadow: var(--shadow);
+            cursor: pointer; transition: transform 0.1s;
         }
-
         .doc-card:active { transform: scale(0.98); }
-        .doc-card.locked { opacity: 0.7; background: rgba(255,255,255,0.05); }
-
-        .card-content { display: flex; align-items: center; gap: 12px; }
-        .card-icon {
-            width: 40px; height: 40px;
-            border-radius: 10px;
-            background: rgba(0, 122, 255, 0.1);
-            color: var(--tg-btn);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 20px;
+        .doc-card.locked { opacity: 0.6; background: rgba(255,255,255,0.5); }
+        
+        .card-main { display: flex; align-items: center; gap: 12px; }
+        .icon-box {
+            width: 42px; height: 42px; border-radius: 10px;
+            background: rgba(0, 122, 255, 0.1); color: var(--tg-btn);
+            display: flex; align-items: center; justify-content: center; font-size: 20px;
         }
-        .doc-card.locked .card-icon { background: rgba(255, 165, 0, 0.1); color: orange; }
+        .locked .icon-box { background: rgba(255, 165, 0, 0.1); color: orange; }
+        .doc-title { font-size: 16px; font-weight: 600; line-height: 1.3; }
+        .pro-tag { font-size: 10px; font-weight: 900; background: var(--pro-gradient); padding: 2px 5px; border-radius: 4px; margin-left: 6px; color: #000; vertical-align: middle; }
 
-        .card-text { font-size: 16px; font-weight: 600; line-height: 1.3; }
-        .pro-label {
-            font-size: 10px; font-weight: 900; color: #333;
-            background: var(--pro-gradient);
-            padding: 2px 6px; border-radius: 6px;
-            margin-left: 6px; vertical-align: middle;
-        }
-
-        .arrow { color: var(--tg-hint); opacity: 0.5; }
-
-        /* --- BOTTOM SHEET (MODAL) --- */
+        /* MODALS (SHEETS) */
         .overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.4);
-            z-index: 200;
-            opacity: 0; pointer-events: none;
-            transition: opacity 0.3s;
+            position: fixed; top:0; left:0; w:100%; h:100%; background: rgba(0,0,0,0.4);
+            z-index: 200; opacity: 0; pointer-events: none; transition: 0.3s;
             backdrop-filter: blur(4px);
         }
-        .overlay.active { opacity: 1; pointer-events: auto; }
+        .overlay.visible { opacity: 1; pointer-events: auto; }
 
         .sheet {
             position: fixed; bottom: 0; left: 0; width: 100%;
-            background: var(--tg-bg);
-            border-radius: 24px 24px 0 0;
+            background: var(--tg-bg); border-radius: 24px 24px 0 0;
             padding: 24px; box-sizing: border-box;
-            transform: translateY(100%);
-            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            z-index: 300;
-            max-height: 90vh;
-            display: flex; flex-direction: column;
+            transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 300; max-height: 90vh; display: flex; flex-direction: column;
         }
-        .sheet.active { transform: translateY(0); }
+        .sheet.visible { transform: translateY(0); }
 
-        .sheet-handle {
-            width: 40px; height: 5px;
-            background: var(--tg-hint);
-            opacity: 0.3;
-            border-radius: 10px;
-            margin: -10px auto 20px auto;
-        }
-
-        .sheet-header {
-            display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px;
-        }
-        .sheet-title { font-size: 22px; font-weight: 700; line-height: 1.2; max-width: 85%; }
-        .sheet-close {
-            background: rgba(142, 142, 147, 0.2);
-            border: none; width: 30px; height: 30px; border-radius: 50%;
-            color: var(--tg-hint); display: flex; align-items: center; justify-content: center;
-            font-size: 20px; cursor: pointer;
-        }
-
+        .sheet-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .sheet-t { font-size: 22px; font-weight: 700; }
+        .close-btn { background: rgba(142,142,147,0.2); border: none; width: 30px; height: 30px; border-radius: 50%; color: var(--tg-hint); font-size: 18px; cursor: pointer; }
+        
         .sheet-body { overflow-y: auto; padding-bottom: 20px; }
 
-        /* FORM ELEMENTS */
-        .input-group { margin-bottom: 16px; }
-        .input-label {
-            display: block; font-size: 13px; font-weight: 600;
-            color: var(--tg-hint); margin-bottom: 8px;
-            text-transform: uppercase; letter-spacing: 0.5px;
+        /* FORM */
+        .inp-group { margin-bottom: 16px; }
+        .inp-label { display: block; font-size: 13px; font-weight: 600; color: var(--tg-hint); margin-bottom: 6px; text-transform: uppercase; }
+        .inp-field {
+            width: 100%; padding: 14px; border-radius: var(--radius-input);
+            border: 1px solid transparent; background: var(--tg-sec-bg); color: var(--tg-text);
+            font-size: 16px; box-sizing: border-box; transition: 0.2s;
         }
-        .nice-input {
-            width: 100%; padding: 16px;
-            border-radius: 14px; border: 1px solid transparent;
-            background: var(--tg-sec-bg); color: var(--tg-text);
-            font-size: 17px; box-sizing: border-box;
-            transition: all 0.2s;
-        }
-        .nice-input:focus {
-            background: var(--tg-bg);
-            border-color: var(--tg-btn);
-            outline: none;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        }
-        textarea.nice-input { min-height: 120px; resize: none; line-height: 1.5; }
+        .inp-field:focus { background: var(--tg-bg); border-color: var(--tg-btn); outline: none; }
+        textarea.inp-field { min-height: 100px; resize: none; }
 
-        /* BUTTONS */
-        .btn-main {
-            width: 100%; padding: 18px; border-radius: 16px;
-            background: var(--tg-btn); color: var(--tg-btn-text);
-            font-size: 17px; font-weight: 700; border: none; cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3);
-            transition: transform 0.1s; margin-top: 10px;
-        }
-        .btn-main:active { transform: scale(0.97); }
+        .btn { width: 100%; padding: 16px; border-radius: 14px; font-size: 17px; font-weight: 700; border: none; cursor: pointer; margin-top: 10px; color: #fff; }
+        .btn-primary { background: var(--tg-btn); box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3); }
+        .btn-pro { background: var(--pro-gradient); color: #000; box-shadow: 0 4px 15px rgba(255, 165, 0, 0.3); }
 
-        .btn-upgrade {
-            background: var(--pro-gradient); color: #333;
-            box-shadow: 0 4px 20px rgba(255, 165, 0, 0.4);
-        }
-
-        /* PRO MODAL CONTENT */
-        .pro-hero { text-align: center; padding: 20px 0; }
-        .lock-animation { font-size: 60px; margin-bottom: 16px; display: inline-block; animation: shake 2s infinite; }
-        @keyframes shake { 0%, 100% {transform: rotate(0);} 25% {transform: rotate(-10deg);} 75% {transform: rotate(10deg);} }
-        .pro-desc { color: var(--tg-hint); margin-bottom: 24px; line-height: 1.5; font-size: 16px; }
+        /* PRO Screen */
+        .pro-screen { text-align: center; padding: 20px 0; }
+        .lock-big { font-size: 60px; margin-bottom: 10px; display: inline-block; animation: shake 2s infinite; }
+        @keyframes shake { 0%,100%{transform:rotate(0);} 25%{transform:rotate(-10deg);} 75%{transform:rotate(10deg);} }
 
     </style>
 </head>
 <body>
 
-    <!-- SKELETON (LOADER) -->
-    <div id="loader" class="skeleton-wrapper">
-        <div class="skeleton sk-title"></div>
-        <div class="skeleton sk-card"></div>
-        <div class="skeleton sk-card"></div>
-        <div class="skeleton sk-card"></div>
-        <div class="skeleton sk-card"></div>
+    <!-- LOADING STATE -->
+    <div id="loader" class="loader-wrap">
+        <div class="skeleton sk-h"></div>
+        <div class="skeleton sk-row"></div>
+        <div class="skeleton sk-row"></div>
+        <div class="skeleton sk-row"></div>
     </div>
 
-    <!-- MAIN APP -->
+    <!-- MAIN INTERFACE -->
     <div id="app" style="display: none;">
         <header>
-            <div class="header-top">
-                <div class="brand">Justin AI</div>
-                <div id="userBadge" class="plan-badge lite">Lite</div>
+            <div class="top-row">
+                <div class="app-name">Justin AI</div>
+                <div id="userBadge" class="badge lite">Lite</div>
             </div>
-            <div class="search-wrap">
-                <svg class="search-icon" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
-                    <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
-                </svg>
-                <input type="text" id="search" class="search-input" placeholder="Какой документ нужен?" oninput="app.render()">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="search" class="search-inp" placeholder="Пошук документа..." oninput="app.render()">
             </div>
         </header>
 
@@ -298,82 +164,78 @@
     </div>
 
     <!-- OVERLAY -->
-    <div id="overlay" class="overlay" onclick="app.closeAll()"></div>
+    <div id="overlay" class="overlay" onclick="app.close()"></div>
 
     <!-- FORM SHEET -->
     <div id="formSheet" class="sheet">
-        <div class="sheet-handle"></div>
-        <div class="sheet-header">
-            <div id="formTitle" class="sheet-title">...</div>
-            <button class="sheet-close" onclick="app.closeAll()">×</button>
+        <div class="sheet-head">
+            <div id="formTitle" class="sheet-t">...</div>
+            <button class="close-btn" onclick="app.close()">✕</button>
         </div>
         <div class="sheet-body">
             <div id="formFields"></div>
-            <button class="btn-main" onclick="app.submit()">Создать документ</button>
+            <button class="btn btn-primary" onclick="app.submit()">Створити документ</button>
         </div>
     </div>
 
     <!-- PRO SHEET -->
     <div id="proSheet" class="sheet">
-        <div class="sheet-handle"></div>
-        <div class="sheet-header">
-            <div class="sheet-title">Доступ закрыт</div>
-            <button class="sheet-close" onclick="app.closeAll()">×</button>
+        <div class="sheet-head">
+            <div class="sheet-t">Доступ закрито</div>
+            <button class="close-btn" onclick="app.close()">✕</button>
         </div>
-        <div class="sheet-body pro-hero">
-            <div class="lock-animation">🔒</div>
-            <h3>Только для PRO</h3>
-            <p class="pro-desc">
-                Этот шаблон требует глубокого AI-анализа. <br>
-                Оформите подписку, чтобы получить доступ.
+        <div class="sheet-body pro-screen">
+            <div class="lock-big">🔒</div>
+            <h3>Тільки для PRO</h3>
+            <p style="color:var(--tg-hint); margin-bottom: 20px;">
+                Цей документ вимагає складного AI-аналізу.<br>
+                Оформіть підписку для доступу.
             </p>
-            <button class="btn-main btn-upgrade" onclick="app.buyPro()">Активировать PRO</button>
+            <button class="btn btn-pro" onclick="app.buyPro()">Активувати PRO</button>
         </div>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
-        tg.enableClosingConfirmation();
 
-        // ⚠️ ВАША ССЫЛКА НА GITHUB RAW JSON
-        const CONFIG_URL = "https://raw.githubusercontent.com/Normalnuy/justin-legal-tools/main/templates.json";
+        // 🔥 ЗАМІНІТЬ ЦЕ ПОСИЛАННЯ НА СВОЄ (Raw JSON з GitHub)
+        const CONFIG_URL = "https://raw.githubusercontent.com/Normalnuy/justin-legal-tool/main/templates.json";
 
         const urlParams = new URLSearchParams(window.location.search);
         const IS_PRO = urlParams.get('plan') === 'pro';
 
         const app = {
-            config: null,
+            data: null,
             currentId: null,
 
             async init() {
                 try {
-                    // Загрузка
-                    const response = await fetch(CONFIG_URL);
-                    if (!response.ok) throw new Error("JSON Error");
-                    this.config = await response.json();
+                    const res = await fetch(CONFIG_URL);
+                    if(!res.ok) throw new Error("JSON Error");
+                    this.data = await res.json();
                     
-                    // Переход от скелетона к UI
-                    setTimeout(() => {
-                        document.getElementById('loader').style.display = 'none';
-                        document.getElementById('app').style.display = 'block';
-                        document.getElementById('app').style.opacity = 0;
-                        requestAnimationFrame(() => {
-                            document.getElementById('app').style.transition = 'opacity 0.5s';
-                            document.getElementById('app').style.opacity = 1;
-                        });
-                    }, 500);
+                    // Hide loader, show app
+                    document.getElementById('loader').style.display = 'none';
+                    const appDiv = document.getElementById('app');
+                    appDiv.style.display = 'block';
+                    
+                    // Fade in effect
+                    appDiv.style.opacity = 0;
+                    setTimeout(() => { 
+                        appDiv.style.transition = 'opacity 0.4s'; 
+                        appDiv.style.opacity = 1; 
+                    }, 50);
 
-                    // Установка бейджа
-                    const badge = document.getElementById('userBadge');
-                    if(IS_PRO) { 
-                        badge.innerText = "PRO"; 
-                        badge.className = "plan-badge pro"; 
+                    // Set Badge
+                    if(IS_PRO) {
+                        const b = document.getElementById('userBadge');
+                        b.className = "badge pro"; b.innerText = "PRO";
                     }
 
                     this.render();
-                } catch (e) {
-                    document.getElementById('loader').innerHTML = `<div style="text-align:center; color:red; padding:20px;">Ошибка связи с сервером.<br>${e.message}</div>`;
+                } catch(e) {
+                    document.getElementById('loader').innerHTML = `<div style="color:red; text-align:center;">Помилка завантаження:<br>${e.message}</div>`;
                 }
             },
 
@@ -381,142 +243,123 @@
                 const search = document.getElementById('search').value.toLowerCase();
                 const container = document.getElementById('list');
                 container.innerHTML = '';
-                
-                const templates = this.config.templates;
-                const categories = this.config.categories;
 
-                // Группировка
+                // Group items
                 const grouped = {};
-                templates.forEach(t => {
+                this.data.templates.forEach(t => {
                     if(search && !t.title.toLowerCase().includes(search)) return;
                     if(!grouped[t.cat]) grouped[t.cat] = [];
                     grouped[t.cat].push(t);
                 });
 
-                if (Object.keys(grouped).length === 0) {
-                    container.innerHTML = `<div style="text-align:center; color:#8e8e93; margin-top:40px;">Ничего не найдено 🤷‍♂️</div>`;
+                if(Object.keys(grouped).length === 0) {
+                    container.innerHTML = `<div style="text-align:center; color:var(--tg-hint); margin-top:40px;">Нічого не знайдено 🤷‍♂️</div>`;
                     return;
                 }
 
-                for (const [catKey, items] of Object.entries(grouped)) {
-                    const block = document.createElement('div');
-                    block.className = 'category-block';
-
-                    const title = document.createElement('div');
-                    title.className = 'cat-title';
-                    title.innerText = categories[catKey] || catKey;
-                    block.appendChild(title);
-
-                    const grid = document.createElement('div');
-                    grid.className = 'cards-grid';
+                // Render groups
+                for(const [catKey, items] of Object.entries(grouped)) {
+                    const catTitle = document.createElement('div');
+                    catTitle.className = 'cat-name';
+                    catTitle.innerText = this.data.categories[catKey] || catKey;
+                    container.appendChild(catTitle);
 
                     items.forEach(item => {
                         const isLocked = item.pro && !IS_PRO;
+                        const el = document.createElement('div');
+                        el.className = `doc-card ${isLocked ? 'locked' : ''}`;
+                        el.onclick = () => this.click(item, isLocked);
                         
-                        const card = document.createElement('div');
-                        card.className = `doc-card ${isLocked ? 'locked' : ''}`;
-                        card.onclick = () => this.clickItem(item, isLocked);
-                        
-                        // Иконка зависит от категории (упрощенно)
-                        let iconChar = '📄';
-                        if (catKey === 'civil') iconChar = '⚖️';
-                        if (catKey === 'family') iconChar = '❤️‍🩹';
-                        if (catKey === 'execution') iconChar = '👮';
-                        if (isLocked) iconChar = '🔒';
+                        // Icon logic (simplified)
+                        let icon = '📄';
+                        if(catKey === 'civil') icon = '⚖️';
+                        if(catKey === 'family') icon = '❤️';
+                        if(isLocked) icon = '🔒';
 
-                        const proLabel = item.pro ? `<span class="pro-label">PRO</span>` : '';
+                        const proBadge = item.pro ? `<span class="pro-tag">PRO</span>` : '';
 
-                        card.innerHTML = `
-                            <div class="card-content">
-                                <div class="card-icon">${iconChar}</div>
-                                <div class="card-text">${item.title} ${proLabel}</div>
+                        el.innerHTML = `
+                            <div class="card-main">
+                                <div class="icon-box">${icon}</div>
+                                <div class="doc-title">${item.title} ${proBadge}</div>
                             </div>
-                            <div class="arrow">
-                                <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-                                    <path fill-rule="evenodd" d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z"/>
-                                </svg>
-                            </div>
+                            <div style="color:var(--tg-hint); opacity:0.5;">›</div>
                         `;
-                        grid.appendChild(card);
+                        container.appendChild(el);
                     });
-
-                    block.appendChild(grid);
-                    container.appendChild(block);
                 }
             },
 
-            clickItem(item, isLocked) {
+            click(item, isLocked) {
                 tg.HapticFeedback.impactOccurred(isLocked ? 'error' : 'light');
-                if (isLocked) {
-                    this.openSheet('proSheet');
+                if(isLocked) {
+                    this.sheet('proSheet');
                 } else {
-                    this.openForm(item);
+                    this.buildForm(item);
+                    this.sheet('formSheet');
                 }
             },
 
-            openForm(item) {
+            buildForm(item) {
                 this.currentId = item.id;
                 document.getElementById('formTitle').innerText = item.title;
                 const container = document.getElementById('formFields');
                 container.innerHTML = '';
 
-                const fields = this.config.presets[item.preset] || this.config.presets['general'];
+                // 🔥 КЛЮЧОВИЙ МОМЕНТ: Беремо поля ПРЯМО з об'єкта item.fields
+                // Якщо полів немає в item, беремо пустий масив (безпека)
+                const fields = item.fields || [];
+
+                if(fields.length === 0) {
+                    container.innerHTML = `<div style="text-align:center; color:gray;">Для цього шаблону не налаштовано полів введення.</div>`;
+                    return;
+                }
 
                 fields.forEach(f => {
-                    const group = document.createElement('div');
-                    group.className = 'input-group';
+                    const wrap = document.createElement('div');
+                    wrap.className = 'inp-group';
                     
                     const lbl = document.createElement('label');
-                    lbl.className = 'input-label';
-                    lbl.innerText = f.l;
-                    group.appendChild(lbl);
+                    lbl.className = 'inp-label';
+                    lbl.innerText = f.label;
+                    wrap.appendChild(lbl);
 
                     let inp;
-                    if (f.t === 'area') {
+                    if(f.type === 'textarea') {
                         inp = document.createElement('textarea');
-                    } else if (f.t === 'date') {
+                    } else if(f.type === 'date') {
                         inp = document.createElement('input');
                         inp.type = 'date';
                     } else {
                         inp = document.createElement('input');
                         inp.type = 'text';
                     }
-                    inp.className = 'nice-input';
-                    inp.id = `in_${f.k}`;
-                    inp.placeholder = f.p || '';
                     
-                    // Автофокус на первом поле не делаем, чтобы клавиатура не прыгала сразу
-                    group.appendChild(inp);
-                    container.appendChild(group);
+                    inp.className = 'inp-field';
+                    inp.id = `in_${f.id}`;
+                    inp.placeholder = f.placeholder || '';
+                    
+                    wrap.appendChild(inp);
+                    container.appendChild(wrap);
                 });
-
-                this.openSheet('formSheet');
             },
 
-            openSheet(id) {
-                document.getElementById('overlay').classList.add('active');
-                document.getElementById(id).classList.add('active');
+            sheet(id) {
+                document.getElementById('overlay').classList.add('visible');
+                document.getElementById(id).classList.add('visible');
             },
 
-            closeAll() {
-                document.getElementById('overlay').classList.remove('active');
-                document.querySelectorAll('.sheet').forEach(el => el.classList.remove('active'));
+            close() {
+                document.getElementById('overlay').classList.remove('visible');
+                document.querySelectorAll('.sheet').forEach(el => el.classList.remove('visible'));
             },
 
             submit() {
                 const inputs = {};
-                let hasEmpty = false;
-
-                document.querySelectorAll('#formFields .nice-input').forEach(el => {
-                    if(!el.value) hasEmpty = true;
+                document.querySelectorAll('#formFields .inp-field').forEach(el => {
+                    // ID змінної: "in_court" -> "court"
                     inputs[el.id.replace('in_', '')] = el.value;
                 });
-
-                // Валидация (опционально)
-                if(hasEmpty) {
-                    tg.HapticFeedback.notificationOccurred('warning');
-                    // Можно показать алерт, но лучше просто пустить, AI разберется
-                }
 
                 tg.HapticFeedback.notificationOccurred('success');
                 tg.sendData(JSON.stringify({
@@ -529,7 +372,7 @@
             buyPro() {
                 tg.HapticFeedback.notificationOccurred('success');
                 tg.sendData(JSON.stringify({action: "buy_pro"}));
-                this.closeAll();
+                this.close();
             }
         };
 
