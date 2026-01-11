@@ -16,27 +16,24 @@
       "cat": "civil",
       "pro": false,
       "fields": [
-        { "id": "court", "label": "Назва суду", "placeholder": "Печерський районний суд...", "type": "text" },
-        { "id": "court_post_adress", "label": "Поштова адреса суду", "placeholder": "Вулиця, будинок, місто, індекс", "type": "text" },
-        { "id": "pozov_pib", "label": "Позивач (Ви)", "placeholder": "ПІБ", "type": "text" },
-        { "id": "pozov_post_adress", "label": "Місце проживання", "placeholder": "Вулиця, будинок, місто, індекс", "type": "text" },
-        { "id": "pozov_id_code", "label": "РНОКПП", "placeholder": "", "type": "text" },
-        { "id": "passport_data", "label": "Паспортні дані", "placeholder": "Серія, номер, ким виданий, дата видачі, дійсний до...", "type": "text" },
-        { "id": "pozov_phone", "label": "Номер телефону", "placeholder": "380...", "type": "text" },
-        { "id": "pozov_mail", "label": "Е-пошта", "placeholder": "...@gmail.com", "type": "text" },
-        { "id": "child_pib", "label": "Малолітня особа", "placeholder": "ПІБ", "type": "text" },
-        { "id": "child_birthday", "label": "Дата народження", "placeholder": "", "type": "date" },
-        { "id": "answer_pib", "label": "Відповідач", "placeholder": "ПІБ", "type": "text" },
-        { "id": "answer_post_adress", "label": "Місце проживання", "placeholder": "Вулиця, будинок, місто, індекс", "type": "text" },
-        { "id": "answer_id_code", "label": "РНОКПП", "placeholder": "*Якщо відомо", "type": "text" },
-        { "id": "answer_phone", "label": "Номер телефону", "placeholder": "*Якщо відомо", "type": "text" },
-        { "id": "answer_mail", "label": "Е-пошта", "placeholder": "*Якщо відомо", "type": "text" },
-        { "id": "pozov_price", "label": "Ціна позову", "placeholder": "грн", "type": "text" },
-        { "id": "description", "label": "Суть позову", "placeholder": "Детальний опис ситуації, обставини, довідки...", "type": "textarea" },
-        { "id": "zbir_price", "label": "Ціна судового збору", "placeholder": "грн", "type": "text" },
-        { "id": "material_price", "label": "Матеріальна шкода", "placeholder": "грн", "type": "text" },
-        { "id": "moral_price", "label": "Моральна шкода", "placeholder": "грн", "type": "text" }
-        ]
+        { "id": "court", "label": "Суд", "placeholder": "Назва суду", "type": "text", "required": true },
+        { "id": "plaintiff", "label": "Позивач", "placeholder": "ПІБ", "type": "text", "required": true },
+        { "id": "defendant", "label": "Відповідач", "placeholder": "ПІБ", "type": "text", "required": true },
+        { "id": "marriage_date", "label": "Дата шлюбу", "type": "date", "required": true },
+        
+        { 
+          "id": "has_children", 
+          "label": "Чи є неповнолітні діти?", 
+          "type": "checkbox",
+          "nested_fields": [
+             { "id": "child_pib", "label": "ПІБ Дитини", "placeholder": "Іванов Іван Іванович", "type": "text", "required": true },
+             { "id": "child_birthday", "label": "Дата народження дитини", "type": "date", "required": true },
+             { "id": "alimony_details", "label": "Вимоги по аліментах", "placeholder": "Наприклад: 1/4 частки доходу", "type": "text", "required": false }
+          ]
+        },
+
+        { "id": "details", "label": "Причина розлучення", "placeholder": "Чому шлюб не склався...", "type": "textarea", "required": true }
+      ]
     }
   ]
 }
