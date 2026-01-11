@@ -3,394 +3,248 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Шаблони документів</title>
+    <title>AI Legal Docs</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
             --bg-color: var(--tg-theme-secondary-bg-color, #f2f2f7);
             --card-bg: var(--tg-theme-bg-color, #ffffff);
             --text-color: var(--tg-theme-text-color, #000000);
-            --hint-color: var(--tg-theme-hint-color, #8e8e93);
             --accent-color: var(--tg-theme-button-color, #007aff);
-            --danger-color: #ff3b30;
-            --success-color: #34c759;
+            --pro-gradient: linear-gradient(135deg, #ff9f0a, #ffd60a);
         }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 20px;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        /* ЗАГОЛОВКИ */
-        h3 {
-            margin: 10px 0 20px 0;
-            font-size: 28px;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-        }
-
-        h4 {
-            margin: 24px 0 8px 12px;
-            color: var(--hint-color);
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-weight: 600;
-        }
-
-        /* КАРТКИ МЕНЮ */
-        .menu-container {
-            background-color: var(--card-bg);
-            border-radius: 14px;
-            overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        }
-
-        .menu-item {
-            display: flex;
-            align-items: center;
-            padding: 16px;
-            cursor: pointer;
-            position: relative;
-            background: var(--card-bg);
-            transition: background 0.2s;
-            border-bottom: 1px solid rgba(0,0,0,0.05);
-        }
-
-        .menu-item:last-child {
-            border-bottom: none;
-        }
-
-        .menu-item:active {
-            background-color: var(--bg-color);
-        }
-
-        /* ІКОНКИ В КВАДРАТАХ */
-        .icon-box {
-            width: 36px;
-            height: 36px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            margin-right: 14px;
-            flex-shrink: 0;
-        }
-
-        .icon-blue { background: #e0f0ff; color: #007aff; }
-        .icon-purple { background: #f4e0ff; color: #af52de; }
-        .icon-gold { background: #fff5cc; color: #ffcc00; }
-
-        .item-text {
-            flex-grow: 1;
-            font-size: 17px;
-            font-weight: 500;
-        }
-
-        .chevron {
-            color: var(--hint-color);
-            opacity: 0.5;
-            font-size: 14px;
-        }
-
-        /* СТИЛІ ДЛЯ ЗАМКА (PREMIUM) */
-        .item-lock {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255, 255, 255, 0.4);
-            backdrop-filter: blur(3px);
-            -webkit-backdrop-filter: blur(3px);
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            padding-right: 20px;
-            z-index: 2;
-        }
-
-        .lock-badge {
-            background: rgba(0,0,0,0.7);
-            color: white;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        /* ФОРМА (ПОЛЯ ВВОДУ) */
-        .form-card {
-            background-color: var(--card-bg);
-            border-radius: 14px;
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            animation: slideIn 0.3s ease-out;
-        }
-
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .form-group { margin-bottom: 18px; }
+        body { margin: 0; padding: 0; font-family: sans-serif; background: var(--bg-color); color: var(--text-color); padding-bottom: 80px; }
         
-        label { 
-            display: block; 
-            margin-bottom: 8px; 
-            color: var(--hint-color); 
-            font-size: 13px; 
-            font-weight: 500;
-            text-transform: uppercase;
+        /* Loader */
+        #loader {
+            position: fixed; top:0; left:0; right:0; bottom:0;
+            background: var(--bg-color); z-index: 999;
+            display: flex; justify-content: center; align-items: center; flex-direction: column;
         }
+        .spinner {
+            width: 40px; height: 40px; border: 4px solid #ccc; border-top-color: var(--accent-color);
+            border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 10px;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        input, textarea { 
-            width: 100%; 
-            padding: 14px; 
-            border: 1px solid rgba(0,0,0,0.1); 
-            border-radius: 12px; 
-            background: var(--bg-color); 
-            color: var(--text-color); 
-            font-size: 16px;
-            box-sizing: border-box; 
-            transition: all 0.2s;
-            -webkit-appearance: none;
-        }
-
-        input:focus, textarea:focus {
-            border-color: var(--accent-color);
-            background: var(--card-bg);
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(0,122,255, 0.1);
-        }
-
-        .main-btn { 
-            width: 100%; 
-            padding: 16px; 
-            background: var(--accent-color); 
-            color: white; 
-            border: none; 
-            border-radius: 14px; 
-            font-size: 17px; 
-            font-weight: 600; 
-            margin-top: 10px; 
-            cursor: pointer; 
-            box-shadow: 0 4px 12px rgba(0,122,255, 0.3);
-            transition: transform 0.1s;
-        }
+        /* Header */
+        .header { padding: 16px; background: var(--card-bg); position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .title-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .badge { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; color: white; }
+        .badge.lite { background: #8e8e93; }
+        .badge.pro { background: var(--pro-gradient); }
         
-        .main-btn:active { transform: scale(0.98); }
+        .search-input { width: 100%; padding: 12px; border-radius: 10px; border: none; background: #efeff4; box-sizing: border-box; font-size: 16px; }
 
-        .hidden { display: none; }
-        
-        /* Dark mode tweaks */
-        @media (prefers-color-scheme: dark) {
-            .menu-container { box-shadow: none; }
-            .menu-item { border-bottom: 1px solid rgba(255,255,255,0.1); }
-            input, textarea { border: 1px solid rgba(255,255,255,0.1); }
-            .item-lock { background: rgba(0,0,0,0.5); }
+        /* List */
+        .container { padding: 16px; }
+        .cat-title { font-size: 14px; font-weight: bold; color: #8e8e93; margin: 16px 0 8px 10px; text-transform: uppercase; }
+        .doc-card {
+            background: var(--card-bg); padding: 16px; border-radius: 12px; margin-bottom: 8px;
+            display: flex; justify-content: space-between; align-items: center; cursor: pointer;
         }
+        .doc-card:active { opacity: 0.7; }
+        .pro-tag { border: 1px solid orange; color: orange; font-size: 10px; padding: 2px 4px; border-radius: 4px; margin-left: 5px; font-weight: bold; }
+        .locked { opacity: 0.6; }
+
+        /* Modal */
+        .modal { display: none; position: fixed; top: 0; left: 0; w: 100%; h: 100%; background: rgba(0,0,0,0.5); z-index: 200; justify-content: center; align-items: flex-end; }
+        .modal.active { display: flex; }
+        .modal-content { background: var(--card-bg); width: 100%; max-width: 600px; padding: 20px; border-radius: 20px 20px 0 0; max-height: 90vh; overflow-y: auto; }
+        
+        .form-input { width: 100%; padding: 14px; margin-bottom: 12px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; background: var(--bg-color); }
+        .form-label { font-size: 12px; margin-bottom: 4px; display: block; color: #8e8e93; }
+        .btn { width: 100%; padding: 16px; border: none; border-radius: 12px; color: white; font-weight: bold; font-size: 16px; margin-top: 10px; cursor: pointer; }
+        .btn-primary { background: var(--accent-color); }
+        .btn-pro { background: var(--pro-gradient); }
     </style>
 </head>
 <body>
 
-    <div id="screen-menu">
-        <h3>📂 Документи</h3>
-        
-        <h4>Базові (Lite)</h4>
-        <div class="menu-container">
-            <div class="menu-item" id="btn-receipt" onclick="tryOpen('receipt')">
-                <div class="icon-box icon-blue">📄</div>
-                <div class="item-text">Розписка про борг</div>
-                <div class="chevron">❯</div>
+    <!-- Loader -->
+    <div id="loader">
+        <div class="spinner"></div>
+        <div style="color: #8e8e93; font-size: 14px;">Завантаження шаблонів...</div>
+    </div>
+
+    <!-- UI -->
+    <div id="app" style="display: none;">
+        <div class="header">
+            <div class="title-row">
+                <span style="font-size: 20px; font-weight: 700;">Юридичні Документи</span>
+                <span id="userBadge" class="badge lite">Lite</span>
             </div>
+            <input type="text" id="search" class="search-input" placeholder="Пошук..." oninput="app.render()">
         </div>
 
-        <h4>Ексклюзив (Pro)</h4>
-        <div class="menu-container">
-            <div class="menu-item" id="btn-contract" onclick="tryOpen('contract')">
-                <div class="icon-box icon-purple">🤝</div>
-                <div class="item-text">Договір послуг</div>
-                <div class="chevron">❯</div>
-            </div>
-            <div class="menu-item" id="btn-act" onclick="tryOpen('act')">
-                <div class="icon-box icon-gold">🏁</div>
-                <div class="item-text">Акт виконаних робіт</div>
-                <div class="chevron">❯</div>
-            </div>
+        <div id="list" class="container"></div>
+    </div>
+
+    <!-- Form Modal -->
+    <div id="formModal" class="modal">
+        <div class="modal-content">
+            <h3 id="formTitle">...</h3>
+            <div id="formFields"></div>
+            <button class="btn btn-primary" onclick="app.submit()">Створити</button>
+            <button class="btn" style="background:transparent; color: #8e8e93; margin-top: 5px;" onclick="app.closeModals()">Закрити</button>
         </div>
     </div>
 
-    <div id="screen-form" class="hidden">
-        <h3 id="form-title">Заповнення</h3>
-        
-        <div class="form-card">
-            <div id="fields-receipt" class="hidden">
-                <div class="form-group">
-                    <label>👤 Я (ПІБ Боржника)</label>
-                    <input type="text" id="r_name" placeholder="Іванов Іван Іванович">
-                </div>
-                <div class="form-group">
-                    <label>🏦 Взяв у (ПІБ Кредитора)</label>
-                    <input type="text" id="r_lender" placeholder="Петров Петро Петрович">
-                </div>
-                <div class="form-group">
-                    <label>💰 Сума (грн)</label>
-                    <input type="number" id="r_amount" placeholder="10000" inputmode="decimal">
-                </div>
-                <div class="form-group">
-                    <label>📅 Дата повернення</label>
-                    <input type="date" id="r_date">
-                </div>
-            </div>
-
-            <div id="fields-contract" class="hidden">
-                <div class="form-group">
-                    <label>👤 Замовник</label>
-                    <input type="text" id="c_client" placeholder="ТОВ 'Ромашка'">
-                </div>
-                <div class="form-group">
-                    <label>🛠 Виконавець</label>
-                    <input type="text" id="c_contractor" placeholder="ФОП Шевченко">
-                </div>
-                <div class="form-group">
-                    <label>📝 Опис послуги</label>
-                    <textarea id="c_service" rows="3" placeholder="Розробка веб-сайту..."></textarea>
-                </div>
-                <div class="form-group">
-                    <label>💵 Вартість (грн)</label>
-                    <input type="number" id="c_price" placeholder="5000">
-                </div>
-            </div>
-             <div id="fields-act" class="hidden">
-                <div style="text-align:center; padding: 20px; color: var(--hint-color);">
-                    Цей шаблон у розробці 🛠
-                </div>
-            </div>
-
-            <button class="main-btn" onclick="sendData()">Створити документ ✨</button>
+    <!-- Pro Modal -->
+    <div id="proModal" class="modal">
+        <div class="modal-content" style="text-align: center;">
+            <div style="font-size: 50px;">🔒</div>
+            <h3>Тільки для PRO</h3>
+            <p style="color: #8e8e93;">Цей документ доступний у платній підписці.</p>
+            <button class="btn btn-pro" onclick="app.buyPro()">Купити PRO</button>
+            <button class="btn" style="background:transparent; color: #8e8e93; margin-top: 5px;" onclick="app.closeModals()">Закрити</button>
         </div>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
-        // Встановлюємо колір хедера під колір фону, щоб виглядало як нативний додаток
-        tg.setHeaderColor(getComputedStyle(document.body).getPropertyValue('--bg-color').trim());
 
-        let currentDocType = null;
+        // ⚠️ ВСТАВТЕ СЮДИ СВОЄ ПОСИЛАННЯ НА RAW JSON З GITHUB
+        const CONFIG_URL = "https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/templates.json";
 
-        // --- ЛОГІКА ДОСТУПУ ---
         const urlParams = new URLSearchParams(window.location.search);
-        const userSub = urlParams.get('sub') || 'free'; 
-        
-        const SUB_LEVELS = { 'free': 0, 'lite': 1, 'pro': 2, 'admin': 3 };
-        const myLevel = SUB_LEVELS[userSub] || 0;
+        const IS_PRO = urlParams.get('plan') === 'pro';
 
-        // Вимоги до документів
-        const DOC_REQ = {
-            'receipt': 1,  // Lite+
-            'contract': 2, // Pro+
-            'act': 2       // Pro+
+        const app = {
+            config: null,
+            currentId: null,
+
+            async init() {
+                try {
+                    // Завантаження конфігурації
+                    const response = await fetch(CONFIG_URL);
+                    if (!response.ok) throw new Error("Network response was not ok");
+                    this.config = await response.json();
+                    
+                    // UI Init
+                    document.getElementById('loader').style.display = 'none';
+                    document.getElementById('app').style.display = 'block';
+                    
+                    const badge = document.getElementById('userBadge');
+                    if(IS_PRO) { badge.innerText = "PRO"; badge.className = "badge pro"; }
+                    
+                    this.render();
+                } catch (e) {
+                    document.getElementById('loader').innerHTML = `<div style="color:red">Помилка завантаження:<br>${e.message}</div>`;
+                }
+            },
+
+            render() {
+                const search = document.getElementById('search').value.toLowerCase();
+                const container = document.getElementById('list');
+                container.innerHTML = '';
+                
+                const templates = this.config.templates;
+                const categories = this.config.categories;
+
+                // Групування
+                const grouped = {};
+                templates.forEach(t => {
+                    if(search && !t.title.toLowerCase().includes(search)) return;
+                    if(!grouped[t.cat]) grouped[t.cat] = [];
+                    grouped[t.cat].push(t);
+                });
+
+                for (const [catKey, items] of Object.entries(grouped)) {
+                    if (items.length === 0) continue;
+                    
+                    const title = document.createElement('div');
+                    title.className = 'cat-title';
+                    title.innerText = categories[catKey] || catKey;
+                    container.appendChild(title);
+
+                    items.forEach(item => {
+                        const div = document.createElement('div');
+                        const isLocked = item.pro && !IS_PRO;
+                        div.className = `doc-card ${isLocked ? 'locked' : ''}`;
+                        div.onclick = () => this.clickItem(item, isLocked);
+                        
+                        const proHTML = item.pro ? `<span class="pro-tag">PRO</span>` : '';
+                        const lockIcon = isLocked ? '🔒' : '📄';
+                        
+                        div.innerHTML = `
+                            <div>${item.title} ${proHTML}</div>
+                            <div style="font-size: 20px;">${lockIcon}</div>
+                        `;
+                        container.appendChild(div);
+                    });
+                }
+            },
+
+            clickItem(item, isLocked) {
+                tg.HapticFeedback.impactOccurred(isLocked ? 'error' : 'light');
+                if (isLocked) {
+                    document.getElementById('proModal').classList.add('active');
+                } else {
+                    this.openForm(item);
+                }
+            },
+
+            openForm(item) {
+                this.currentId = item.id;
+                document.getElementById('formTitle').innerText = item.title;
+                const container = document.getElementById('formFields');
+                container.innerHTML = '';
+
+                // Отримуємо поля з пресету
+                const fields = this.config.presets[item.preset] || this.config.presets['general'];
+
+                fields.forEach(f => {
+                    const lbl = document.createElement('label');
+                    lbl.className = 'form-label';
+                    lbl.innerText = f.l;
+                    container.appendChild(lbl);
+
+                    let inp;
+                    if (f.t === 'area') {
+                        inp = document.createElement('textarea');
+                    } else if (f.t === 'date') {
+                        inp = document.createElement('input');
+                        inp.type = 'date';
+                    } else {
+                        inp = document.createElement('input');
+                        inp.type = 'text';
+                    }
+                    inp.className = 'form-input';
+                    inp.id = `in_${f.k}`;
+                    inp.placeholder = f.p || '';
+                    container.appendChild(inp);
+                });
+
+                document.getElementById('formModal').classList.add('active');
+            },
+
+            closeModals() {
+                document.querySelectorAll('.modal').forEach(el => el.classList.remove('active'));
+            },
+
+            submit() {
+                const inputs = {};
+                document.querySelectorAll('#formFields .form-input').forEach(el => {
+                    inputs[el.id.replace('in_', '')] = el.value;
+                });
+
+                tg.HapticFeedback.notificationOccurred('success');
+                tg.sendData(JSON.stringify({
+                    action: "generate_legal",
+                    template_id: this.currentId,
+                    inputs: inputs
+                }));
+            },
+
+            buyPro() {
+                tg.sendData(JSON.stringify({action: "buy_pro"}));
+                this.closeModals();
+            }
         };
 
-        function tryOpen(type) {
-            const req = DOC_REQ[type];
-            if (myLevel < req) {
-                tg.HapticFeedback.notificationOccurred('error');
-                tg.showAlert(`🔒 Цей шаблон доступний у тарифі ${req === 2 ? 'PRO' : 'LITE'}`);
-                return;
-            }
-            openForm(type);
-        }
-
-        function renderLocks() {
-            for (const [type, req] of Object.entries(DOC_REQ)) {
-                if (myLevel < req) {
-                    const el = document.getElementById(`btn-${type}`);
-                    if (el) {
-                        let lockDiv = document.createElement('div');
-                        lockDiv.className = 'item-lock';
-                        // Красивий бейдж
-                        let badgeColor = req === 2 ? '#af52de' : '#007aff'; // Purple for Pro, Blue for Lite
-                        lockDiv.innerHTML = `<div class="lock-badge" style="background:${badgeColor}">🔒 ${req === 2 ? 'PRO' : 'LITE'}</div>`;
-                        el.appendChild(lockDiv);
-                    }
-                }
-            }
-        }
-        
-        renderLocks();
-
-        // --- НАВІГАЦІЯ ---
-        tg.BackButton.onClick(() => {
-            document.getElementById('screen-form').classList.add('hidden');
-            document.getElementById('screen-menu').classList.remove('hidden');
-            tg.BackButton.hide();
-            tg.MainButton.hide();
-        });
-
-        function openForm(type) {
-            currentDocType = type;
-            tg.HapticFeedback.impactOccurred('light');
-            
-            document.getElementById('screen-menu').classList.add('hidden');
-            document.getElementById('screen-form').classList.remove('hidden');
-            
-            // Ховаємо всі поля
-            document.getElementById('fields-receipt').classList.add('hidden');
-            document.getElementById('fields-contract').classList.add('hidden');
-            document.getElementById('fields-act').classList.add('hidden');
-            
-            // Показуємо потрібні
-            const fields = document.getElementById(`fields-${type}`);
-            if(fields) fields.classList.remove('hidden');
-
-            tg.BackButton.show();
-        }
-
-        function sendData() {
-            let data = {};
-            
-            // Валідація (проста)
-            let isValid = true;
-
-            if (currentDocType === 'receipt') {
-                data = {
-                    action: "doc_receipt",
-                    name: document.getElementById('r_name').value,
-                    lender: document.getElementById('r_lender').value,
-                    amount: document.getElementById('r_amount').value,
-                    date: document.getElementById('r_date').value
-                };
-                if(!data.amount) isValid = false;
-            } else if (currentDocType === 'contract') {
-                data = {
-                    action: "doc_contract",
-                    client: document.getElementById('c_client').value,
-                    contractor: document.getElementById('c_contractor').value,
-                    service_desc: document.getElementById('c_service').value,
-                    price: document.getElementById('c_price').value
-                };
-                if(!data.price) isValid = false;
-            }
-
-            if(!isValid && currentDocType !== 'act') {
-                tg.HapticFeedback.notificationOccurred('warning');
-                tg.showAlert("Будь ласка, заповніть основні поля.");
-                return;
-            }
-
-            tg.HapticFeedback.notificationOccurred('success');
-            tg.sendData(JSON.stringify(data));
-            // Не закриваємо одразу, даємо користувачу побачити клік
-            setTimeout(() => tg.close(), 100); 
-        }
+        app.init();
     </script>
 </body>
 </html>
