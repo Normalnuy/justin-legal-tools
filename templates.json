@@ -54,7 +54,7 @@
       "id": "2026-01-11-vidzyv_na_pozov_general",
       "def_filename": "Vidzyv_na_pozov.docx",
       "ai_filename": "AI_Vidzyv_na_pozov.docx",
-      "title": "Відзив на позовну заяву (Загальний)",
+      "title": "Відзив на позовну заяву",
       "cat": "civil",
       "pro": false,
       "fields": [
@@ -94,7 +94,7 @@
       "id": "2026-01-11-vidpovid_na_vidzyv",
       "def_filename": "Vidpovid_na_vidzyv.docx",
       "ai_filename": "AI_Vidpovid_na_vidzyv.docx",
-      "title": "Відповідь на відзив (Шкода)",
+      "title": "Відповідь на відзив",
       "cat": "civil",
       "pro": false,
       "fields": [
