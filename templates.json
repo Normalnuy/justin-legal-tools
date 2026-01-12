@@ -16,23 +16,646 @@
       "cat": "civil",
       "pro": false,
       "fields": [
-        { "id": "court", "label": "Суд", "placeholder": "Назва суду", "type": "text", "required": true },
-        { "id": "plaintiff", "label": "Позивач", "placeholder": "ПІБ", "type": "text", "required": true },
-        { "id": "defendant", "label": "Відповідач", "placeholder": "ПІБ", "type": "text", "required": true },
-        { "id": "marriage_date", "label": "Дата шлюбу", "type": "date", "required": true },
+        { "id": "court", "label": "Назва суду", "placeholder": "Печерський районний суд міста Києва", "type": "text", "required": true },
+        { "id": "court_post_adress", "label": "Адреса суду", "placeholder": "01001, м. Київ, вул...", "type": "text", "required": true },
         
+        { "id": "pozov_pib", "label": "Позивач (Ви)", "placeholder": "ПІБ повністю", "type": "text", "required": true },
+        { "id": "pozov_post_adress", "label": "Адреса Позивача", "placeholder": "Індекс, місто, вулиця...", "type": "text", "required": true },
+        { "id": "pozov_id_code", "label": "РНОКПП (Код)", "placeholder": "1234567890", "type": "text", "required": true },
+        { "id": "passport_data", "label": "Паспортні дані", "placeholder": "Серія, номер, ким виданий, дата", "type": "text", "required": true },
+        { "id": "pozov_phone", "label": "Ваш телефон", "placeholder": "+380...", "type": "text", "required": true },
+        { "id": "pozov_mail", "label": "Ваш E-mail", "placeholder": "example@mail.com", "type": "text", "required": false },
+
         { 
-          "id": "has_children", 
-          "label": "Чи є неповнолітні діти?", 
+          "id": "has_child_block", 
+          "label": "Позов в інтересах малолітньої особи?", 
           "type": "checkbox",
           "nested_fields": [
-             { "id": "child_pib", "label": "ПІБ Дитини", "placeholder": "Іванов Іван Іванович", "type": "text", "required": true },
-             { "id": "child_birthday", "label": "Дата народження дитини", "type": "date", "required": true },
-             { "id": "alimony_details", "label": "Вимоги по аліментах", "placeholder": "Наприклад: 1/4 частки доходу", "type": "text", "required": false }
+             { "id": "child_pib", "label": "ПІБ Дитини", "placeholder": "Іваненко Іван Іванович", "type": "text", "required": true },
+             { "id": "child_birthday", "label": "Дата народження дитини", "type": "date", "required": true }
           ]
         },
 
-        { "id": "details", "label": "Причина розлучення", "placeholder": "Чому шлюб не склався...", "type": "textarea", "required": true }
+        { "id": "answer_pib", "label": "Відповідач", "placeholder": "ПІБ повністю", "type": "text", "required": true },
+        { "id": "answer_post_adress", "label": "Адреса Відповідача", "placeholder": "Індекс, місто, вулиця...", "type": "text", "required": true },
+        { "id": "answer_id_code", "label": "РНОКПП Відповідача", "placeholder": "Якщо відомо", "type": "text", "required": false },
+        { "id": "answer_phone", "label": "Телефон Відповідача", "placeholder": "Якщо відомо", "type": "text", "required": false },
+        { "id": "answer_mail", "label": "E-mail Відповідача", "placeholder": "Якщо відомо", "type": "text", "required": false },
+
+        { "id": "pozov_price", "label": "Ціна позову (Сума збитків)", "placeholder": "грн", "type": "text", "required": true },
+        { "id": "zbir_price", "label": "Розмір судового збору", "placeholder": "грн (напр. 1211.20)", "type": "text", "required": true },
+        
+        { "id": "description", "label": "Суть позову (Обставини)", "placeholder": "Опишіть, коли і як було завдано шкоду, чим це підтверджується...", "type": "textarea", "required": true }
+      ]
+    },
+    {
+      "id": "2026-01-11-vidzyv_na_pozovnu_zayavu",
+      "def_filename": "Vidzyv_na_pozovnu_zayavu.docx",
+      "ai_filename": "AI_Vidzyv_na_pozovnu_zayavu.docx",
+      "title": "Відзив на позовну заяву",
+      "cat": "civil",
+      "pro": false,
+      "fields": [
+        { "id": "court", "label": "Назва суду", "placeholder": "Районний суд...", "type": "text", "required": true },
+        { "id": "jadge_name", "label": "ПІБ Судді", "placeholder": "Іваненко І.І.", "type": "text", "required": true },
+        { "id": "case_number", "label": "Номер справи", "placeholder": "757/1234/24", "type": "text", "required": true },
+        
+        { "id": "answer_pib", "label": "Відповідач (Ви)", "placeholder": "ПІБ повністю", "type": "text", "required": true },
+        { "id": "answer_post_adress", "label": "Ваша адреса", "placeholder": "Індекс, місто, вулиця...", "type": "text", "required": true },
+        { "id": "answer_id_code", "label": "Ваш РНОКПП", "placeholder": "10 цифр", "type": "text", "required": true },
+
+        { "id": "pozov_pib", "label": "Позивач", "placeholder": "ПІБ позивача", "type": "text", "required": true },
+        { "id": "pozov_post_adress", "label": "Адреса Позивача", "placeholder": "Якщо відомо", "type": "text", "required": false },
+        
+        { "id": "pozov_item", "label": "Предмет позову", "placeholder": "напр. стягнення боргу", "type": "text", "required": true },
+        
+        { "id": "pozov_assert", "label": "Що стверджує Позивач?", "placeholder": "Позивач зазначає, що я брав кошти...", "type": "textarea", "required": true },
+        { "id": "answer_assert", "label": "Ваше заперечення (по суті)", "placeholder": "Це не відповідає дійсності, оскільки...", "type": "textarea", "required": true },
+        
+        { "id": "pozov_evidence", "label": "Які докази надав Позивач?", "placeholder": "напр. Розписка від 01.01.2023", "type": "text", "required": true },
+        { "id": "answer_evidence_arg", "label": "Чому цей доказ неналежний?", "placeholder": "У розписці відсутній підпис / дата...", "type": "textarea", "required": true },
+        
+        { "id": "answer_price_arg", "label": "Заперечення щодо суми", "placeholder": "Розрахунок невірний, бо не враховано...", "type": "textarea", "required": false }
+      ]
+    },
+    {
+      "id": "2026-01-11-vidpovid_na_vidzyv",
+      "def_filename": "Vidpovid_na_vidzyv.docx",
+      "ai_filename": "AI_Vidpovid_na_vidzyv.docx",
+      "title": "Відповідь на відзив",
+      "cat": "civil",
+      "pro": false,
+      "fields": [
+        { "id": "court", "label": "Назва суду", "placeholder": "Печерський районний суд...", "type": "text", "required": true },
+        { "id": "case_number", "label": "Номер справи", "placeholder": "757/1234/24", "type": "text", "required": true },
+        { "id": "pozov_pib", "label": "Позивач (Ви)", "placeholder": "ПІБ повністю", "type": "text", "required": true },
+        { "id": "answer_pib", "label": "Відповідач", "placeholder": "ПІБ повністю", "type": "text", "required": true },
+        { "id": "answer_evidence_arg", "label": "Що стверджує Відповідач?", "placeholder": "Коротко: на що посилається відповідач у відзиві...", "type": "textarea", "required": true },
+        { "id": "pozov_evidence_arg", "label": "Чому це неправда?", "placeholder": "Ваші аргументи та спростування...", "type": "textarea", "required": true }
+      ]
+    },
+    {
+      "id": "2026-01-11-zaperechennya_na_vidpovid",
+      "def_filename": "Zaperechennya_na_vidpovid.docx",
+      "ai_filename": "AI_Zaperechennya_na_vidpovid.docx",
+      "title": "Заперечення на відповідь",
+      "cat": "civil",
+      "pro": false,
+      "fields": [
+        { "id": "court", "label": "Назва суду", "placeholder": "Печерський районний суд...", "type": "text", "required": true },
+        { "id": "case_number", "label": "Номер справи", "placeholder": "757/1234/24", "type": "text", "required": true },
+        { "id": "answer_pib", "label": "Відповідач (Ви)", "placeholder": "ПІБ повністю", "type": "text", "required": true },
+        { "id": "pozov_pib", "label": "Позивач", "placeholder": "ПІБ повністю", "type": "text", "required": true },
+        { "id": "pozov_evidence_arg", "label": "Аргументи Позивача", "placeholder": "Що позивач написав у відповіді на відзив...", "type": "textarea", "required": true },
+        { "id": "answer_evidence_arg", "label": "Ваші заперечення", "placeholder": "Чому ви з цим не згодні...", "type": "textarea", "required": true },
+        { "id": "answer_evidence", "label": "Докази", "placeholder": "Чим підтверджується ваша позиція...", "type": "textarea", "required": true }
+      ]
+    },
+    {
+      "id": "2026-01-11-pozov_rozirvannya_shlyubu_alimenty",
+      "def_filename": "Pozov_rozirvannya_shlyubu_alimenty.docx",
+      "ai_filename": "AI_Pozov_rozirvannya_shlyubu_alimenty.docx",
+      "title": "Розлучення та аліменти",
+      "cat": "family",
+      "pro": false,
+      "fields": [
+        { "id": "court", "label": "Назва суду", "placeholder": "Печерський районний суд...", "type": "text", "required": true },
+        { "id": "pozov_pib", "label": "Позивач (Ви)", "placeholder": "ПІБ повністю", "type": "text", "required": true },
+        { "id": "pozov_post_adress", "label": "Адреса Позивача", "placeholder": "Індекс, місто, вулиця...", "type": "text", "required": true },
+        { "id": "pozov_id_code", "label": "Ваш РНОКПП", "placeholder": "10 цифр", "type": "text", "required": true },
+        { "id": "answer_pib", "label": "Відповідач", "placeholder": "ПІБ повністю", "type": "text", "required": true },
+        { "id": "answer_post_adress", "label": "Адреса Відповідача", "placeholder": "Індекс, місто, вулиця...", "type": "text", "required": true },
+        { "id": "marry_date", "label": "Дата укладення шлюбу", "type": "date", "required": true },
+        { "id": "racs", "label": "Орган реєстрації шлюбу", "placeholder": "Назва відділу ДРАЦС", "type": "text", "required": true },
+        { "id": "az_number", "label": "Номер актового запису", "placeholder": "№ запису у свідоцтві", "type": "text", "required": true },
+        { "id": "child_pib", "label": "ПІБ Дитини", "placeholder": "Іваненко Іван Іванович", "type": "text", "required": true },
+        { "id": "child_birthday", "label": "Дата народження дитини", "type": "date", "required": true },
+        { "id": "marry_end", "label": "Дата припинення стосунків", "placeholder": "місяць/рік (напр. січень 2024)", "type": "text", "required": true },
+        { 
+          "id": "aliments", 
+          "label": "Стягувати аліменти?", 
+          "type": "checkbox", 
+          "nested_fields": [
+            { "id": "pozov_price", "label": "Ціна позову (Аліменти)", "placeholder": "Сума за пів року (напр. 36000)", "type": "text", "required": true },
+            { "id": "aliments_size", "label": "Розмір аліментів", "placeholder": "напр. 1/4 частки доходів або 3000 грн", "type": "text", "required": true }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2026-01-11-vidzyv_alimenty",
+      "def_filename": "Vidzyv_alimenty.docx",
+      "ai_filename": "AI_Vidzyv_alimenty.docx",
+      "title": "Відзив на аліменти",
+      "cat": "family",
+      "pro": true,
+      "fields": [
+        { "id": "court", "label": "Назва суду", "placeholder": "Районний суд...", "type": "text", "required": true },
+        { "id": "case_number", "label": "Номер справи", "placeholder": "757/1234/24", "type": "text", "required": true },
+        { "id": "answer_pib", "label": "Відповідач (Ви)", "placeholder": "ПІБ повністю", "type": "text", "required": true },
+        
+        { "id": "pozov_price", "label": "Вимоги Позивача", "placeholder": "Яку суму/частку просять (напр. 1/4)", "type": "text", "required": true },
+        { "id": "salary", "label": "Ваш офіційний дохід", "placeholder": "грн (напр. 15000)", "type": "text", "required": true },
+        
+        { 
+          "id": "maintenance", 
+          "label": "Чи є інші особи на утриманні?", 
+          "type": "checkbox", 
+          "nested_fields": [
+            { "id": "maintenance_subs", "label": "Хто на утриманні", "placeholder": "напр. непрацездатна мати, дитина від іншого шлюбу", "type": "text", "required": true },
+            { "id": "evidence", "label": "Чим це підтверджується", "placeholder": "напр. Свідоцтво про народження серії...", "type": "textarea", "required": true }
+          ]
+        },
+
+        { "id": "answer_price", "label": "Пропонований розмір аліментів", "placeholder": "Скільки ви згодні платити (напр. 2000 грн)", "type": "text", "required": true }
+      ]
+    },
+    {
+      "id": "2026-01-11-zustrichna_pozovna_zayava",
+      "def_filename": "Zustrichna_pozovna_zayava.docx",
+      "ai_filename": "AI_Zustrichna_pozovna_zayava.docx",
+      "title": "Зустрічна позовна заява",
+      "cat": "civil",
+      "pro": true,
+      "fields": [
+        { "id": "court", "label": "Назва суду", "placeholder": "Печерський районний суд...", "type": "text", "required": true },
+        { "id": "case_number", "label": "Номер первісної справи", "placeholder": "757/1234/24", "type": "text", "required": true },
+        { "id": "pozov_pib", "label": "Ви (Позивач за зустрічним)", "placeholder": "ПІБ повністю", "type": "text", "required": true },
+        { "id": "answer_pib", "label": "Відповідач (за зустрічним)", "placeholder": "ПІБ повністю", "type": "text", "required": true },
+        { "id": "pozov_item", "label": "Предмет спору", "placeholder": "напр. визнання права особистої власності", "type": "text", "required": true },
+        { "id": "pozov_description", "label": "Опис спірного майна", "placeholder": "Детальний опис (марка авто, адреса квартири, характеристики)...", "type": "textarea", "required": true },
+        { "id": "source_cash", "label": "Джерело коштів", "placeholder": "напр. кошти подаровані батьками / заощадження до шлюбу", "type": "text", "required": true },
+        { "id": "property", "label": "Позовна вимога", "placeholder": "Що саме визнати вашою власністю (напр. автомобіль Toyota Camry...)", "type": "textarea", "required": true }
+      ]
+    },
+    {
+      "id": "2026-01-11-Zayava_vyklyk_svidkiv",
+      "def_filename": "Zayava_vyklyk_svidkiv.docx",
+      "ai_filename": "AI_Zayava_vyklyk_svidkiv.docx",
+      "title": "Заява про виклик свідків",
+      "cat": "procedural",
+      "pro": false,
+      "fields": [
+        { "id": "court", "label": "Назва суду", "placeholder": "Печерський районний суд...", "type": "text", "required": true },
+        { "id": "zayavnik_pib", "label": "Заявник (Ви)", "placeholder": "ПІБ повністю", "type": "text", "required": true },
+        { "id": "facts", "label": "Які обставини треба підтвердити?", "placeholder": "напр. факт проживання однією сім'єю...", "type": "textarea", "required": true },
+        { "id": "svidok_1_name", "label": "ПІБ Свідка 1", "placeholder": "Іванов Іван Іванович", "type": "text", "required": true },
+        { "id": "svidok_1_adress", "label": "Адреса Свідка 1", "placeholder": "м. Київ, вул...", "type": "text", "required": true },
+        { 
+          "id": "svidok_2", 
+          "label": "Чи є другий свідок?", 
+          "type": "checkbox", 
+          "nested_fields": [
+            { "id": "svidok_2_name", "label": "ПІБ Свідка 2", "placeholder": "Петров Петро Петрович", "type": "text", "required": true },
+            { "id": "svidok_2_adress", "label": "Адреса Свідка 2", "placeholder": "м. Київ, вул...", "type": "text", "required": true }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2026-01-11-zayava_zaluchennya_treti_osoby",
+      "def_filename": "Zayava_zaluchennya_treti_osoby.docx",
+      "ai_filename": "AI_Zayava_zaluchennya_treti_osoby.docx",
+      "title": "Залучення третьої особи",
+      "cat": "procedural",
+      "pro": false,
+      "fields": [
+        { "id": "court", "label": "Назва суду", "placeholder": "Печерський районний суд...", "type": "text", "required": true },
+        { "id": "case_number", "label": "Номер справи", "placeholder": "757/1234/24", "type": "text", "required": true },
+        
+        { "id": "third_pib", "label": "Кого залучаємо (ПІБ)", "placeholder": "ПІБ Третьої особи повністю", "type": "text", "required": true },
+        { "id": "influence_pib", "label": "Чиї права зачіпаються?", "placeholder": "ПІБ особи (зазвичай це та сама Третя особа)", "type": "text", "required": true },
+        
+        { "id": "influence", "label": "Як вплине рішення?", "placeholder": "Поясніть, чому рішення суду може вплинути на права цієї особи...", "type": "textarea", "required": true }
+      ]
+    },
+    {
+      "id": "2026-01-11-zayava_povernennya_oryginalu",
+      "def_filename": "Zayava_povernennya_oryginalu.docx",
+      "ai_filename": "AI_Zayava_povernennya_oryginalu.docx",
+      "title": "Повернення оригіналу доказу",
+      "cat": "procedural",
+      "pro": false,
+      "fields": [
+        { "id": "court", "label": "Назва суду", "placeholder": "Печерський районний суд...", "type": "text", "required": true },
+        { "id": "case_number", "label": "Номер справи", "placeholder": "757/1234/24", "type": "text", "required": true },
+        { "id": "document", "label": "Який документ повернути?", "placeholder": "Повна назва (напр. Договір купівлі-продажу від 01.01.2023)", "type": "textarea", "required": true }
+      ]
+    },
+    {
+      "id": "2026-01-11-zayava_vyznannya_pozovu",
+      "def_filename": "Zayava_vyznannya_pozovu.docx",
+      "ai_filename": "AI_Zayava_vyznannya_pozovu.docx",
+      "title": "Заява про визнання позову",
+      "cat": "procedural",
+      "pro": false,
+      "fields": [
+        { "id": "court", "label": "Назва суду", "placeholder": "Печерський районний суд...", "type": "text", "required": true },
+        { "id": "case_number", "label": "Номер справи", "placeholder": "757/1234/24", "type": "text", "required": true },
+        { "id": "answer_pib", "label": "Відповідач (Ви)", "placeholder": "ПІБ повністю", "type": "text", "required": true }
+      ]
+    },
+    {
+      "id": "2026-01-11-zayava_myrova_ugoda",
+      "def_filename": "Zayava_myrova_ugoda.docx",
+      "ai_filename": "AI_Zayava_myrova_ugoda.docx",
+      "title": "Заява про затвердження мирової угоди",
+      "cat": "procedural",
+      "pro": true,
+      "fields": [
+        { "id": "court", "label": "Назва суду", "placeholder": "Печерський районний суд...", "type": "text", "required": true },
+        { "id": "case_number", "label": "Номер справи", "placeholder": "757/1234/24", "type": "text", "required": true },
+        { "id": "pozov_pib", "label": "Сторона 1 (Позивач)", "placeholder": "ПІБ повністю", "type": "text", "required": true },
+        { "id": "answer_pib", "label": "Сторона 2 (Відповідач)", "placeholder": "ПІБ повністю", "type": "text", "required": true },
+        { "id": "date", "label": "Дата укладення угоди", "type": "date", "required": true }
+      ]
+    },
+    {
+      "id": "2026-01-11-klopotannya_ponovlennya_provadzhennya",
+      "def_filename": "Klopotannya_ponovlennya_provadzhennya.docx",
+      "ai_filename": "AI_Klopotannya_ponovlennya_provadzhennya.docx",
+      "title": "Клопотання про поновлення провадження",
+      "cat": "procedural",
+      "pro": false,
+      "fields": [
+        { "id": "court", "label": "Назва суду", "placeholder": "Печерський районний суд...", "type": "text", "required": true },
+        { "id": "case_number", "label": "Номер справи", "placeholder": "757/1234/24", "type": "text", "required": true },
+        { "id": "date", "label": "Дата ухвали про зупинення", "type": "date", "required": true },
+        { "id": "reason_rejected", "label": "До якої події зупиняли?", "placeholder": "напр. до отримання висновку експертизи", "type": "textarea", "required": true }
+      ]
+    },
+    {
+      "id": "2026-01-11-zayava_dodatkove_rishennya",
+      "def_filename": "Zayava_dodatkove_rishennya.docx",
+      "ai_filename": "AI_Zayava_dodatkove_rishennya.docx",
+      "title": "Заява про додаткове рішення",
+      "cat": "procedural",
+      "pro": true,
+      "fields": [
+        { "id": "court", "label": "Назва суду", "placeholder": "Печерський районний суд...", "type": "text", "required": true },
+        { "id": "date", "label": "Дата основного рішення", "type": "date", "required": true },
+        { "id": "price", "label": "Сума витрат (грн)", "placeholder": "10000", "type": "text", "required": true }
+      ]
+    },
+    {
+      "id": "2026-01-11-zayava_oznayomlennya_materialy",
+      "def_filename": "Zayava_oznayomlennya_materialy.docx",
+      "ai_filename": "AI_Zayava_oznayomlennya_materialy.docx",
+      "title": "Ознайомлення з матеріалами",
+      "cat": "procedural",
+      "pro": false,
+      "fields": [
+        { "id": "court", "label": "Назва суду", "placeholder": "Печерський районний суд...", "type": "text", "required": true },
+        { "id": "case_number", "label": "Номер справи", "placeholder": "757/1234/24", "type": "text", "required": true }
+      ]
+    },
+    {
+      "id": "2026-01-11-zayava_vidstrochennya_zboru",
+      "def_filename": "Zayava_vidstrochennya_zboru.docx",
+      "ai_filename": "AI_Zayava_vidstrochennya_zboru.docx",
+      "title": "Відстрочення судового збору",
+      "cat": "procedural",
+      "pro": false,
+      "fields": [
+        { "id": "court", "label": "Назва суду", "placeholder": "Печерський районний суд...", "type": "text", "required": true },
+        { "id": "price", "label": "Сума збору", "placeholder": "Скільки треба сплатити (грн)", "type": "text", "required": true },
+        { "id": "reason", "label": "Причина несплати", "placeholder": "Чому ви не можете сплатити зараз (напр. безробіття, хвороба)...", "type": "textarea", "required": true },
+        { "id": "document", "label": "Чим це підтверджується?", "placeholder": "Назва документа (напр. Довідка про доходи №...)", "type": "textarea", "required": true }
+      ]
+    },
+    {
+      "id": "2026-01-11-zayava_zabezpechennya_pozovu",
+      "def_filename": "Zayava_zabezpechennya_pozovu.docx",
+      "ai_filename": "AI_Zayava_zabezpechennya_pozovu.docx",
+      "title": "Заява про забезпечення позову",
+      "cat": "procedural",
+      "pro": true,
+      "fields": [
+        { "id": "court", "label": "Назва суду", "placeholder": "Печерський районний суд...", "type": "text", "required": true },
+        { "id": "price", "label": "Ціна позову", "placeholder": "Сума, яку ви стягуєте (грн)", "type": "text", "required": true },
+        { "id": "evidence", "label": "Чому є загроза?", "placeholder": "Опишіть дії відповідача (напр. виставив авто на продаж, переписує майно)...", "type": "textarea", "required": true },
+        { "id": "description_property", "label": "Майно для арешту", "placeholder": "Детальний опис (марка авто, номер, квартира, кадастровий номер)...", "type": "textarea", "required": true },
+        { "id": "adress", "label": "Де знаходиться майно?", "placeholder": "Адреса розташування", "type": "text", "required": true }
+      ]
+    },
+    {
+      "id": "2026-01-11-zayava_vytrebuvannya_dokaziv",
+      "def_filename": "Zayava_vytrebuvannya_dokaziv.docx",
+      "ai_filename": "AI_Zayava_vytrebuvannya_dokaziv.docx",
+      "title": "Заява про витребування доказів",
+      "cat": "procedural",
+      "pro": true,
+      "fields": [
+        { "id": "court", "label": "Назва суду", "placeholder": "Печерський районний суд...", "type": "text", "required": true },
+        { "id": "case_number", "label": "Номер справи", "placeholder": "757/1234/24", "type": "text", "required": true },
+        { "id": "evidence", "label": "Що треба довести?", "placeholder": "напр. реальний майновий стан відповідача", "type": "textarea", "required": true },
+        { "id": "reason", "label": "Чому не можете отримати самі?", "placeholder": "напр. інформація є з обмеженим доступом / ігнорування запиту", "type": "textarea", "required": true },
+        { "id": "answer_name", "label": "У кого витребувати?", "placeholder": "Назва установи (напр. АТ 'ПриватБанк')", "type": "text", "required": true },
+        { "id": "evidence_name", "label": "Який документ потрібен?", "placeholder": "напр. Виписка по рахунку №... за період...", "type": "textarea", "required": true }
+      ]
+    },
+    {
+      "id": "2026-01-11-zayava_vydacha_kopii_rishennya",
+      "def_filename": "Zayava_vydacha_kopii_rishennya.docx",
+      "ai_filename": "AI_Zayava_vydacha_kopii_rishennya.docx",
+      "title": "Видача копії рішення",
+      "cat": "procedural",
+      "pro": false,
+      "fields": [
+        { "id": "court", "label": "Назва суду", "placeholder": "Печерський районний суд...", "type": "text", "required": true },
+        { "id": "case_number", "label": "Номер справи", "placeholder": "757/1234/24", "type": "text", "required": true },
+        { "id": "date", "label": "Дата ухвалення рішення", "type": "date", "required": true }
+      ]
+    },
+    {
+      "id": "2026-01-11-zayava_vydacha_tech_zapysu",
+      "def_filename": "Zayava_vydacha_tech_zapysu.docx",
+      "ai_filename": "AI_Zayava_vydacha_tech_zapysu.docx",
+      "title": "Видача технічного запису",
+      "cat": "procedural",
+      "pro": false,
+      "fields": [
+        { "id": "court", "label": "Назва суду", "placeholder": "Печерський районний суд...", "type": "text", "required": true },
+        { "id": "date", "label": "Дата судового засідання", "type": "date", "required": true },
+        { "id": "object", "label": "Носій інформації", "placeholder": "напр. CD-диск / DVD-диск / Флеш-накопичувач", "type": "text", "required": true }
+      ]
+    },
+    {
+      "id": "2026-01-11-zayava_dopusk_perekladacha",
+      "def_filename": "Zayava_dopusk_perekladacha.docx",
+      "ai_filename": "AI_Zayava_dopusk_perekladacha.docx",
+      "title": "Заява про допуск перекладача",
+      "cat": "procedural",
+      "pro": false,
+      "fields": [
+        { "id": "court", "label": "Назва суду", "placeholder": "Печерський районний суд...", "type": "text", "required": true },
+        { "id": "case_number", "label": "Номер справи", "placeholder": "757/1234/24", "type": "text", "required": true },
+        { "id": "translator_pib", "label": "ПІБ Перекладача", "placeholder": "ПІБ особи, яку залучаєте", "type": "text", "required": true }
+      ]
+    },
+    {
+      "id": "2026-01-11-zayava_pryznachennya_ekspertyzy",
+      "def_filename": "Zayava_pryznachennya_ekspertyzy.docx",
+      "ai_filename": "AI_Zayava_pryznachennya_ekspertyzy.docx",
+      "title": "Призначення експертизи",
+      "cat": "procedural",
+      "pro": true,
+      "fields": [
+        { "id": "court", "label": "Назва суду", "placeholder": "Печерський районний суд...", "type": "text", "required": true },
+        { "id": "case_number", "label": "Номер справи", "placeholder": "757/1234/24", "type": "text", "required": true },
+        { "id": "object", "label": "Що треба з'ясувати?", "placeholder": "напр. реальну ринкову вартість автомобіля", "type": "textarea", "required": true },
+        { "id": "expertise_type", "label": "Вид експертизи", "placeholder": "напр. автотоварознавча / будівельно-технічна", "type": "text", "required": true },
+        { "id": "questions", "label": "Питання до експерта", "placeholder": "1. Яка вартість...? 2. Чи відповідає...?", "type": "textarea", "required": true },
+        { "id": "expertise_institution", "label": "Експертна установа", "placeholder": "напр. КНДІСЕ (Київський інститут експертиз)", "type": "text", "required": true }
+      ]
+    },
+    {
+      "id": "2026-01-11-zayava_vidvid_suddi",
+      "def_filename": "Zayava_vidvid_suddi.docx",
+      "ai_filename": "AI_Zayava_vidvid_suddi.docx",
+      "title": "Заява про відвід судді",
+      "cat": "procedural",
+      "pro": true,
+      "fields": [
+        { "id": "court", "label": "Назва суду", "placeholder": "Печерський районний суд...", "type": "text", "required": true },
+        { "id": "case_number", "label": "Номер справи", "placeholder": "757/1234/24", "type": "text", "required": true },
+        { "id": "judge_pib", "label": "ПІБ Судді", "placeholder": "Іваненко Іван Іванович", "type": "text", "required": true },
+        { "id": "reason", "label": "Причина відводу", "placeholder": "напр. суддя є родичем однієї зі сторін / висловлював упередженість...", "type": "textarea", "required": true }
+      ]
+    },
+    {
+      "id": "2026-01-11-zayava_videokonferentsiya",
+      "def_filename": "Zayava_videokonferentsiya.docx",
+      "ai_filename": "AI_Zayava_videokonferentsiya.docx",
+      "title": "Участь у відеоконференції",
+      "cat": "procedural",
+      "pro": false,
+      "fields": [
+        { "id": "court", "label": "Назва суду", "placeholder": "Печерський районний суд...", "type": "text", "required": true },
+        { "id": "case_number", "label": "Номер справи", "placeholder": "757/1234/24", "type": "text", "required": true },
+        { "id": "date", "label": "Дата судового засідання", "type": "date", "required": true },
+        { "id": "email", "label": "Електронна пошта (для EasyCon/ВКЗ)", "placeholder": "Ваш email, зареєстрований в системі", "type": "text", "required": true }
+      ]
+    },
+    {
+      "id": "2026-01-11-klopotannya_rozglyad_vidsutnosti",
+      "def_filename": "Klopotannya_rozglyad_vidsutnosti.docx",
+      "ai_filename": "AI_Klopotannya_rozglyad_vidsutnosti.docx",
+      "title": "Розгляд за відсутності",
+      "cat": "procedural",
+      "pro": false,
+      "fields": [
+        { "id": "court", "label": "Назва суду", "placeholder": "Печерський районний суд...", "type": "text", "required": true },
+        { "id": "case_number", "label": "Номер справи", "placeholder": "757/1234/24", "type": "text", "required": true }
+      ]
+    },
+    {
+      "id": "2026-01-11-zayava_pereglyad_zaochnogo",
+      "def_filename": "Zayava_pereglyad_zaochnogo.docx",
+      "ai_filename": "AI_Zayava_pereglyad_zaochnogo.docx",
+      "title": "Перегляд заочного рішення",
+      "cat": "procedural",
+      "pro": true,
+      "fields": [
+        { "id": "court", "label": "Назва суду", "placeholder": "Печерський районний суд...", "type": "text", "required": true },
+        { "id": "case_number", "label": "Номер справи", "placeholder": "757/1234/24", "type": "text", "required": true },
+        { "id": "date", "label": "Дата заочного рішення", "type": "date", "required": true },
+        { "id": "reason", "label": "Чому ви не прийшли?", "placeholder": "Поважна причина (хвороба, відрядження, не отримав повістку)...", "type": "textarea", "required": true },
+        { "id": "evidence", "label": "Які докази не враховано?", "placeholder": "Докази, що істотно впливають на вирішення справи...", "type": "textarea", "required": true }
+      ]
+    },
+    {
+      "id": "2026-01-11-zayava_ponovlennya_stroku_apel",
+      "def_filename": "Zayava_ponovlennya_stroku_apel.docx",
+      "ai_filename": "AI_Zayava_ponovlennya_stroku_apel.docx",
+      "title": "Поновлення строку на апеляцію",
+      "cat": "appeals",
+      "pro": false,
+      "fields": [
+        { "id": "court_apel", "label": "Апеляційний суд", "placeholder": "Київський апеляційний суд...", "type": "text", "required": true },
+        { "id": "case_number", "label": "Номер справи", "placeholder": "757/1234/24", "type": "text", "required": true },
+        { "id": "date", "label": "Дата рішення суду", "type": "date", "required": true },
+        { "id": "receive", "label": "Коли отримали рішення?", "type": "date", "required": true },
+        { "id": "evidence", "label": "Доказ отримання", "placeholder": "напр. вхідний штамп на конверті / довідка суду...", "type": "textarea", "required": true }
+      ]
+    },
+    {
+      "id": "2026-01-11-apelyatsiyna_skarga",
+      "def_filename": "Apelyatsiyna_skarga.docx",
+      "ai_filename": "AI_Apelyatsiyna_skarga.docx",
+      "title": "Апеляційна скарга на рішення",
+      "cat": "appeals",
+      "pro": true,
+      "fields": [
+        { "id": "court_apel", "label": "Апеляційний суд", "placeholder": "Назва суду, куди подаєте...", "type": "text", "required": true },
+        { "id": "complainant", "label": "Скаржник (Ви)", "placeholder": "ПІБ повністю", "type": "text", "required": true },
+        { "id": "court", "label": "Суд 1-ї інстанції", "placeholder": "Назва суду, який ухвалив рішення...", "type": "text", "required": true },
+        { "id": "case_number", "label": "Номер справи", "placeholder": "757/1234/24", "type": "text", "required": true },
+        { "id": "date", "label": "Дата рішення суду", "type": "date", "required": true },        
+        { "id": "circumstance", "label": "Неповне з'ясування обставин", "placeholder": "Які факти суд не врахував або не дослідив...", "type": "textarea", "required": true },
+        { "id": "rule_law", "label": "Порушення норм права", "placeholder": "В чому полягає помилка суду...", "type": "textarea", "required": true },
+        { "id": "article", "label": "Порушена стаття ЦКУ", "placeholder": "напр. 625", "type": "text", "required": true }
+      ]
+    },
+    {
+      "id": "2026-01-11-vidzyv_apel_skarga",
+      "def_filename": "Vidzyv_apel_skarga.docx",
+      "ai_filename": "AI_Vidzyv_apel_skarga.docx",
+      "title": "Відзив на апеляційну скаргу",
+      "cat": "appeals",
+      "pro": false,
+      "fields": [
+        { "id": "court_apel", "label": "Апеляційний суд", "placeholder": "Назва суду...", "type": "text", "required": true },
+        { "id": "case_number", "label": "Номер справи", "placeholder": "757/1234/24", "type": "text", "required": true },
+        { "id": "applicant_pib", "label": "Ваше ПІБ", "placeholder": "ПІБ повністю", "type": "text", "required": true },
+        { "id": "objection", "label": "Ваша позиція", "placeholder": "Чому апеляційна скарга є безпідставною, а рішення суду законним...", "type": "textarea", "required": true }
+      ]
+    },
+    {
+      "id": "2026-01-11-zayava_ponovlennya_stroku_apel",
+      "def_filename": "Zayava_ponovlennya_stroku_apel.docx",
+      "ai_filename": "AI_Zayava_ponovlennya_stroku_apel.docx",
+      "title": "Поновлення строку (апеляція)",
+      "cat": "appeals",
+      "pro": false,
+      "fields": [
+        { "id": "court_apel", "label": "Апеляційний суд", "placeholder": "Назва суду", "type": "text", "required": true },
+        { "id": "date", "label": "Дата рішення суду", "type": "date", "required": true },
+        { "id": "receive", "label": "Дата отримання копії", "type": "date", "required": true },
+        { "id": "evidence", "label": "Доказ отримання", "placeholder": "напр. штамп на конверті / розписка", "type": "text", "required": true }
+      ]
+    },
+    {
+      "id": "2026-01-11-apel_skarga_pidsudnist",
+      "def_filename": "Apel_skarga_pidsudnist.docx",
+      "ai_filename": "AI_Apel_skarga_pidsudnist.docx",
+      "title": "Апеляція на ухвалу (підсудність)",
+      "cat": "appeals",
+      "pro": true,
+      "fields": [
+        { "id": "court_apel", "label": "Апеляційний суд", "placeholder": "Назва суду", "type": "text", "required": true },
+        { "id": "reason", "label": "Чому порушено підсудність?", "placeholder": "Суд мав передати справу, але...", "type": "textarea", "required": true }
+      ]
+    },
+    {
+      "id": "2026-01-11-zayava_pryyednannya_apel",
+      "def_filename": "Zayava_pryyednannya_apel.docx",
+      "ai_filename": "AI_Zayava_pryyednannya_apel.docx",
+      "title": "Приєднання до апеляції",
+      "cat": "appeals",
+      "pro": false,
+      "fields": [
+        { "id": "court_apel", "label": "Апеляційний суд", "placeholder": "Назва суду", "type": "text", "required": true },
+        { "id": "complainant_pib", "label": "До чиєї скарги приєднуєтесь?", "placeholder": "ПІБ Скаржника", "type": "text", "required": true }
+      ]
+    },
+    {
+      "id": "2026-01-11-dopovnennya_apel_skarga",
+      "def_filename": "Dopovnennya_apel_skarga.docx",
+      "ai_filename": "AI_Dopovnennya_apel_skarga.docx",
+      "title": "Доповнення до апеляції",
+      "cat": "appeals",
+      "pro": true,
+      "fields": [
+        { "id": "court_apel", "label": "Апеляційний суд", "placeholder": "Назва суду", "type": "text", "required": true },
+        { "id": "new_object", "label": "Нові обґрунтування", "placeholder": "Чим доповнюєте скаргу...", "type": "textarea", "required": true }
+      ]
+    },
+    {
+      "id": "2026-01-11-zminy_apel_skarga",
+      "def_filename": "Zminy_apel_skarga.docx",
+      "ai_filename": "AI_Zminy_apel_skarga.docx",
+      "title": "Зміни до апеляції",
+      "cat": "appeals",
+      "pro": true,
+      "fields": [
+        { "id": "court_apel", "label": "Апеляційний суд", "placeholder": "Назва суду", "type": "text", "required": true },
+        { "id": "new_character", "label": "Змінена прохальна частина", "placeholder": "Що саме ви тепер просите суд...", "type": "textarea", "required": true }
+      ]
+    },
+    {
+      "id": "2026-01-11-vidklykannya_apel_skarga",
+      "def_filename": "Vidklykannya_apel_skarga.docx",
+      "ai_filename": "AI_Vidklykannya_apel_skarga.docx",
+      "title": "Відкликання апеляції",
+      "cat": "appeals",
+      "pro": false,
+      "fields": [
+        { "id": "court_apel", "label": "Апеляційний суд", "placeholder": "Назва суду", "type": "text", "required": true }
+      ]
+    },
+    {
+      "id": "2026-01-11-vidmova_apel_skarga",
+      "def_filename": "Vidmova_apel_skarga.docx",
+      "ai_filename": "AI_Vidmova_apel_skarga.docx",
+      "title": "Відмова від апеляції",
+      "cat": "appeals",
+      "pro": false,
+      "fields": [
+        { "id": "court_apel", "label": "Апеляційний суд", "placeholder": "Назва суду", "type": "text", "required": true },
+        { "id": "case_number", "label": "Номер справи", "placeholder": "757/1234/24", "type": "text", "required": true }
+      ]
+    },
+    {
+      "id": "2026-01-11-vidmova_pozov_apel",
+      "def_filename": "Vidmova_pozov_apel.docx",
+      "ai_filename": "AI_Vidmova_pozov_apel.docx",
+      "title": "Відмова від позову (апеляція)",
+      "cat": "appeals",
+      "pro": true,
+      "fields": [
+        { "id": "court_apel", "label": "Апеляційний суд", "placeholder": "Назва суду", "type": "text", "required": true },
+        { "id": "pozov_pib", "label": "Позивач (Ви)", "placeholder": "ПІБ повністю", "type": "text", "required": true }
+      ]
+    },
+    {
+      "id": "2026-01-11-myrova_ugoda_apel",
+      "def_filename": "Myrova_ugoda_apel.docx",
+      "ai_filename": "AI_Myrova_ugoda_apel.docx",
+      "title": "Мирова угода (апеляція)",
+      "cat": "appeals",
+      "pro": true,
+      "fields": [
+        { "id": "court_apel", "label": "Апеляційний суд", "placeholder": "Назва суду", "type": "text", "required": true }
+      ]
+    },
+    {
+      "id": "2026-01-11-ponovlennya_stroku_kasatsiya",
+      "def_filename": "Ponovlennya_stroku_kasatsiya.docx",
+      "ai_filename": "AI_Ponovlennya_stroku_kasatsiya.docx",
+      "title": "Поновлення строку (касація)",
+      "cat": "appeals",
+      "pro": false,
+      "fields": [
+        { "id": "date", "label": "Дата отримання постанови", "type": "date", "required": true }
+      ]
+    },
+    {
+      "id": "2026-01-11-kasatsiyna_skarga_rishennya",
+      "def_filename": "Kasatsiyna_skarga_rishennya.docx",
+      "ai_filename": "AI_Kasatsiyna_skarga_rishennya.docx",
+      "title": "Касаційна скарга",
+      "cat": "appeals",
+      "pro": true,
+      "fields": [
+        { "id": "complainant_pib", "label": "Скаржник (Ви)", "placeholder": "ПІБ повністю", "type": "text", "required": true },
+        { "id": "case_number", "label": "Номер справи", "placeholder": "757/1234/24", "type": "text", "required": true },
+        { "id": "date", "label": "Дата постанови Верховного Суду", "placeholder": "для посилання на практику", "type": "date", "required": true },
+        { "id": "article", "label": "Стаття закону", "placeholder": "напр. 625", "type": "text", "required": true },
+        { "id": "zakon", "label": "Назва закону", "placeholder": "напр. Цивільного кодексу України", "type": "text", "required": true }
+      ]
+    },
+    {
+      "id": "2026-01-11-kasatsiyna_skarga_ukhvala",
+      "def_filename": "Kasatsiyna_skarga_ukhvala.docx",
+      "ai_filename": "AI_Kasatsiyna_skarga_ukhvala.docx",
+      "title": "Касаційна скарга на ухвалу",
+      "cat": "appeals",
+      "pro": true,
+      "fields": [
+        { "id": "court", "label": "Суд касаційної інстанції", "placeholder": "Верховний Суд (Касаційний цивільний суд)", "type": "text", "required": true },
+        { "id": "case_number", "label": "Номер справи", "placeholder": "757/1234/24", "type": "text", "required": true },   
+        { "id": "object", "label": "Предмет ухвали", "placeholder": "напр. про забезпечення позову / про відмову у відкритті...", "type": "textarea", "required": true }
       ]
     }
   ]
