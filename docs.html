@@ -18,12 +18,11 @@
             --radius-card: 16px;
             --radius-input: 12px;
             
-            /* Градієнти та кольори для статусів */
             --pro-gradient: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
             --lite-gradient: linear-gradient(135deg, #32ade6 0%, #007aff 100%);
             --admin-gradient: linear-gradient(135deg, #ff3b30 0%, #ff2d55 100%);
             --free-bg: var(--tg-hint);
-            --bought-color: #34c759; /* Зелений для куплених */
+            --bought-color: #34c759;
 
             --shadow: 0 4px 20px rgba(0,0,0,0.05);
             --error-color: #ff3b30;
@@ -63,7 +62,6 @@
         .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
         .app-name { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; }
         
-        /* User Badge styles */
         .badge { padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; color: #fff; text-transform: uppercase; }
         .badge.free { background: var(--free-bg); }
         .badge.lite { background: var(--lite-gradient); }
@@ -103,14 +101,12 @@
         
         .doc-title { font-size: 16px; font-weight: 600; line-height: 1.3; }
         
-        /* Tags inside cards */
         .plan-tag { font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 4px; margin-left: 6px; color: #fff; vertical-align: middle; text-transform: uppercase; }
         .plan-tag.lite { background: var(--lite-gradient); }
         .plan-tag.pro { background: var(--pro-gradient); color: #000; }
-        .plan-tag.admin { background: var(--admin-gradient); }
         .plan-tag.bought { background: var(--bought-color); color: #fff; }
 
-        /* МОДАЛКА (ШТОРКА) */
+        /* МОДАЛКА */
         .overlay {
             position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6);
             z-index: 200; opacity: 0; pointer-events: none; transition: 0.3s;
@@ -171,12 +167,10 @@
         .inp-field.error { border-color: var(--error-color); background: rgba(255, 59, 48, 0.05); }
         textarea.inp-field { min-height: 100px; resize: none; font-family: inherit; }
 
-        /* CHECKBOX GROUP */
         .checkbox-row {
             display: flex; align-items: center; gap: 12px;
             padding: 16px; background: var(--tg-sec-bg); border-radius: var(--radius-input);
-            cursor: pointer; margin-bottom: 16px;
-            border: 1px solid transparent;
+            cursor: pointer; margin-bottom: 16px; border: 1px solid transparent;
         }
         .checkbox-row.active { background: var(--tg-bg); border-color: var(--tg-btn); }
         .checkbox-row input { width: 22px; height: 22px; accent-color: var(--tg-btn); }
@@ -188,21 +182,12 @@
         }
         .nested-container.open { display: block; opacity: 1; }
 
-        /* КНОПКИ */
         .btn { width: 100%; padding: 16px; border-radius: 14px; font-size: 17px; font-weight: 700; border: none; cursor: pointer; margin-top: 10px; color: #fff; }
         .btn-primary { background: var(--tg-btn); box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3); }
         .btn-upgrade { background: var(--pro-gradient); color: #000; box-shadow: 0 4px 15px rgba(255, 165, 0, 0.3); }
-        
-        /* Вторинна кнопка (сіра) */
-        .btn-secondary { 
-            background: var(--tg-sec-bg); 
-            color: var(--tg-text); 
-            margin-top: 12px;
-            border: 1px solid rgba(0,0,0,0.05);
-        }
+        .btn-secondary { background: var(--tg-sec-bg); color: var(--tg-text); margin-top: 12px; border: 1px solid rgba(0,0,0,0.05); }
         .btn-secondary:active { opacity: 0.7; }
 
-        /* PRO/UPGRADE Screen */
         .pro-screen { text-align: center; padding: 40px 20px; }
         .lock-big { font-size: 64px; margin-bottom: 16px; display: inline-block; animation: shake 2s infinite; }
         @keyframes shake { 0%,100%{transform:rotate(0);} 25%{transform:rotate(-10deg);} 75%{transform:rotate(10deg);} }
@@ -254,46 +239,47 @@
         <div class="sheet-body pro-screen">
             <div class="lock-big">🔒</div>
             <h3 id="upgradeTitle">Тільки для PRO</h3>
-            <p id="upgradeText" style="color:var(--tg-hint); margin-bottom: 24px; font-size: 16px; line-height: 1.5;">
-                ...
-            </p>
-            <div id="upgradeButtons" style="display: flex; flex-direction: column;">
-                </div>
+            <p id="upgradeText" style="color:var(--tg-hint); margin-bottom: 24px; font-size: 16px; line-height: 1.5;">...</p>
+            <div id="upgradeButtons" style="display: flex; flex-direction: column;"></div>
         </div>
     </div>
 
     <script>
+        // --- DEBUGGER ---
+        // Це допоможе виявити помилку всередині Telegram. 
+        // Якщо вискочить alert, ви зрозумієте, де проблема.
+        window.onerror = function(msg, url, line) {
+            // alert("System Error: " + msg + "\nLine: " + line); // Розкоментуйте для налагодження, якщо не працюватиме
+            return false;
+        };
+
         const tg = window.Telegram.WebApp;
         tg.expand();
-        if (tg.enableClosingConfirmation) tg.enableClosingConfirmation();
+        tg.ready(); // Повідомляємо TG, що додаток готовий
 
-        // Посилання на JSON конфіг
         const CONFIG_URL = "https://raw.githubusercontent.com/Normalnuy/justin-legal-tools/main/templates.json";
-
-        // Рівні доступу
         const PLAN_LEVELS = { 'free': 0, 'lite': 1, 'pro': 2, 'admin': 3 };
 
-        // 1. ОТРИМАННЯ ПАРАМЕТРІВ З URL
         const urlParams = new URLSearchParams(window.location.search);
-        
-        // План користувача (з URL або free)
         const RAW_PLAN = urlParams.get('plan') || 'free';
         const USER_RANK = PLAN_LEVELS[RAW_PLAN] !== undefined ? PLAN_LEVELS[RAW_PLAN] : 0;
-
-        // Список куплених шаблонів (з URL, формат: ?purchased=id1,id2)
         const PURCHASED_PARAM = urlParams.get('purchased') || '';
         const PURCHASED_IDS = PURCHASED_PARAM.split(',').filter(id => id.trim() !== '');
 
-        // --- HELPER для безпечної вібрації ---
+        // Безпечний виклик вібрації (try-catch гарантує, що скрипт не помре)
         function safeHaptic(type) {
-            if (tg.HapticFeedback) {
-                tg.HapticFeedback.impactOccurred(type);
-            }
+            try {
+                if (tg.HapticFeedback && tg.HapticFeedback.impactOccurred) {
+                    tg.HapticFeedback.impactOccurred(type);
+                }
+            } catch(e) { console.log('Haptic error', e); }
         }
         function safeNotify(type) {
-            if (tg.HapticFeedback) {
-                tg.HapticFeedback.notificationOccurred(type);
-            }
+            try {
+                if (tg.HapticFeedback && tg.HapticFeedback.notificationOccurred) {
+                    tg.HapticFeedback.notificationOccurred(type);
+                }
+            } catch(e) { console.log('Notify error', e); }
         }
 
         const app = {
@@ -303,28 +289,25 @@
             async init() {
                 try {
                     const res = await fetch(CONFIG_URL);
-                    if(!res.ok) throw new Error("JSON Error");
+                    if(!res.ok) throw new Error("JSON Error " + res.status);
                     this.data = await res.json();
                     
                     document.getElementById('loader').style.display = 'none';
                     const appDiv = document.getElementById('app');
                     appDiv.style.display = 'block';
                     
-                    // Анімація
-                    appDiv.style.opacity = 0;
                     setTimeout(() => { 
                         appDiv.style.transition = 'opacity 0.4s'; 
                         appDiv.style.opacity = 1; 
                     }, 50);
 
-                    // Встановлення бейджа користувача
                     const badge = document.getElementById('userBadge');
                     badge.innerText = RAW_PLAN.toUpperCase();
                     badge.className = `badge ${RAW_PLAN}`;
 
                     this.render();
                 } catch(e) {
-                    document.getElementById('loader').innerHTML = `<div style="color:red; text-align:center;">Помилка завантаження:<br>${e.message}</div>`;
+                    document.getElementById('loader').innerHTML = `<div style="color:red; text-align:center;">Error:<br>${e.message}</div>`;
                 }
             },
 
@@ -333,10 +316,9 @@
                 const container = document.getElementById('list');
                 container.innerHTML = '';
 
-                const grouped = {};
-                // Перевірка наявності даних
                 if (!this.data || !this.data.templates) return;
 
+                const grouped = {};
                 this.data.templates.forEach(t => {
                     if(search && !t.title.toLowerCase().includes(search)) return;
                     if(!grouped[t.cat]) grouped[t.cat] = [];
@@ -357,23 +339,21 @@
                     items.forEach(item => {
                         const itemPlan = item.plan || 'free'; 
                         const itemRank = PLAN_LEVELS[itemPlan] !== undefined ? PLAN_LEVELS[itemPlan] : 0;
-                        
-                        // Перевіряємо, чи купив користувач цей шаблон окремо
-                        const isPurchased = PURCHASED_IDS.includes(item.id);
-
-                        // Логіка блокування: Заблоковано, якщо ранг замалий І не куплено
+                        const isPurchased = PURCHASED_IDS.includes(String(item.id));
                         const isLocked = (itemRank > USER_RANK) && !isPurchased;
                         
                         const el = document.createElement('div');
                         el.className = `doc-card ${isLocked ? 'locked' : ''}`;
-                        // ТУТ БУЛА ПОМИЛКА: передаємо управління в безпечну функцію
-                        el.onclick = () => this.click(item, isLocked, itemPlan);
                         
+                        // ПРАВИЛЬНИЙ ОБРОБНИК ПОДІЙ (без onclick в HTML)
+                        el.addEventListener('click', () => {
+                            this.click(item, isLocked, itemPlan);
+                        });
+
                         let icon = '📄';
                         if(catKey === 'civil') icon = '⚖️';
                         if(catKey === 'family') icon = '❤️';
                         if(isLocked) icon = '🔒';
-                        
                         if(isPurchased && itemRank > USER_RANK) icon = '✅';
 
                         let planBadge = '';
@@ -396,9 +376,7 @@
             },
 
             click(item, isLocked, requiredPlan) {
-                // ВИПРАВЛЕНО: Безпечний виклик вібрації
                 safeHaptic(isLocked ? 'error' : 'light');
-
                 if(isLocked) {
                     this.showUpgrade(item, requiredPlan);
                 } else {
@@ -407,31 +385,48 @@
                 }
             },
 
-            // Вікно пропозиції покупки
+            // --- ОСНОВНЕ ВИПРАВЛЕННЯ ТУТ ---
+            // Ми більше не формуємо HTML кнопок як текст.
+            // Ми створюємо їх як об'єкти, що гарантує роботу onclick.
             showUpgrade(item, requiredPlan) {
-                this.currentId = item.id;
+                try {
+                    this.currentId = item.id;
 
-                const title = document.getElementById('upgradeTitle');
-                const text = document.getElementById('upgradeText');
-                const btnArea = document.getElementById('upgradeButtons');
+                    const title = document.getElementById('upgradeTitle');
+                    const text = document.getElementById('upgradeText');
+                    const btnArea = document.getElementById('upgradeButtons');
 
-                title.innerText = `Доступ обмежено`;
-                text.innerHTML = `
-                    Цей документ входить у план <b>${requiredPlan.toUpperCase()}</b>.<br>
-                    Ви можете оформити підписку або придбати цей шаблон окремо.
-                `;
-                
-                // ВИПРАВЛЕНО: Екранування лапок для безпечного HTML onclick
-                // Замінюємо ' на \', щоб не поламати HTML
-                const safeTitle = item.title.replace(/'/g, "\\'"); 
-                const safeId = String(item.id).replace(/'/g, "\\'");
+                    title.innerText = `Доступ обмежено`;
+                    text.innerHTML = `
+                        Цей документ входить у план <b>${requiredPlan.toUpperCase()}</b>.<br>
+                        Ви можете оформити підписку або придбати цей шаблон окремо.
+                    `;
+                    
+                    // Очищаємо старі кнопки
+                    btnArea.innerHTML = '';
 
-                btnArea.innerHTML = `
-                    <button class="btn btn-upgrade" onclick="app.buySubscription('${requiredPlan}')">Оформити підписку</button>
-                    <button class="btn btn-secondary" onclick="app.buySingleTemplate('${safeId}', '${safeTitle}', '${requiredPlan}')">Купити тільки цей шаблон</button>
-                `;
-                
-                this.sheet('upgradeSheet');
+                    // 1. Кнопка "Оформити підписку"
+                    const subBtn = document.createElement('button');
+                    subBtn.className = 'btn btn-upgrade';
+                    subBtn.innerText = 'Оформити підписку';
+                    subBtn.onclick = () => {
+                        this.buySubscription(requiredPlan);
+                    };
+                    btnArea.appendChild(subBtn);
+
+                    // 2. Кнопка "Купити окремо"
+                    const singleBtn = document.createElement('button');
+                    singleBtn.className = 'btn btn-secondary';
+                    singleBtn.innerText = 'Купити тільки цей шаблон';
+                    singleBtn.onclick = () => {
+                        this.buySingleTemplate(item.id, item.title, requiredPlan);
+                    };
+                    btnArea.appendChild(singleBtn);
+
+                    this.sheet('upgradeSheet');
+                } catch(e) {
+                    alert("Err ShowUpgrade: " + e.message);
+                }
             },
 
             renderField(f, container) {
@@ -450,8 +445,10 @@
                     nestedDiv.className = 'nested-container';
                     nestedDiv.id = `nested_${f.id}`;
 
+                    // Виправлення делегування подій для чекбокса
                     checkboxRow.onclick = (e) => {
-                        const checkbox = document.getElementById(checkId);
+                        // Знаходимо інпут всередині цього рядка
+                        const checkbox = checkboxRow.querySelector('input');
                         if (e.target !== checkbox) checkbox.checked = !checkbox.checked;
                         
                         if (checkbox.checked) {
@@ -475,7 +472,6 @@
 
                 const wrap = document.createElement('div');
                 wrap.className = 'inp-group';
-                
                 const isRequired = f.required !== false; 
                 const starHtml = isRequired ? '<span class="required-mark">*</span>' : ' <span style="color:var(--tg-hint);font-weight:400;font-size:12px;">(необов.)</span>';
                 
@@ -485,14 +481,10 @@
                 wrap.appendChild(lbl);
 
                 let inp;
-                if(f.type === 'textarea') {
-                    inp = document.createElement('textarea');
-                } else if(f.type === 'date') {
+                if(f.type === 'textarea') inp = document.createElement('textarea');
+                else {
                     inp = document.createElement('input');
-                    inp.type = 'date';
-                } else {
-                    inp = document.createElement('input');
-                    inp.type = 'text';
+                    inp.type = f.type === 'date' ? 'date' : 'text';
                 }
                 
                 inp.className = 'inp-field';
@@ -509,7 +501,6 @@
                 document.getElementById('formTitle').innerText = item.title;
                 const container = document.getElementById('formFields');
                 container.innerHTML = '';
-
                 const fields = item.fields || [];
                 if(fields.length === 0) {
                     container.innerHTML = `<div style="text-align:center; color:gray;">Полів немає.</div>`;
@@ -535,7 +526,6 @@
 
                 document.querySelectorAll('#formFields .inp-field').forEach(el => {
                     if (el.offsetParent === null) return; 
-
                     const val = el.value.trim();
                     const isRequired = el.dataset.required === "true";
 
@@ -545,19 +535,15 @@
                         if(!firstError) firstError = el;
                         el.oninput = () => el.classList.remove('error');
                     }
-
-                    if (val) {
-                        inputs[el.id.replace('in_', '')] = val;
-                    }
+                    if (val) inputs[el.id.replace('in_', '')] = val;
                 });
 
                 if (!isValid) {
-                    safeNotify('error'); // Виправлено
+                    safeNotify('error');
                     if(firstError) firstError.scrollIntoView({behavior: "smooth", block: "center"});
                     return;
                 }
-
-                safeNotify('success'); // Виправлено
+                safeNotify('success');
                 tg.sendData(JSON.stringify({
                     action: "doc_generate",
                     template_id: this.currentId,
@@ -566,21 +552,18 @@
             },
 
             buySubscription(requiredPlan) {
-                safeNotify('success'); // Виправлено
-                tg.sendData(JSON.stringify({
-                    action: "buy_upgrade",
-                    sub: requiredPlan    
-                }));
+                safeNotify('success');
+                tg.sendData(JSON.stringify({ action: "buy_upgrade", sub: requiredPlan }));
                 this.close();
             },
 
             buySingleTemplate(templateId, title, requiredPlan) {
-                safeNotify('success'); // Виправлено
-                tg.sendData(JSON.stringify({
-                    action: "buy_single",
-                    title: title,
-                    template_id: templateId,
-                    sub: requiredPlan
+                safeNotify('success');
+                tg.sendData(JSON.stringify({ 
+                    action: "buy_single", 
+                    title: title, 
+                    template_id: templateId, 
+                    sub: requiredPlan 
                 }));
                 this.close();
             }
