@@ -9,12 +9,12 @@
   },
   "templates": [
     {
-      "id": "2026-01-11-pozov-materialna-moralna-shkoda",
+      "id": "001-pozov-materialna-moralna-shkoda",
       "def_filename": "Pozovna_materialna_moralna_shkoda.docx",
       "ai_filename": "AI_Pozovna_materialna_moralna_shkoda.docx",
       "title": "Відшкодування шкоди",
       "cat": "civil",
-      "pro": false,
+      "plan": "lite",
       "fields": [
         { "id": "court", "label": "Назва суду", "placeholder": "Печерський районний суд міста Києва", "type": "text", "required": true },
         { "id": "court_post_adress", "label": "Адреса суду", "placeholder": "01001, м. Київ, вул...", "type": "text", "required": true },
@@ -51,12 +51,12 @@
       ]
     },
     {
-      "id": "2026-01-11-vidzyv_na_pozov_general",
+      "id": "002-vidzyv_na_pozov_general",
       "def_filename": "Vidzyv_na_pozov.docx",
       "ai_filename": "AI_Vidzyv_na_pozov.docx",
       "title": "Відзив на позовну заяву",
       "cat": "civil",
-      "pro": false,
+      "plan": "lite",
       "fields": [
         { "id": "court", "label": "Назва суду", "placeholder": "Печерський районний суд...", "type": "text", "required": true },
         { "id": "court_post_adress", "label": "Адреса суду", "placeholder": "01001, м. Київ, вул...", "type": "text", "required": true },
@@ -91,12 +91,12 @@
       ]
     },
         {
-      "id": "2026-01-11-vidpovid_na_vidzyv",
+      "id": "003-vidpovid_na_vidzyv",
       "def_filename": "Vidpovid_na_vidzyv.docx",
       "ai_filename": "AI_Vidpovid_na_vidzyv.docx",
       "title": "Відповідь на відзив",
       "cat": "civil",
-      "pro": false,
+      "plan": "lite",
       "fields": [
         { "id": "court", "label": "Назва суду", "placeholder": "Печерський районний суд...", "type": "text", "required": true },
         { "id": "court_post_adress", "label": "Адреса суду", "placeholder": "01001, м. Київ, вул...", "type": "text", "required": true },
@@ -128,12 +128,12 @@
       ]
     },
     {
-      "id": "2026-01-11-zaperechennya_na_vidpovid",
+      "id": "004-zaperechennya_na_vidpovid",
       "def_filename": "Zaperechennya_na_vidpovid.docx",
       "ai_filename": "AI_Zaperechennya_na_vidpovid.docx",
       "title": "Заперечення на відповідь на відзив",
       "cat": "civil",
-      "pro": false,
+      "plan": "lite",
       "fields": [
         { "id": "court", "label": "Назва суду", "placeholder": "Печерський районний суд міста Києва", "type": "text", "required": true },
         { "id": "court_post_adress", "label": "Адреса суду", "placeholder": "01001, м. Київ, вул...", "type": "text", "required": true },
@@ -154,12 +154,12 @@
       ]
     },
     {
-      "id": "2026-01-11-pozov_rozirvannya_shlyubu_alimenty",
+      "id": "005-pozov_rozirvannya_shlyubu_alimenty",
       "def_filename": "Rozirvannya_shlubu_z_alimentamy.docx",
       "ai_filename": "AI_Rozirvannya_shlubu_z_alimentamy.docx",
       "title": "Розірвання шлюбу та аліменти",
       "cat": "family",
-      "pro": true,
+      "plan": "pro",
       "fields": [
         { "id": "court", "label": "Назва суду", "placeholder": "Печерський районний суд міста Києва", "type": "text", "required": true },
         { "id": "court_post_adress", "label": "Адреса суду", "placeholder": "01001, м. Київ, вул...", "type": "text", "required": true },
@@ -201,12 +201,12 @@
       ]
     },
     {
-      "id": "2026-01-11-vidzyv_alimenty",
+      "id": "006-vidzyv_alimenty",
       "def_filename": "Vidzyv_do_alimetiv.docx",
       "ai_filename": "AI_Vidzyv_do_alimetiv.docx",
       "title": "Відзив на аліменти",
       "cat": "family",
-      "pro": true,
+      "plan": "pro",
       "fields": [
         { "id": "court", "label": "Назва суду", "placeholder": "Печерський районний суд...", "type": "text", "required": true },
         { "id": "court_post_adress", "label": "Адреса суду", "placeholder": "01001, м. Київ, вул...", "type": "text", "required": true },

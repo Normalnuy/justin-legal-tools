@@ -18,10 +18,13 @@
             --radius-card: 16px;
             --radius-input: 12px;
             
+            /* Градієнти та кольори для статусів */
             --pro-gradient: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-            /* Стиль для Адміна */
+            --lite-gradient: linear-gradient(135deg, #32ade6 0%, #007aff 100%);
             --admin-gradient: linear-gradient(135deg, #ff3b30 0%, #ff2d55 100%);
-            
+            --free-bg: var(--tg-hint);
+            --bought-color: #34c759; /* Зелений для куплених */
+
             --shadow: 0 4px 20px rgba(0,0,0,0.05);
             --error-color: #ff3b30;
         }
@@ -60,8 +63,10 @@
         .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
         .app-name { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; }
         
+        /* User Badge styles */
         .badge { padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; color: #fff; text-transform: uppercase; }
-        .badge.lite { background: var(--tg-hint); }
+        .badge.free { background: var(--free-bg); }
+        .badge.lite { background: var(--lite-gradient); }
         .badge.pro { background: var(--pro-gradient); color: #000; }
         .badge.admin { background: var(--admin-gradient); box-shadow: 0 4px 10px rgba(255, 59, 48, 0.4); }
 
@@ -94,13 +99,20 @@
             background: rgba(0, 122, 255, 0.1); color: var(--tg-btn);
             display: flex; align-items: center; justify-content: center; font-size: 20px;
         }
-        .locked .icon-box { background: rgba(255, 165, 0, 0.1); color: orange; }
+        .locked .icon-box { background: rgba(142, 142, 147, 0.1); color: gray; }
+        
         .doc-title { font-size: 16px; font-weight: 600; line-height: 1.3; }
-        .pro-tag { font-size: 10px; font-weight: 900; background: var(--pro-gradient); padding: 2px 5px; border-radius: 4px; margin-left: 6px; color: #000; vertical-align: middle; }
+        
+        /* Tags inside cards */
+        .plan-tag { font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 4px; margin-left: 6px; color: #fff; vertical-align: middle; text-transform: uppercase; }
+        .plan-tag.lite { background: var(--lite-gradient); }
+        .plan-tag.pro { background: var(--pro-gradient); color: #000; }
+        .plan-tag.admin { background: var(--admin-gradient); }
+        .plan-tag.bought { background: var(--bought-color); color: #fff; }
 
         /* МОДАЛКА (ШТОРКА) */
         .overlay {
-            position: fixed; top:0; left:0; w:100%; h:100%; background: rgba(0,0,0,0.6);
+            position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6);
             z-index: 200; opacity: 0; pointer-events: none; transition: 0.3s;
             backdrop-filter: blur(2px);
         }
@@ -176,11 +188,21 @@
         }
         .nested-container.open { display: block; opacity: 1; }
 
+        /* КНОПКИ */
         .btn { width: 100%; padding: 16px; border-radius: 14px; font-size: 17px; font-weight: 700; border: none; cursor: pointer; margin-top: 10px; color: #fff; }
         .btn-primary { background: var(--tg-btn); box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3); }
-        .btn-pro { background: var(--pro-gradient); color: #000; box-shadow: 0 4px 15px rgba(255, 165, 0, 0.3); }
+        .btn-upgrade { background: var(--pro-gradient); color: #000; box-shadow: 0 4px 15px rgba(255, 165, 0, 0.3); }
+        
+        /* Вторинна кнопка (сіра) */
+        .btn-secondary { 
+            background: var(--tg-sec-bg); 
+            color: var(--tg-text); 
+            margin-top: 12px;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        .btn-secondary:active { opacity: 0.7; }
 
-        /* PRO Screen */
+        /* PRO/UPGRADE Screen */
         .pro-screen { text-align: center; padding: 40px 20px; }
         .lock-big { font-size: 64px; margin-bottom: 16px; display: inline-block; animation: shake 2s infinite; }
         @keyframes shake { 0%,100%{transform:rotate(0);} 25%{transform:rotate(-10deg);} 75%{transform:rotate(10deg);} }
@@ -199,7 +221,7 @@
         <header>
             <div class="top-row">
                 <div class="app-name">Justin AI</div>
-                <div id="userBadge" class="badge lite">Lite</div>
+                <div id="userBadge" class="badge free">Free</div>
             </div>
             <div class="search-box">
                 <span class="search-icon">🔍</span>
@@ -212,7 +234,6 @@
 
     <div id="overlay" class="overlay" onclick="app.close()"></div>
 
-    <!-- FORM SHEET -->
     <div id="formSheet" class="sheet">
         <div class="sheet-head">
             <div id="formTitle" class="sheet-t">...</div>
@@ -220,26 +241,24 @@
         </div>
         <div class="sheet-body">
             <div id="formFields"></div>
-            <div style="height: 20px;"></div> <!-- Spacer -->
-            <button class="btn btn-primary" onclick="app.submit()">Створити документ</button>
-            <div style="height: 30px;"></div> <!-- Bottom padding -->
+            <div style="height: 20px;"></div> <button class="btn btn-primary" onclick="app.submit()">Створити документ</button>
+            <div style="height: 30px;"></div>
         </div>
     </div>
 
-    <!-- PRO SHEET -->
-    <div id="proSheet" class="sheet">
+    <div id="upgradeSheet" class="sheet">
         <div class="sheet-head">
-            <div class="sheet-t">Доступ закрито</div>
+            <div class="sheet-t">Доступ обмежено</div>
             <button class="close-btn" onclick="app.close()">✕</button>
         </div>
         <div class="sheet-body pro-screen">
             <div class="lock-big">🔒</div>
-            <h3>Тільки для PRO</h3>
-            <p style="color:var(--tg-hint); margin-bottom: 24px; font-size: 16px; line-height: 1.5;">
-                Цей документ вимагає складного AI-аналізу.<br>
-                Оформіть підписку для доступу.
+            <h3 id="upgradeTitle">Тільки для PRO</h3>
+            <p id="upgradeText" style="color:var(--tg-hint); margin-bottom: 24px; font-size: 16px; line-height: 1.5;">
+                ...
             </p>
-            <button class="btn btn-pro" onclick="app.buyPro()">Активувати PRO</button>
+            <div id="upgradeButtons" style="display: flex; flex-direction: column;">
+                </div>
         </div>
     </div>
 
@@ -248,13 +267,22 @@
         tg.expand();
         if (tg.enableClosingConfirmation) tg.enableClosingConfirmation();
 
+        // Посилання на JSON конфіг
         const CONFIG_URL = "https://raw.githubusercontent.com/Normalnuy/justin-legal-tools/main/templates.json";
 
+        // Рівні доступу
+        const PLAN_LEVELS = { 'free': 0, 'lite': 1, 'pro': 2, 'admin': 3 };
+
+        // 1. ОТРИМАННЯ ПАРАМЕТРІВ З URL
         const urlParams = new URLSearchParams(window.location.search);
-        const PLAN = urlParams.get('plan') || 'lite'; // 'lite', 'pro', 'admin'
         
-        // ADMIN має доступ до всього, як і PRO
-        const HAS_ACCESS = PLAN === 'pro' || PLAN === 'admin';
+        // План користувача (з URL або free)
+        const RAW_PLAN = urlParams.get('plan') || 'free';
+        const USER_RANK = PLAN_LEVELS[RAW_PLAN] !== undefined ? PLAN_LEVELS[RAW_PLAN] : 0;
+
+        // Список куплених шаблонів (з URL, формат: ?purchased=id1,id2)
+        const PURCHASED_PARAM = urlParams.get('purchased') || '';
+        const PURCHASED_IDS = PURCHASED_PARAM.split(',').filter(id => id.trim() !== '');
 
         const app = {
             data: null,
@@ -270,24 +298,17 @@
                     const appDiv = document.getElementById('app');
                     appDiv.style.display = 'block';
                     
+                    // Анімація
                     appDiv.style.opacity = 0;
                     setTimeout(() => { 
                         appDiv.style.transition = 'opacity 0.4s'; 
                         appDiv.style.opacity = 1; 
                     }, 50);
 
+                    // Встановлення бейджа користувача
                     const badge = document.getElementById('userBadge');
-                    
-                    if (PLAN === 'admin') {
-                        badge.innerText = "ADMIN";
-                        badge.className = "badge admin";
-                    } else if (PLAN === 'pro') {
-                        badge.innerText = "PRO";
-                        badge.className = "badge pro";
-                    } else {
-                        badge.innerText = "Lite";
-                        badge.className = "badge lite";
-                    }
+                    badge.innerText = RAW_PLAN.toUpperCase();
+                    badge.className = `badge ${RAW_PLAN}`;
 
                     this.render();
                 } catch(e) {
@@ -319,24 +340,41 @@
                     container.appendChild(catTitle);
 
                     items.forEach(item => {
-                        // Якщо документ PRO, але у юзера немає доступу (ні PRO, ні ADMIN)
-                        const isLocked = item.pro && !HAS_ACCESS;
+                        const itemPlan = item.plan || 'free'; 
+                        const itemRank = PLAN_LEVELS[itemPlan] !== undefined ? PLAN_LEVELS[itemPlan] : 0;
+                        
+                        // Перевіряємо, чи купив користувач цей шаблон окремо
+                        const isPurchased = PURCHASED_IDS.includes(item.id);
+
+                        // Логіка блокування: Заблоковано, якщо ранг замалий І не куплено
+                        const isLocked = (itemRank > USER_RANK) && !isPurchased;
                         
                         const el = document.createElement('div');
                         el.className = `doc-card ${isLocked ? 'locked' : ''}`;
-                        el.onclick = () => this.click(item, isLocked);
+                        el.onclick = () => this.click(item, isLocked, itemPlan);
                         
                         let icon = '📄';
                         if(catKey === 'civil') icon = '⚖️';
                         if(catKey === 'family') icon = '❤️';
                         if(isLocked) icon = '🔒';
+                        
+                        // Якщо документ був би заблокований, але ми його купили -> показуємо галочку
+                        if(isPurchased && itemRank > USER_RANK) icon = '✅';
 
-                        const proBadge = item.pro ? `<span class="pro-tag">PRO</span>` : '';
+                        // Формування бейджика
+                        let planBadge = '';
+                        if (isPurchased && itemRank > USER_RANK) {
+                            // Куплений "платний" документ
+                            planBadge = `<span class="plan-tag bought">КУПЛЕНО</span>`;
+                        } else if (itemPlan !== 'free') {
+                            // Звичайний статус
+                            planBadge = `<span class="plan-tag ${itemPlan}">${itemPlan.toUpperCase()}</span>`;
+                        }
 
                         el.innerHTML = `
                             <div class="card-main">
                                 <div class="icon-box">${icon}</div>
-                                <div class="doc-title">${item.title} ${proBadge}</div>
+                                <div class="doc-title">${item.title} ${planBadge}</div>
                             </div>
                             <div style="color:var(--tg-hint); opacity:0.5;">›</div>
                         `;
@@ -345,21 +383,43 @@
                 }
             },
 
-            click(item, isLocked) {
+            click(item, isLocked, requiredPlan) {
                 tg.HapticFeedback.impactOccurred(isLocked ? 'error' : 'light');
                 if(isLocked) {
-                    this.sheet('proSheet');
+                    this.showUpgrade(item, requiredPlan);
                 } else {
                     this.buildForm(item);
                     this.sheet('formSheet');
                 }
             },
 
+            // Вікно пропозиції покупки
+            showUpgrade(item, requiredPlan) {
+                this.currentId = item.id;
+
+                const title = document.getElementById('upgradeTitle');
+                const text = document.getElementById('upgradeText');
+                const btnArea = document.getElementById('upgradeButtons');
+
+                title.innerText = `Доступ обмежено`;
+                text.innerHTML = `
+                    Цей документ входить у план <b>${requiredPlan.toUpperCase()}</b>.<br>
+                    Ви можете оформити підписку або придбати цей шаблон окремо.
+                `;
+                
+                // Дві кнопки: Підписка та Окрема покупка
+                btnArea.innerHTML = `
+                    <button class="btn btn-upgrade" onclick="app.buySubscription('${requiredPlan}')">Оформити підписку</button>
+                    <button class="btn btn-secondary" onclick="app.buySingleTemplate('${item.id}', '${item.title}', '${requiredPlan}')">Купити тільки цей шаблон</button>
+                `;
+                
+                this.sheet('upgradeSheet');
+            },
+
             renderField(f, container) {
-                // 1. Checkbox
+                // Рендер checkbox
                 if (f.type === 'checkbox') {
                     const groupDiv = document.createElement('div');
-                    
                     const checkboxRow = document.createElement('div');
                     checkboxRow.className = 'checkbox-row';
                     const checkId = `check_${f.id}`;
@@ -396,7 +456,7 @@
                     return;
                 }
 
-                // 2. Normal Inputs
+                // Рендер звичайних полів
                 const wrap = document.createElement('div');
                 wrap.className = 'inp-group';
                 
@@ -439,7 +499,6 @@
                     container.innerHTML = `<div style="text-align:center; color:gray;">Полів немає.</div>`;
                     return;
                 }
-
                 fields.forEach(f => this.renderField(f, container));
             },
 
@@ -490,9 +549,23 @@
                 }));
             },
 
-            buyPro() {
+            buySubscription(requiredPlan) {
                 tg.HapticFeedback.notificationOccurred('success');
-                tg.sendData(JSON.stringify({action: "buy_pro"}));
+                tg.sendData(JSON.stringify({
+                    action: "buy_upgrade",
+                    sub: requiredPlan    
+                }));
+                this.close();
+            },
+
+            buySingleTemplate(templateId, title, requiredPlan) {
+                tg.HapticFeedback.notificationOccurred('success');
+                tg.sendData(JSON.stringify({
+                    action: "buy_single",
+                    title: title,
+                    template_id: templateId,
+                    sub: requiredPlan
+                }));
                 this.close();
             }
         };
