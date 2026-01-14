@@ -284,6 +284,18 @@
         const PURCHASED_PARAM = urlParams.get('purchased') || '';
         const PURCHASED_IDS = PURCHASED_PARAM.split(',').filter(id => id.trim() !== '');
 
+        // --- HELPER для безпечної вібрації ---
+        function safeHaptic(type) {
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred(type);
+            }
+        }
+        function safeNotify(type) {
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.notificationOccurred(type);
+            }
+        }
+
         const app = {
             data: null,
             currentId: null,
@@ -322,6 +334,9 @@
                 container.innerHTML = '';
 
                 const grouped = {};
+                // Перевірка наявності даних
+                if (!this.data || !this.data.templates) return;
+
                 this.data.templates.forEach(t => {
                     if(search && !t.title.toLowerCase().includes(search)) return;
                     if(!grouped[t.cat]) grouped[t.cat] = [];
@@ -351,6 +366,7 @@
                         
                         const el = document.createElement('div');
                         el.className = `doc-card ${isLocked ? 'locked' : ''}`;
+                        // ТУТ БУЛА ПОМИЛКА: передаємо управління в безпечну функцію
                         el.onclick = () => this.click(item, isLocked, itemPlan);
                         
                         let icon = '📄';
@@ -358,16 +374,12 @@
                         if(catKey === 'family') icon = '❤️';
                         if(isLocked) icon = '🔒';
                         
-                        // Якщо документ був би заблокований, але ми його купили -> показуємо галочку
                         if(isPurchased && itemRank > USER_RANK) icon = '✅';
 
-                        // Формування бейджика
                         let planBadge = '';
                         if (isPurchased && itemRank > USER_RANK) {
-                            // Куплений "платний" документ
                             planBadge = `<span class="plan-tag bought">КУПЛЕНО</span>`;
                         } else if (itemPlan !== 'free') {
-                            // Звичайний статус
                             planBadge = `<span class="plan-tag ${itemPlan}">${itemPlan.toUpperCase()}</span>`;
                         }
 
@@ -384,7 +396,9 @@
             },
 
             click(item, isLocked, requiredPlan) {
-                tg.HapticFeedback.impactOccurred(isLocked ? 'error' : 'light');
+                // ВИПРАВЛЕНО: Безпечний виклик вібрації
+                safeHaptic(isLocked ? 'error' : 'light');
+
                 if(isLocked) {
                     this.showUpgrade(item, requiredPlan);
                 } else {
@@ -407,17 +421,20 @@
                     Ви можете оформити підписку або придбати цей шаблон окремо.
                 `;
                 
-                // Дві кнопки: Підписка та Окрема покупка
+                // ВИПРАВЛЕНО: Екранування лапок для безпечного HTML onclick
+                // Замінюємо ' на \', щоб не поламати HTML
+                const safeTitle = item.title.replace(/'/g, "\\'"); 
+                const safeId = String(item.id).replace(/'/g, "\\'");
+
                 btnArea.innerHTML = `
                     <button class="btn btn-upgrade" onclick="app.buySubscription('${requiredPlan}')">Оформити підписку</button>
-                    <button class="btn btn-secondary" onclick="app.buySingleTemplate('${item.id}', '${item.title}', '${requiredPlan}')">Купити тільки цей шаблон</button>
+                    <button class="btn btn-secondary" onclick="app.buySingleTemplate('${safeId}', '${safeTitle}', '${requiredPlan}')">Купити тільки цей шаблон</button>
                 `;
                 
                 this.sheet('upgradeSheet');
             },
 
             renderField(f, container) {
-                // Рендер checkbox
                 if (f.type === 'checkbox') {
                     const groupDiv = document.createElement('div');
                     const checkboxRow = document.createElement('div');
@@ -456,7 +473,6 @@
                     return;
                 }
 
-                // Рендер звичайних полів
                 const wrap = document.createElement('div');
                 wrap.className = 'inp-group';
                 
@@ -536,12 +552,12 @@
                 });
 
                 if (!isValid) {
-                    tg.HapticFeedback.notificationOccurred('error');
+                    safeNotify('error'); // Виправлено
                     if(firstError) firstError.scrollIntoView({behavior: "smooth", block: "center"});
                     return;
                 }
 
-                tg.HapticFeedback.notificationOccurred('success');
+                safeNotify('success'); // Виправлено
                 tg.sendData(JSON.stringify({
                     action: "doc_generate",
                     template_id: this.currentId,
@@ -550,7 +566,7 @@
             },
 
             buySubscription(requiredPlan) {
-                tg.HapticFeedback.notificationOccurred('success');
+                safeNotify('success'); // Виправлено
                 tg.sendData(JSON.stringify({
                     action: "buy_upgrade",
                     sub: requiredPlan    
@@ -559,7 +575,7 @@
             },
 
             buySingleTemplate(templateId, title, requiredPlan) {
-                tg.HapticFeedback.notificationOccurred('success');
+                safeNotify('success'); // Виправлено
                 tg.sendData(JSON.stringify({
                     action: "buy_single",
                     title: title,
