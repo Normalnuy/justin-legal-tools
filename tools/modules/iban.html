@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>IBAN Validator</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #F2F2F7; --card: #FFFFFF; --text: #000; --sub: #8E8E93;
+            --blue: #007AFF; --green: #34C759; --red: #FF3B30; --mono: #000000;
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root { --bg: #000; --card: #1C1C1E; --text: #FFF; --sub: #98989D; --mono: #FFF; }
+        }
+        body { margin: 0; padding: 20px; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        .header { margin-bottom: 20px; }
+        .title { font-size: 28px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+        .subtitle { font-size: 13px; color: var(--sub); font-weight: 600; text-transform: uppercase; margin-top: 5px; }
+
+        .card { background: var(--card); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 16px; transition: 0.3s; }
+        
+        label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--sub); margin-bottom: 8px; }
+        .input-row { display: flex; gap: 10px; }
+        input { 
+            width: 100%; padding: 16px; border-radius: 14px; border: 1px solid rgba(0,0,0,0.1); 
+            background: var(--bg); color: var(--text); font-size: 16px; outline: none; font-weight: 600; font-family: monospace; letter-spacing: 1px;
+        }
+        input:focus { border-color: var(--blue); }
+
+        .btn-paste {
+            background: rgba(118, 118, 128, 0.12); border: none; border-radius: 14px;
+            width: 50px; flex-shrink: 0; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+
+        /* Result Card */
+        .res-box { display: none; text-align: center; }
+        .status-icon { font-size: 40px; margin-bottom: 10px; display: block; }
+        
+        .bank-logo { 
+            width: 60px; height: 60px; border-radius: 12px; margin: 0 auto 10px auto; 
+            background: var(--bg); display: flex; align-items: center; justify-content: center;
+            font-size: 24px; font-weight: 800; color: var(--sub);
+        }
+        
+        .bank-name { font-size: 20px; font-weight: 800; margin-bottom: 5px; }
+        .iban-fmt { font-family: monospace; font-size: 16px; color: var(--sub); word-break: break-all; margin-bottom: 20px; }
+
+        .valid { color: var(--green); }
+        .invalid { color: var(--red); }
+
+        /* QR Code */
+        .qr-container {
+            margin-top: 20px; padding: 15px; background: white; border-radius: 16px;
+            display: inline-block; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .qr-img { width: 150px; height: 150px; display: block; }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="subtitle">Перевірка реквізитів</div>
+        <div class="title">🏦 IBAN Валідатор</div>
+    </div>
+
+    <div class="card">
+        <label>Введіть IBAN (UA...)</label>
+        <div class="input-row">
+            <input type="text" id="ibanInp" placeholder="UA000000000000000000000000000" oninput="check()" maxlength="29">
+            <button class="btn-paste" onclick="paste()">📋</button>
+        </div>
+    </div>
+
+    <div id="result" class="card res-box">
+        <div id="bankLogo" class="bank-logo">?</div>
+        <div class="bank-name" id="bankName">-</div>
+        <div class="iban-fmt" id="ibanFmt">-</div>
+        
+        <div id="statusMsg" style="font-size:13px; font-weight:600; text-transform:uppercase"></div>
+
+        <div class="qr-container" id="qrBox" style="display:none">
+            <img id="qrImg" class="qr-img" src="" alt="QR">
+            <div style="font-size:10px; color:#999; margin-top:5px; font-weight:600">SCAN TO PAY</div>
+        </div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+
+        // MFO Database (Major Ukrainian Banks)
+        const BANKS = {
+            '305299': { n: 'PrivatBank', c: '#74B72E', i: 'P' },
+            '322001': { n: 'Universal Bank (Monobank)', c: '#000', i: 'M' },
+            '322669': { n: 'Oschadbank', c: '#368F3F', i: 'O' },
+            '380805': { n: 'Raiffeisen Bank', c: '#FFD700', i: 'R' }, // Yellow
+            '305482': { n: 'PUMB', c: '#BE2C37', i: 'P' },
+            '351005': { n: 'UKRSIBBANK', c: '#009F64', i: 'U' },
+            '339500': { n: 'Sense Bank (Alpha)', c: '#00A3E0', i: 'S' },
+            '300023': { n: 'Citibank', c: '#003B70', i: 'C' },
+            '320478': { n: 'Ukrgasbank', c: '#006E8E', i: 'G' },
+            '300335': { n: 'OTP Bank', c: '#5BA058', i: 'O' }
+        };
+
+        async function paste() {
+            try {
+                const text = await navigator.clipboard.readText();
+                document.getElementById('ibanInp').value = text.trim();
+                check();
+            } catch(e) { tg.showAlert("Надайте дозвіл на вставку"); }
+        }
+
+        function check() {
+            let raw = document.getElementById('ibanInp').value.trim().toUpperCase().replace(/\s/g, '');
+            const resBox = document.getElementById('result');
+            
+            if (raw.length < 10) {
+                resBox.style.display = 'none';
+                return;
+            }
+            resBox.style.display = 'block';
+
+            // 1. Basic Format Check
+            const isValidLength = raw.length === 29;
+            const isUA = raw.startsWith('UA');
+            
+            // 2. Modulo 97 Check (The real magic)
+            const isValidChecksum = validateMod97(raw);
+
+            // 3. Bank Detection
+            const mfo = raw.substring(4, 10); // Digits 5-10 in UA IBAN are MFO
+            const bank = BANKS[mfo];
+
+            // Render
+            const logoEl = document.getElementById('bankLogo');
+            const nameEl = document.getElementById('bankName');
+            const statEl = document.getElementById('statusMsg');
+            const qrBox = document.getElementById('qrBox');
+
+            // Formatted string
+            document.getElementById('ibanFmt').innerText = formatIban(raw);
+
+            if (isUA && isValidLength && isValidChecksum) {
+                // VALID
+                statEl.innerText = "✅ IBAN ВАЛІДНИЙ";
+                statEl.className = "valid";
+                
+                if (bank) {
+                    nameEl.innerText = bank.n;
+                    logoEl.innerText = bank.i;
+                    logoEl.style.background = bank.c;
+                    logoEl.style.color = (bank.c === '#FFD700') ? '#000' : '#fff';
+                } else {
+                    nameEl.innerText = "Інший Банк";
+                    logoEl.innerText = "🏦";
+                    logoEl.style.background = "var(--sub)";
+                }
+
+                // Generate QR (Using Google Chart API or similar for simplicity without heavy libs)
+                // This creates a text QR. Banking apps usually read plain text IBANs.
+                // Standard: IPK (text) or special format. Simple text works for copying.
+                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${raw}`;
+                document.getElementById('qrImg').src = qrUrl;
+                qrBox.style.display = 'inline-block';
+
+            } else {
+                // INVALID
+                nameEl.innerText = "Помилка";
+                logoEl.innerText = "❌";
+                logoEl.style.background = "var(--red)";
+                logoEl.style.color = "white";
+                qrBox.style.display = 'none';
+                
+                if (!isUA) statEl.innerText = "Починається не з UA";
+                else if (!isValidLength) statEl.innerText = `Довжина ${raw.length} (має бути 29)`;
+                else statEl.innerText = "Невірна контрольна сума (помилка в цифрах)";
+                
+                statEl.className = "invalid";
+            }
+        }
+
+        // --- ALGORITHMS ---
+
+        function validateMod97(iban) {
+            if (!iban.startsWith('UA')) return false;
+            
+            // Move first 4 chars to end: UAxx 123... -> 123...UAxx
+            let rearranged = iban.substring(4) + iban.substring(0, 4);
+            
+            // Convert letters to numbers (A=10, B=11... U=30)
+            // 'U' is 30, 'A' is 10.
+            let numeric = "";
+            for (let i = 0; i < rearranged.length; i++) {
+                let char = rearranged[i];
+                if (char >= '0' && char <= '9') {
+                    numeric += char;
+                } else {
+                    numeric += (char.charCodeAt(0) - 55);
+                }
+            }
+
+            // Calculate Mod 97 using BigInt because number is huge
+            try {
+                const remainder = BigInt(numeric) % 97n;
+                return remainder === 1n;
+            } catch (e) { return false; }
+        }
+
+        function formatIban(str) {
+            // Groups of 4
+            return str.match(/.{1,4}/g)?.join(' ') || str;
+        }
+    </script>
+</body>
+</html>

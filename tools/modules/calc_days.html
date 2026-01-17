@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Date Calculator</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #F2F2F7; --card: #FFFFFF; --text: #000; --sub: #8E8E93;
+            --blue: #007AFF; --green: #34C759; --orange: #FF9500;
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root { --bg: #000; --card: #1C1C1E; --text: #FFF; --sub: #98989D; }
+        }
+        body { margin: 0; padding: 20px; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        .header { margin-bottom: 20px; }
+        .title { font-size: 28px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+        .subtitle { font-size: 13px; color: var(--sub); font-weight: 600; text-transform: uppercase; margin-top: 5px; }
+
+        /* Tabs */
+        .tabs { display: flex; background: rgba(118, 118, 128, 0.12); padding: 2px; border-radius: 12px; margin-bottom: 20px; }
+        .tab { 
+            flex: 1; text-align: center; padding: 10px; font-size: 13px; font-weight: 600; 
+            border-radius: 10px; cursor: pointer; transition: 0.2s; color: var(--sub);
+        }
+        .tab.active { background: var(--card); color: var(--text); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+
+        .card { background: var(--card); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 16px; }
+
+        label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--sub); margin-bottom: 8px; }
+        input[type="date"] { 
+            width: 100%; padding: 14px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.1); 
+            background: var(--bg); color: var(--text); font-size: 17px; outline: none; margin-bottom: 15px; font-weight: 600; appearance: none;
+        }
+
+        .input-row { display: flex; gap: 10px; margin-bottom: 15px; }
+        .input-group { flex: 1; }
+        input[type="number"] {
+            width: 100%; padding: 12px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.1);
+            background: var(--bg); color: var(--text); font-size: 16px; font-weight: 600; outline: none;
+        }
+
+        /* Result Box */
+        .res-box { 
+            text-align: center; padding: 25px 20px; border-radius: 20px; color: white; 
+            background: linear-gradient(135deg, var(--blue) 0%, #0056b3 100%);
+            display: none; transition: 0.3s;
+        }
+        .res-lbl { font-size: 13px; opacity: 0.8; text-transform: uppercase; margin-bottom: 5px; }
+        .res-val { font-size: 32px; font-weight: 800; margin-bottom: 5px; }
+        .res-sub { background: rgba(0,0,0,0.2); padding: 4px 10px; border-radius: 8px; font-size: 12px; display: inline-block; font-weight: 600; }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="subtitle">Тайм-менеджмент</div>
+        <div class="title">📅 Часомір</div>
+    </div>
+
+    <div class="tabs">
+        <div class="tab active" onclick="switchMode('diff')">Інтервал</div>
+        <div class="tab" onclick="switchMode('calc')">Операції (+/-)</div>
+    </div>
+
+    <div id="mode-diff">
+        <div class="card">
+            <label>Початкова дата</label>
+            <input type="date" id="d1" onchange="calcDiff()">
+            
+            <label>Кінцева дата</label>
+            <input type="date" id="d2" onchange="calcDiff()">
+        </div>
+
+        <div id="resDiff" class="res-box">
+            <div class="res-lbl">Різниця</div>
+            <div class="res-val" id="diffDays">0 днів</div>
+            <div class="res-sub" id="diffWeeks">0 тижнів</div>
+        </div>
+    </div>
+
+    <div id="mode-calc" style="display:none">
+        <div class="card">
+            <label>Стартова дата</label>
+            <input type="date" id="start" onchange="calcDate()">
+
+            <label>Додати / Відняти (використовуйте мінус)</label>
+            <div class="input-row">
+                <div class="input-group">
+                    <input type="number" id="addY" placeholder="Років" oninput="calcDate()">
+                </div>
+                <div class="input-group">
+                    <input type="number" id="addM" placeholder="Місяців" oninput="calcDate()">
+                </div>
+                <div class="input-group">
+                    <input type="number" id="addD" placeholder="Днів" oninput="calcDate()">
+                </div>
+            </div>
+        </div>
+
+        <div id="resCalc" class="res-box">
+            <div class="res-lbl">Результат</div>
+            <div class="res-val" id="newDate">-</div>
+            <div class="res-sub" id="newDay">-</div>
+        </div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+
+        const DAYS = ["Неділя", "Понеділок", "Вівторок", "Середа", "Четвер", "П'ятниця", "Субота"];
+
+        // Init Dates
+        document.getElementById('d1').valueAsDate = new Date();
+        document.getElementById('d2').valueAsDate = new Date();
+        document.getElementById('start').valueAsDate = new Date();
+
+        function switchMode(mode) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+
+            if(mode === 'diff') {
+                document.getElementById('mode-diff').style.display = 'block';
+                document.getElementById('mode-calc').style.display = 'none';
+            } else {
+                document.getElementById('mode-diff').style.display = 'none';
+                document.getElementById('mode-calc').style.display = 'block';
+            }
+        }
+
+        function calcDiff() {
+            let d1 = new Date(document.getElementById('d1').value);
+            let d2 = new Date(document.getElementById('d2').value);
+
+            if (!d1 || !d2) return;
+
+            // Normalize time to midnight to avoid timezone bugs
+            d1.setHours(0,0,0,0);
+            d2.setHours(0,0,0,0);
+
+            let diffTime = Math.abs(d2 - d1);
+            let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+            
+            // Weeks calculation (approx)
+            let weeks = (diffDays / 7).toFixed(1);
+
+            document.getElementById('resDiff').style.display = 'block';
+            document.getElementById('diffDays').innerText = diffDays + " дн.";
+            document.getElementById('diffWeeks').innerText = weeks + " тиж.";
+            
+            tg.HapticFeedback.selectionChanged();
+        }
+
+        function calcDate() {
+            let startVal = document.getElementById('start').value;
+            if(!startVal) return;
+
+            let date = new Date(startVal);
+            
+            let y = parseInt(document.getElementById('addY').value) || 0;
+            let m = parseInt(document.getElementById('addM').value) || 0;
+            let d = parseInt(document.getElementById('addD').value) || 0;
+
+            // Logic: Add Years -> Month -> Days
+            date.setFullYear(date.getFullYear() + y);
+            date.setMonth(date.getMonth() + m);
+            date.setDate(date.getDate() + d);
+
+            let dayName = DAYS[date.getDay()];
+            let formatted = date.toLocaleDateString('uk-UA');
+
+            document.getElementById('resCalc').style.display = 'block';
+            document.getElementById('newDate').innerText = formatted;
+            document.getElementById('newDay').innerText = dayName;
+
+            // Warning for weekends
+            if (date.getDay() === 0 || date.getDay() === 6) {
+                document.getElementById('resCalc').style.background = "var(--orange)";
+            } else {
+                document.getElementById('resCalc').style.background = "linear-gradient(135deg, var(--blue) 0%, #0056b3 100%)";
+            }
+        }
+    </script>
+</body>
+</html>

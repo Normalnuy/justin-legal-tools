@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>FOP Tax</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <script src="../config.js"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #F2F2F7; --card: #FFFFFF; --text: #000; --sub: #8E8E93;
+            --blue: #007AFF; --green: #34C759; --orange: #FF9500; --red: #FF3B30;
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root { --bg: #000; --card: #1C1C1E; --text: #FFF; --sub: #98989D; }
+        }
+        body { margin: 0; padding: 20px; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        .header { margin-bottom: 20px; }
+        .title { font-size: 28px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+        .subtitle { font-size: 13px; color: var(--sub); font-weight: 600; text-transform: uppercase; margin-top: 5px; }
+
+        .group-select { display: flex; gap: 10px; margin-bottom: 20px; }
+        .g-btn { 
+            flex: 1; background: var(--card); padding: 15px 0; border-radius: 16px; 
+            text-align: center; font-weight: 700; font-size: 16px; 
+            box-shadow: var(--shadow); border: 2px solid transparent; cursor: pointer; transition: 0.2s;
+        }
+        .g-btn.active { border-color: var(--blue); background: rgba(0, 122, 255, 0.05); color: var(--blue); }
+        .g-desc { font-size: 10px; font-weight: 500; color: var(--sub); display: block; margin-top: 4px; }
+
+        .card { background: var(--card); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 16px; }
+
+        label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--sub); margin-bottom: 8px; }
+        input { 
+            width: 100%; padding: 14px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.1); 
+            background: var(--bg); color: var(--text); font-size: 18px; outline: none; font-weight: 600;
+        }
+
+        .toggle-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .toggle { position: relative; display: inline-block; width: 50px; height: 30px; }
+        .toggle input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--sub); transition: .4s; border-radius: 34px; opacity: 0.3; }
+        .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        input:checked + .slider { background-color: var(--green); opacity: 1; }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        .receipt { 
+            background: var(--card); padding: 20px; border-radius: 20px; 
+            position: relative; overflow: hidden;
+            background-image: radial-gradient(circle at 0 0, transparent 10px, var(--card) 10px), radial-gradient(circle at 100% 0, transparent 10px, var(--card) 10px);
+        }
+        .rec-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; }
+        .rec-row.total { border-top: 2px dashed rgba(0,0,0,0.1); padding-top: 15px; margin-top: 15px; font-weight: 800; font-size: 18px; }
+        .rec-val { font-weight: 600; font-family: monospace; font-size: 15px; }
+        
+        .tag { padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; color: white; margin-left: 5px; }
+        .tag-vz { background: var(--orange); }
+        .tag-ep { background: var(--blue); }
+
+        .limit-bar-bg { height: 6px; background: rgba(0,0,0,0.1); border-radius: 3px; margin-top: 20px; overflow: hidden; }
+        .limit-bar-fill { height: 100%; background: var(--green); width: 0%; transition: 0.5s; }
+        .limit-text { font-size: 10px; color: var(--sub); margin-top: 5px; text-align: right; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="subtitle" id="sub-year">Податки ...</div>
+        <div class="title">💼 ФОП Калькулятор</div>
+    </div>
+
+    <div class="group-select">
+        <div class="g-btn" id="g1" onclick="setGroup(1)">1<span class="g-desc">Ринки/Побут</span></div>
+        <div class="g-btn active" id="g2" onclick="setGroup(2)">2<span class="g-desc">Послуги/Торг</span></div>
+        <div class="g-btn" id="g3" onclick="setGroup(3)">3<span class="g-desc">IT/ЗЕД/Інше</span></div>
+    </div>
+
+    <div class="card">
+        <div id="incomeBlock" style="display:none">
+            <label>Дохід за місяць (грн)</label>
+            <input type="number" id="income" placeholder="0" oninput="calc()">
+        </div>
+
+        <div class="toggle-row">
+            <div>
+                <span style="font-size:14px; font-weight:600">Платити ЄСВ?</span>
+                <div style="font-size:11px; color:var(--sub)">Добровільно під час воєнного стану</div>
+            </div>
+            <label class="toggle">
+                <input type="checkbox" id="esv" onchange="calc()">
+                <span class="slider"></span>
+            </label>
+        </div>
+        
+        <div style="font-size:11px; color:var(--sub); margin-top:10px; line-height:1.4">
+            * <b>Військовий збір:</b><br> 
+            1-2 група: фіксована ставка.<br>
+            3 група: 1% від доходу.
+        </div>
+    </div>
+
+    <div class="receipt">
+        <div class="rec-row">
+            <span>Єдиний податок <span class="tag tag-ep">ЄП</span></span>
+            <span class="rec-val" id="valEP">0 ₴</span>
+        </div>
+        <div class="rec-row">
+            <span>Військовий збір <span class="tag tag-vz">ВЗ</span></span>
+            <span class="rec-val" id="valVZ">0 ₴</span>
+        </div>
+        <div class="rec-row">
+            <span>ЄСВ (22%)</span>
+            <span class="rec-val" id="valESV">0 ₴</span>
+        </div>
+        
+        <div class="rec-row total">
+            <span>РАЗОМ:</span>
+            <span class="rec-val" id="valTotal">0 ₴</span>
+        </div>
+
+        <div class="limit-bar-bg">
+            <div class="limit-bar-fill" id="limitBar"></div>
+        </div>
+        <div class="limit-text" id="limitText">Ліміт доходу: ...</div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+
+        let currentGroup = 2;
+
+        function setGroup(g) {
+            currentGroup = g;
+            document.querySelectorAll('.g-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('g'+g).classList.add('active');
+            
+            // Show input only for Group 3
+            document.getElementById('incomeBlock').style.display = (g === 3) ? 'block' : 'none';
+            
+            calc();
+        }
+
+        function calc() {
+            if (typeof Config === 'undefined') {
+                console.error("Config not loaded");
+                return;
+            }
+
+            const F = Config.Fin;        // Розраховані фінанси
+            const B = Config.Data.base;  // Базові дані
+            const U = Config.Utils;      // Утиліти (форматування)
+
+            // Ліміти (множники МЗП)
+            const LIMIT_1 = F.minWage * 167;
+            const LIMIT_2 = F.minWage * 834;
+            const LIMIT_3 = F.minWage * 1167;
+
+            let income = parseFloat(document.getElementById('income').value) || 0;
+            let payESV = document.getElementById('esv').checked;
+
+            let ep = 0;
+            let vz = 0;
+            let esv = 0;
+            let limit = 0;
+
+            // ЄСВ (однаково для всіх)
+            if (payESV) {
+                esv = F.esv;
+            }
+
+            if (currentGroup === 1) {
+                // Група 1
+                ep = B.livingWage.able * 0.10; // 10% ПМ
+                vz = F.warTax;                 // 10% МЗП (Фіксовано)
+                limit = LIMIT_1;
+            } 
+            else if (currentGroup === 2) {
+                // Група 2
+                ep = F.minWage * 0.20;         // 20% МЗП
+                vz = F.warTax;                 // 10% МЗП
+                limit = LIMIT_2;
+            } 
+            else {
+                // Група 3
+                ep = income * 0.05;            // 5% від доходу
+                vz = income * 0.01;            // 1% від доходу
+                limit = LIMIT_3;
+            }
+
+            let total = ep + vz + esv;
+
+            // Вивід значень
+            document.getElementById('valEP').innerText = U.fmt(ep);
+            document.getElementById('valVZ').innerText = U.fmt(vz);
+            document.getElementById('valESV').innerText = payESV ? U.fmt(esv) : U.fmt(0);
+            document.getElementById('valTotal').innerText = U.fmt(total);
+
+            // Ліміт
+            document.getElementById('limitText').innerText = `Річний ліміт: ${U.fmt(limit).replace(' ₴', '')} ₴`;
+            
+            // Візуалізація смужки (тільки для 3 групи або як приклад)
+            // Для 3 групи показуємо прогноз на рік (міс * 12)
+            if (currentGroup === 3 && income > 0) {
+                let percent = (income * 12 / limit) * 100; 
+                document.getElementById('limitBar').style.width = Math.min(percent, 100) + "%";
+                document.getElementById('limitBar').style.background = percent > 80 ? "var(--red)" : "var(--green)";
+            } else {
+                document.getElementById('limitBar').style.width = "0%";
+            }
+
+            tg.HapticFeedback.selectionChanged();
+        }
+        
+        // Ініціалізація
+        window.onload = function() {
+            if (typeof Config !== 'undefined') {
+                document.getElementById('sub-year').innerText = "Податки " + Config.Data.year;
+            }
+            calc();
+        }
+    </script>
+</body>
+</html>

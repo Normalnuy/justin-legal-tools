@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Deadlines Pro</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #F2F2F7; --card: #FFFFFF; --text: #000; --sub: #8E8E93;
+            --blue: #007AFF; --indigo: #5856D6; --red: #FF3B30; --green: #34C759;
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root { --bg: #000; --card: #1C1C1E; --text: #FFF; --sub: #98989D; }
+        }
+        body { margin: 0; padding: 20px; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        .header { margin-bottom: 20px; }
+        .title { font-size: 28px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+        .subtitle { font-size: 13px; color: var(--sub); font-weight: 600; text-transform: uppercase; margin-top: 5px; }
+
+        .card { background: var(--card); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 16px; }
+        
+        label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--sub); margin-bottom: 8px; }
+        input, select { 
+            width: 100%; padding: 16px; border-radius: 14px; border: 1px solid rgba(0,0,0,0.1); 
+            background: var(--bg); color: var(--text); font-size: 16px; outline: none; margin-bottom: 15px; font-weight: 500; appearance: none;
+        }
+
+        /* Segment Control */
+        .seg { display: flex; background: var(--bg); padding: 4px; border-radius: 12px; margin-bottom: 20px; }
+        .seg-btn { flex: 1; text-align: center; padding: 10px; font-size: 13px; font-weight: 600; border-radius: 9px; color: var(--sub); transition: 0.2s; cursor: pointer; }
+        .seg-btn.active { background: var(--card); color: var(--text); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+
+        /* Result Box */
+        .res-box { 
+            text-align: center; padding: 25px 20px; border-radius: 20px; color: white; 
+            background: linear-gradient(135deg, var(--blue) 0%, #0056b3 100%);
+            display: none; transition: 0.3s; position: relative; overflow: hidden;
+        }
+        .res-lbl { font-size: 13px; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+        .res-val { font-size: 32px; font-weight: 800; line-height: 1.1; margin-bottom: 10px; text-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .res-sub { background: rgba(0,0,0,0.2); padding: 6px 12px; border-radius: 10px; font-size: 13px; display: inline-block; font-weight: 600; }
+        
+        .alert-badge {
+            background: var(--red); color: white; padding: 4px 10px; border-radius: 6px;
+            font-size: 11px; font-weight: 700; margin-left: 8px; display: none;
+        }
+
+        /* Countdown */
+        .countdown { margin-top: 15px; font-size: 14px; opacity: 0.9; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 10px; }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="subtitle">ЦПК / КАС / КПК</div>
+        <div class="title">⏱ Процесуальні Строки</div>
+    </div>
+
+    <div class="card">
+        <div class="seg">
+            <div class="seg-btn active" id="btnCiv" onclick="setMode('civ')">Цивільне</div>
+            <div class="seg-btn" id="btnAdm" onclick="setMode('adm')">Адмін</div>
+            <div class="seg-btn" id="btnCrim" onclick="setMode('crim')">Кримінал</div>
+        </div>
+
+        <label>Процесуальна дія</label>
+        <div style="position:relative">
+            <select id="eventSelect" onchange="calc()">
+                </select>
+            <div style="position:absolute; right:15px; top:40%; transform:translateY(-50%); pointer-events:none; opacity:0.5">▼</div>
+        </div>
+
+        <label>Дата події (оголошення / отримання)</label>
+        <input type="date" id="dateStart" onchange="calc()">
+    </div>
+
+    <div id="result" class="res-box">
+        <div class="res-lbl">Останній день строку</div>
+        <div class="res-val">
+            <span id="resDate">dd.mm.yyyy</span>
+            <span id="resAlert" class="alert-badge">ПЕРЕНОС</span>
+        </div>
+        <div class="res-sub" id="resDayOfWeek">Понеділок</div>
+        
+        <div class="countdown" id="resCountdown">Залишилось: ...</div>
+    </div>
+
+    <div style="margin-top: 20px; padding: 0 10px; font-size: 11px; color: var(--sub); line-height: 1.5;">
+        * Враховується правило переносу вихідного дня (ст. 124 ЦПК, ст. 120 КАС, ст. 115 КПК).<br>
+        * Якщо останній день строку припадає на вихідний, святковий або інший неробочий день, днем закінчення строку є перший за ним робочий день.
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+
+        // Database of Procedures
+        const DATA = {
+            civ: [
+                { name: "Апеляція на рішення суду", days: 30 },
+                { name: "Апеляція на ухвалу суду", days: 15 },
+                { name: "Касаційна скарга", days: 30 },
+                { name: "Заява про перегляд (нововиявлені)", days: 30 },
+                { name: "Усунення недоліків (стандарт)", days: 10 }
+            ],
+            adm: [
+                { name: "Апеляція на рішення суду", days: 30 },
+                { name: "Апеляція на ухвалу суду", days: 15 },
+                { name: "Касаційна скарга", days: 30 },
+                { name: "Строк звернення (загальний)", days: 180 }, // 6 months simplified to days for robustness or logic needs month check
+                { name: "Справи про адмінправопорушення (термінові)", days: 10 }
+            ],
+            crim: [
+                { name: "Апеляція на вирок", days: 30 },
+                { name: "Апеляція на ухвалу слідчого судді", days: 5 },
+                { name: "Касаційна скарга (після апеляції)", days: 90 }, // 3 months approx
+                { name: "Заява про перегляд (нововиявлені)", days: 90 }
+            ]
+        };
+
+        let currentMode = 'civ';
+        const daysOfWeek = ["Неділя", "Понеділок", "Вівторок", "Середа", "Четвер", "П'ятниця", "Субота"];
+
+        // Init
+        document.getElementById('dateStart').valueAsDate = new Date();
+        setMode('civ');
+
+        function setMode(m) {
+            currentMode = m;
+            
+            // UI Toggle
+            ['civ', 'adm', 'crim'].forEach(k => {
+                document.getElementById('btn' + k.charAt(0).toUpperCase() + k.slice(1)).classList.remove('active');
+            });
+            document.getElementById('btn' + m.charAt(0).toUpperCase() + m.slice(1)).classList.add('active');
+
+            // Populate Select
+            const sel = document.getElementById('eventSelect');
+            sel.innerHTML = "";
+            DATA[m].forEach(item => {
+                let opt = document.createElement('option');
+                opt.value = item.days;
+                opt.innerText = item.name + ` (${item.days} дн.)`;
+                sel.appendChild(opt);
+            });
+
+            calc();
+        }
+
+        function calc() {
+            let startVal = document.getElementById('dateStart').value;
+            let addDays = parseInt(document.getElementById('eventSelect').value);
+
+            if (!startVal) {
+                document.getElementById('result').style.display = 'none';
+                return;
+            }
+
+            let date = new Date(startVal);
+            
+            // Add procedural duration
+            date.setDate(date.getDate() + addDays);
+
+            // Check for Weekend (Saturday=6, Sunday=0)
+            let day = date.getDay();
+            let shift = 0;
+            
+            if (day === 6) shift = 2; // Sat -> Mon
+            if (day === 0) shift = 1; // Sun -> Mon
+            
+            // Apply Shift
+            if (shift > 0) {
+                date.setDate(date.getDate() + shift);
+                document.getElementById('resAlert').style.display = 'inline-block';
+                document.getElementById('resAlert').innerText = "ПЕРЕНОС З ВИХІДНОГО";
+            } else {
+                document.getElementById('resAlert').style.display = 'none';
+            }
+
+            // Render
+            document.getElementById('result').style.display = 'block';
+            document.getElementById('resDate').innerText = date.toLocaleDateString('uk-UA');
+            document.getElementById('resDayOfWeek').innerText = daysOfWeek[date.getDay()];
+
+            // Countdown Logic
+            let today = new Date();
+            today.setHours(0,0,0,0);
+            date.setHours(0,0,0,0);
+            
+            let diff = Math.ceil((date - today) / (1000 * 60 * 60 * 24));
+            let cdText = "";
+            let color = "linear-gradient(135deg, var(--blue) 0%, #0056b3 100%)";
+
+            if (diff < 0) {
+                cdText = "⚠️ СТРОК ПРОПУЩЕНО!";
+                color = "var(--red)";
+            } else if (diff === 0) {
+                cdText = "🔥 СЬОГОДНІ ОСТАННІЙ ДЕНЬ!";
+                color = "var(--orange)";
+            } else {
+                cdText = `Залишилось днів: ${diff}`;
+                if (diff <= 3) color = "var(--orange)"; // Warning color if close
+            }
+
+            document.getElementById('resCountdown').innerText = cdText;
+            document.getElementById('result').style.background = color;
+            
+            tg.HapticFeedback.selectionChanged();
+        }
+    </script>
+</body>
+</html>

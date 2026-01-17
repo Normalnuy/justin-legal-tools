@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>NATO Alphabet</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #F2F2F7; --card: #FFFFFF; --text: #000; --sub: #8E8E93;
+            --blue: #007AFF; --indigo: #5856D6;
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root { --bg: #000; --card: #1C1C1E; --text: #FFF; --sub: #98989D; }
+        }
+        body { margin: 0; padding: 20px; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        .header { margin-bottom: 20px; }
+        .title { font-size: 28px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+        .subtitle { font-size: 13px; color: var(--sub); font-weight: 600; text-transform: uppercase; margin-top: 5px; }
+
+        .card { background: var(--card); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 16px; }
+        
+        label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--sub); margin-bottom: 8px; }
+        
+        .input-row { display: flex; gap: 10px; }
+        input { 
+            width: 100%; padding: 16px; border-radius: 14px; border: 1px solid rgba(0,0,0,0.1); 
+            background: var(--bg); color: var(--text); font-size: 18px; outline: none; 
+            text-transform: uppercase; font-family: monospace; letter-spacing: 1px; font-weight: 700;
+        }
+        
+        /* Speak Button */
+        .btn-speak {
+            background: var(--indigo); color: white; border: none; border-radius: 14px;
+            width: 56px; flex-shrink: 0; font-size: 24px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: 0.2s;
+        }
+        .btn-speak:active { opacity: 0.8; transform: scale(0.95); }
+
+        /* Result List */
+        .res-box { 
+            background: #2C2C2E; color: white; border-radius: 20px; padding: 15px 20px;
+            display: none; transition: 0.3s;
+        }
+        
+        .nato-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .nato-row:last-child { border-bottom: none; }
+        
+        .nato-char {
+            font-size: 24px; font-weight: 800; width: 40px; color: var(--indigo);
+            font-family: monospace;
+        }
+        .nato-word {
+            font-size: 18px; font-weight: 600; letter-spacing: 0.5px;
+        }
+
+        /* Keyboard hint style */
+        .hint-text { margin-top: 20px; padding: 0 10px; font-size: 11px; color: var(--sub); line-height: 1.5; }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="subtitle">Радіообмін</div>
+        <div class="title">📡 NATO Абетка</div>
+    </div>
+
+    <div class="card">
+        <label>Введіть VIN, Номер або Прізвище</label>
+        <div class="input-row">
+            <input type="text" id="natoInp" placeholder="A123BC" oninput="process()">
+            <button class="btn-speak" onclick="speak()">🔊</button>
+        </div>
+    </div>
+
+    <div id="result" class="res-box">
+        </div>
+
+    <div class="hint-text">
+        * Використовується міжнародний фонетичний алфавіт ICAO (NATO).<br>
+        * Цифри вимовляються як: Zero, One, Two, Three (Tree), Four (Fower), Five (Fife), Six, Seven, Eight, Nine (Niner).
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+
+        const DICT = {
+            'A': 'Alpha', 'B': 'Bravo', 'C': 'Charlie', 'D': 'Delta', 'E': 'Echo', 'F': 'Foxtrot',
+            'G': 'Golf', 'H': 'Hotel', 'I': 'India', 'J': 'Juliet', 'K': 'Kilo', 'L': 'Lima',
+            'M': 'Mike', 'N': 'November', 'O': 'Oscar', 'P': 'Papa', 'Q': 'Quebec', 'R': 'Romeo',
+            'S': 'Sierra', 'T': 'Tango', 'U': 'Uniform', 'V': 'Victor', 'W': 'Whiskey', 'X': 'X-ray',
+            'Y': 'Yankee', 'Z': 'Zulu',
+            '0': 'Zero', '1': 'One', '2': 'Two', '3': 'Three', '4': 'Four',
+            '5': 'Five', '6': 'Six', '7': 'Seven', '8': 'Eight', '9': 'Nine',
+            '-': 'Dash', '/': 'Slash', '.': 'Dot', ' ': '[PROBIL]'
+        };
+
+        function process() {
+            const input = document.getElementById('natoInp').value.toUpperCase();
+            const box = document.getElementById('result');
+            
+            if (!input) {
+                box.style.display = 'none';
+                return;
+            }
+
+            let html = '';
+            
+            for (let char of input) {
+                if (char === ' ') {
+                    html += `<div style="height:15px; border-bottom:1px solid rgba(255,255,255,0.1)"></div>`;
+                    continue;
+                }
+
+                let word = DICT[char] || 'Unknown';
+                let style = DICT[char] ? '' : 'opacity:0.5; font-style:italic';
+
+                html += `
+                <div class="nato-row">
+                    <div class="nato-char">${char}</div>
+                    <div class="nato-word" style="${style}">${word}</div>
+                </div>`;
+            }
+
+            box.innerHTML = html;
+            box.style.display = 'block';
+        }
+
+        function speak() {
+            const input = document.getElementById('natoInp').value.toUpperCase();
+            if (!input) return;
+
+            // Build a phrase for clear pronunciation
+            let phrase = "";
+            for (let char of input) {
+                if (DICT[char]) {
+                    phrase += DICT[char] + ". "; // Pause after each word
+                }
+            }
+
+            // Using Web Speech API
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(phrase);
+                utterance.lang = 'en-US'; // NATO alphabet is English based
+                utterance.rate = 0.85; // Slightly slower for clarity
+                utterance.pitch = 1.0;
+                window.speechSynthesis.speak(utterance);
+                
+                // Visual Feedback
+                const btn = document.querySelector('.btn-speak');
+                btn.style.transform = "scale(0.9)";
+                setTimeout(() => btn.style.transform = "scale(1)", 200);
+            } else {
+                tg.showAlert("Ваш браузер не підтримує озвучку.");
+            }
+        }
+    </script>
+</body>
+</html>

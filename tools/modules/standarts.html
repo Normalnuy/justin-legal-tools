@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Standards Pro</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <script src="../config.js"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #F0F2F5; --card: #FFFFFF; --text: #1C1C1E; --sub: #8E8E93;
+            --blue: #007AFF; --green: #34C759; --orange: #FF9500; --red: #FF3B30; --purple: #AF52DE; --teal: #30B0C7;
+            --shadow: 0 8px 24px rgba(0,0,0,0.06);
+            --btn-active: #000; --btn-text: #fff;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root { --bg: #000; --card: #1C1C1E; --text: #FFF; --sub: #98989D; --btn-active: #fff; --btn-text: #000; }
+        }
+        body { margin: 0; padding: 20px; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding-bottom: 40px; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        .header { margin-bottom: 25px; }
+        .subtitle { font-size: 13px; color: var(--sub); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .title { font-size: 32px; font-weight: 800; margin-top: 4px; display: flex; align-items: center; gap: 8px; }
+
+        .nav-pills { 
+            display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; margin-bottom: 20px; 
+            scrollbar-width: none; 
+        }
+        .pill { 
+            padding: 10px 18px; background: var(--card); border-radius: 30px; 
+            font-size: 14px; font-weight: 600; color: var(--sub); cursor: pointer; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05); white-space: nowrap; transition: 0.3s;
+        }
+        .pill.active { background: var(--btn-active); color: var(--btn-text); transform: scale(1.02); }
+
+        .card { 
+            background: var(--card); border-radius: 24px; padding: 20px; 
+            box-shadow: var(--shadow); margin-bottom: 20px; position: relative; overflow: hidden;
+            transition: transform 0.2s;
+        }
+        .card:active { transform: scale(0.99); }
+        
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .card-icon { font-size: 24px; background: rgba(0,0,0,0.04); width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 14px; }
+        .card-title { font-size: 17px; font-weight: 700; }
+        
+        .main-val { 
+            font-size: 36px; font-weight: 800; letter-spacing: -1px; margin-bottom: 20px; 
+            display: inline-block; cursor: pointer;
+        }
+        .main-val:active { opacity: 0.7; }
+        
+        .grid { 
+            display: grid; grid-template-columns: 1fr 1fr; gap: 12px; 
+            background: rgba(0,0,0,0.03); border-radius: 16px; padding: 15px;
+        }
+        .grid-item { display: flex; flex-direction: column; cursor: pointer; }
+        .grid-lbl { font-size: 11px; color: var(--sub); font-weight: 600; margin-bottom: 4px; }
+        .grid-val { font-size: 15px; font-weight: 700; }
+
+        .col-blue { color: var(--blue); }
+        .col-green { color: var(--green); }
+        .col-red { color: var(--red); }
+        .col-purple { color: var(--purple); }
+        .col-orange { color: var(--orange); }
+
+        #toast {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
+            background: rgba(0,0,0,0.85); color: white; padding: 12px 24px; border-radius: 50px;
+            font-size: 14px; font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 100;
+            display: flex; align-items: center; gap: 8px;
+        }
+        #toast.show { transform: translateX(-50%) translateY(0); }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="subtitle" id="sub-year">Бюджет ...</div>
+        <div class="title">🇺🇦 Стандарти</div>
+    </div>
+
+    <div class="nav-pills">
+        <div class="pill active" onclick="filter('all', this)">Всі</div>
+        <div class="pill" onclick="filter('wage', this)">💰 Зарплати</div>
+        <div class="pill" onclick="filter('law', this)">⚖️ Право</div>
+        <div class="pill" onclick="filter('tax', this)">📊 Податки</div>
+        <div class="pill" onclick="filter('fine', this)">🚨 Штрафи</div>
+    </div>
+
+    <div class="card cat-wage cat-tax cat-fine">
+        <div class="card-header">
+            <div style="display:flex; align-items:center; gap:12px">
+                <div class="card-icon">💵</div>
+                <div class="card-title">Мін. Зарплата (МЗП)</div>
+            </div>
+        </div>
+        <div class="main-val col-green" id="v-mzp" onclick="copyID('v-mzp', 'МЗП')">...</div>
+        
+        <div class="grid">
+            <div class="grid-item" onclick="copyID('v-esv', 'ЄСВ')">
+                <span class="grid-lbl">ЄСВ (22%)</span>
+                <span class="grid-val" id="v-esv">...</span>
+            </div>
+            <div class="grid-item" onclick="copyID('v-vz', 'Військ. збір')">
+                <span class="grid-lbl">Військ. збір (ФОП 1-2)</span>
+                <span class="grid-val" id="v-vz">...</span>
+            </div>
+            <div class="grid-item" onclick="copyID('v-f80', 'Штраф')">
+                <span class="grid-lbl">Штраф (Неоформл.)</span>
+                <span class="grid-val col-red" id="v-f80">...</span>
+            </div>
+            <div class="grid-item" onclick="copyID('v-f24', 'Штраф')">
+                <span class="grid-lbl">Штраф (Недопуск)</span>
+                <span class="grid-val col-red" id="v-f24">...</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card cat-law cat-wage">
+        <div class="card-header">
+            <div style="display:flex; align-items:center; gap:12px">
+                <div class="card-icon">👷‍♂️</div>
+                <div>
+                    <div class="card-title">Прожитковий мін.</div>
+                    <div style="font-size:11px; color:var(--sub)">Для працездатних осіб</div>
+                </div>
+            </div>
+        </div>
+        <div class="main-val col-blue" id="v-pm" onclick="copyID('v-pm', 'ПМ')">...</div>
+
+        <div class="grid">
+            <div class="grid-item" onclick="copyID('v-cf-min', 'Судовий збір')">
+                <span class="grid-lbl">Судовий збір (мін)</span>
+                <span class="grid-val" id="v-cf-min">...</span>
+            </div>
+             <div class="grid-item" onclick="copyID('v-cf-max', 'Судовий збір')">
+                <span class="grid-lbl">Судовий збір (макс)</span>
+                <span class="grid-val" id="v-cf-max">...</span>
+            </div>
+            <div class="grid-item" onclick="copyID('v-psp', 'ПСП')">
+                <span class="grid-lbl">ПСП (50% ПМ)</span>
+                <span class="grid-val col-purple" id="v-psp">...</span>
+            </div>
+            <div class="grid-item" onclick="copyID('v-crime', 'Межа крадіжки')">
+                <span class="grid-lbl">Межа криміналу</span>
+                <span class="grid-val col-red" id="v-crime">...</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card cat-law">
+        <div class="card-header">
+            <div style="display:flex; align-items:center; gap:12px">
+                <div class="card-icon">👶</div>
+                <div class="card-title">Діти та Аліменти</div>
+            </div>
+        </div>
+        
+        <div style="margin-bottom:15px">
+            <div style="font-size:12px; color:var(--sub); margin-bottom:4px">До 6 років</div>
+            <div class="grid">
+                <div class="grid-item" onclick="copyID('v-ali-6-min', 'Аліменти')">
+                    <span class="grid-lbl">Мін. гарант. (50%)</span>
+                    <span class="grid-val" id="v-ali-6-min">...</span>
+                </div>
+                <div class="grid-item" onclick="copyID('v-ali-6-rec', 'Аліменти')">
+                    <span class="grid-lbl">Рекомендований</span>
+                    <span class="grid-val col-green" id="v-ali-6-rec">...</span>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div style="font-size:12px; color:var(--sub); margin-bottom:4px">Від 6 до 18 років</div>
+            <div class="grid">
+                <div class="grid-item" onclick="copyID('v-ali-18-min', 'Аліменти')">
+                    <span class="grid-lbl">Мін. гарант. (50%)</span>
+                    <span class="grid-val" id="v-ali-18-min">...</span>
+                </div>
+                <div class="grid-item" onclick="copyID('v-ali-18-rec', 'Аліменти')">
+                    <span class="grid-lbl">Рекомендований</span>
+                    <span class="grid-val col-green" id="v-ali-18-rec">...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card cat-law cat-fine">
+        <div class="card-header">
+            <div style="display:flex; align-items:center; gap:12px">
+                <div class="card-icon">⚖️</div>
+                <div>
+                    <div class="card-title">Кримінальна шкода</div>
+                    <div style="font-size:11px; color:var(--sub)">Кваліфікація (від ПСП)</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="grid-item" onclick="copyID('v-cr-small', 'Крадіжка')">
+                <span class="grid-lbl">Дрібна крадіжка (до)</span>
+                <span class="grid-val col-green" id="v-cr-small">...</span>
+            </div>
+            <div class="grid-item" onclick="copyID('v-cr-sig', 'Шкода')">
+                <span class="grid-lbl">Значна шкода (250+)</span>
+                <span class="grid-val col-orange" id="v-cr-sig">...</span>
+            </div>
+            <div class="grid-item" onclick="copyID('v-cr-large', 'Шкода')">
+                <span class="grid-lbl">Велика шкода (600+)</span>
+                <span class="grid-val col-red" id="v-cr-large">...</span>
+            </div>
+             <div class="grid-item" onclick="copyID('v-cr-xl', 'Шкода')">
+                <span class="grid-lbl">Особл. велика (12500+)</span>
+                <span class="grid-val col-purple" id="v-cr-xl">...</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card cat-fine cat-law">
+        <div class="card-header">
+            <div style="display:flex; align-items:center; gap:12px">
+                <div class="card-icon">🧾</div>
+                <div>
+                    <div class="card-title">НМДГ (Штрафи)</div>
+                    <div style="font-size:11px; color:var(--sub)">Тільки для санкцій</div>
+                </div>
+            </div>
+        </div>
+        <div class="main-val" id="v-nmdg" onclick="copyID('v-nmdg', 'НМДГ')">...</div>
+        
+        <div class="grid">
+            <div class="grid-item" onclick="copyID('v-nmdg-50', 'Штраф')">
+                <span class="grid-lbl">50 НМДГ</span>
+                <span class="grid-val" id="v-nmdg-50">...</span>
+            </div>
+            <div class="grid-item" onclick="copyID('v-nmdg-100', 'Штраф')">
+                <span class="grid-lbl">100 НМДГ</span>
+                <span class="grid-val" id="v-nmdg-100">...</span>
+            </div>
+            <div class="grid-item" onclick="copyID('v-nmdg-1000', 'Штраф')">
+                <span class="grid-lbl">1000 НМДГ</span>
+                <span class="grid-val" id="v-nmdg-1000">...</span>
+            </div>
+            <div class="grid-item" onclick="copyID('v-nmdg-2000', 'Штраф')">
+                <span class="grid-lbl">2000 НМДГ</span>
+                <span class="grid-val" id="v-nmdg-2000">...</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <span id="toastMsg">Скопійовано!</span>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+
+        // --- ІНІЦІАЛІЗАЦІЯ ДАНИХ З КОНФІГУ ---
+        window.onload = function() {
+            // Якщо конфіг не підключився (файл не знайдено)
+            if (typeof Config === 'undefined') {
+                alert("Помилка: config.js не знайдено!");
+                return;
+            }
+
+            const C = Config.Fin; // Фінанси
+            const B = Config.Data.base; // Базові
+            const U = Config.Utils; // Утиліти (fmt)
+
+            // Функція для встановлення тексту
+            const set = (id, val) => {
+                const el = document.getElementById(id);
+                if(el) el.innerText = U.fmt(val);
+            };
+
+            // Рік
+            document.getElementById('sub-year').innerText = "Бюджет " + Config.Data.year;
+
+            // Зарплати та Штрафи
+            set('v-mzp', C.minWage);
+            set('v-esv', C.esv);
+            set('v-vz', C.warTax);
+            set('v-f80', C.fines.noJob);
+            set('v-f24', C.fines.ignore);
+
+            // ПМ та Право
+            set('v-pm', B.livingWage.able);
+            set('v-cf-min', C.courtFee.min);
+            set('v-cf-max', C.courtFee.max);
+            set('v-psp', C.psp);
+            set('v-crime', C.crimeThreshold);
+
+            // Аліменти
+            set('v-ali-6-min', C.alimony.min6);
+            set('v-ali-6-rec', B.livingWage.child6);
+            set('v-ali-18-min', C.alimony.min18);
+            set('v-ali-18-rec', B.livingWage.child18);
+
+            // Кримінал (від ПСП)
+            set('v-cr-small', C.crimeThreshold);
+            set('v-cr-sig', C.psp * 250);
+            set('v-cr-large', C.psp * 600);
+            set('v-cr-xl', C.psp * 12500);
+
+            // НМДГ (від Базового)
+            set('v-nmdg', B.nmdg);
+            set('v-nmdg-50', B.nmdg * 50);
+            set('v-nmdg-100', B.nmdg * 100);
+            set('v-nmdg-1000', B.nmdg * 1000);
+            set('v-nmdg-2000', B.nmdg * 2000);
+        };
+
+        // --- ЛОГІКА ІНТЕРФЕЙСУ ---
+
+        function filter(cat, btn) {
+            document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+
+            const cards = document.querySelectorAll('.card');
+            cards.forEach(card => {
+                if (cat === 'all' || card.classList.contains('cat-' + cat)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        // Копіювання по ID (бере текст прямо з екрану)
+        function copyID(id, label) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            
+            // Чистимо від пробілів та знака валюти для буфера
+            let text = el.innerText.replace(' ₴', '').replace(/\s/g, ''); 
+            
+            navigator.clipboard.writeText(text);
+            tg.HapticFeedback.notificationOccurred('success');
+            
+            const toast = document.getElementById('toast');
+            const msg = document.getElementById('toastMsg');
+            
+            msg.innerText = `${label}: ${text} скопійовано`;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+    </script>
+</body>
+</html>

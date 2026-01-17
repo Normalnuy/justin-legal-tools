@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Alimony</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <script src="../config.js"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #F2F2F7; --card: #FFFFFF; --text: #000; --sub: #8E8E93;
+            --blue: #007AFF; --green: #34C759; --red: #FF3B30; --orange: #FF9500;
+            --btn-bg: rgba(118, 118, 128, 0.12);
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root { --bg: #000; --card: #1C1C1E; --text: #FFF; --sub: #98989D; --btn-bg: rgba(255, 255, 255, 0.15); }
+        }
+        body { margin: 0; padding: 20px; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        .header { margin-bottom: 20px; }
+        .title { font-size: 28px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+        .subtitle { font-size: 13px; color: var(--sub); font-weight: 600; text-transform: uppercase; margin-top: 5px; }
+
+        .card { background: var(--card); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 16px; }
+        
+        label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--sub); margin-bottom: 8px; letter-spacing: 0.5px; }
+        input, select { 
+            width: 100%; padding: 14px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.1); 
+            background: var(--bg); color: var(--text); font-size: 17px; outline: none; margin-bottom: 15px; font-weight: 600; appearance: none;
+        }
+
+        .children-container { margin-top: 10px; }
+        .child-row { 
+            display: flex; align-items: center; justify-content: space-between; 
+            margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid rgba(0,0,0,0.05);
+            animation: slideDown 0.3s ease-out;
+        }
+        .child-row:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        
+        .child-label { font-size: 15px; font-weight: 600; }
+        
+        .age-switch { 
+            display: flex; background: var(--btn-bg); padding: 2px; border-radius: 8px; 
+        }
+        .age-opt { 
+            padding: 6px 12px; font-size: 13px; font-weight: 500; border-radius: 7px; 
+            cursor: pointer; transition: 0.2s; color: var(--text); opacity: 0.7;
+        }
+        .age-opt.active { 
+            background: var(--card); opacity: 1; font-weight: 700; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+        }
+
+        .res-box { 
+            text-align: center; padding: 25px 20px; border-radius: 20px; color: white; 
+            display: none; transition: 0.3s; position: relative; overflow: hidden;
+        }
+        .res-val { font-size: 40px; font-weight: 800; line-height: 1; margin-bottom: 10px; text-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .res-badge { background: rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; text-transform: uppercase; display: inline-block; }
+
+        .details { margin-top: 20px; background: rgba(0,0,0,0.05); padding: 15px; border-radius: 14px; }
+        .det-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; }
+        .det-row:last-child { margin-bottom: 0; padding-top: 8px; border-top: 1px solid rgba(0,0,0,0.1); font-weight: 700; }
+        .det-label { color: var(--sub); }
+        
+        .alert-min { color: var(--red); font-size: 12px; margin-top: 10px; display: none; font-weight: 700; text-align: center; line-height: 1.4; }
+
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="subtitle">Сімейний кодекс</div>
+        <div class="title">👶 Аліменти</div>
+    </div>
+
+    <div class="card">
+        <label>Чистий дохід платника (грн)</label>
+        <input type="number" id="income" placeholder="Напр: 15000" oninput="calc()">
+
+        <label>Кількість дітей</label>
+        <div style="position:relative; margin-bottom: 20px;">
+            <select id="count" onchange="renderChildren()">
+                <option value="1">1 дитина (25%)</option>
+                <option value="2">2 дітей (33%)</option>
+                <option value="3">3 дітей (50%)</option>
+                <option value="4">4 дітей (50%)</option>
+                <option value="5">5 дітей (50%)</option>
+            </select>
+            <div style="position:absolute; right:15px; top:50%; transform:translateY(-50%); pointer-events:none; opacity:0.5">▼</div>
+        </div>
+
+        <div id="childrenContainer" class="children-container"></div>
+    </div>
+
+    <div id="result" class="res-box">
+        <div class="res-badge" id="resShareText">Частка: 25%</div>
+        <div class="res-val" id="resTotal">0 ₴</div>
+        <div style="font-size:12px; opacity:0.9">Рекомендована сума до сплати</div>
+    </div>
+
+    <div id="detailsBox" class="card" style="display:none">
+        <div class="details">
+            <div class="det-row">
+                <span class="det-label">Гарантований мінімум (сума):</span>
+                <span id="detMin">0 ₴</span>
+            </div>
+            <div class="det-row">
+                <span class="det-label">Рекомендований (100% ПМ):</span>
+                <span id="detRec">0 ₴</span>
+            </div>
+            <div class="det-row">
+                <span class="det-label">Максимальна межа (10 ПМ):</span>
+                <span id="detMax">0 ₴</span>
+            </div>
+            <div class="alert-min" id="alertMin">
+                ⚠️ Увага! Частка від зарплати менша за гарантований законом мінімум на всіх дітей.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+
+        let childAges = ['small', 'small', 'small', 'small', 'small']; 
+
+        // Initial render
+        renderChildren();
+
+        function renderChildren() {
+            const count = parseInt(document.getElementById('count').value);
+            const container = document.getElementById('childrenContainer');
+            container.innerHTML = ""; // Clear
+
+            for (let i = 0; i < count; i++) {
+                const isSmall = childAges[i] === 'small';
+                
+                const div = document.createElement('div');
+                div.className = 'child-row';
+                div.innerHTML = `
+                    <span class="child-label">Дитина №${i + 1}</span>
+                    <div class="age-switch">
+                        <div class="age-opt ${isSmall ? 'active' : ''}" onclick="setAge(${i}, 'small')">до 6</div>
+                        <div class="age-opt ${!isSmall ? 'active' : ''}" onclick="setAge(${i}, 'big')">6-18</div>
+                    </div>
+                `;
+                container.appendChild(div);
+            }
+            calc();
+        }
+
+        function setAge(index, type) {
+            childAges[index] = type;
+            renderChildren();
+        }
+
+        function calc() {
+            if (typeof Config === 'undefined') return;
+
+            const U = Config.Utils;
+            const PM_SMALL = Config.Data.base.livingWage.child6;
+            const PM_BIG = Config.Data.base.livingWage.child18;
+
+            let income = parseFloat(document.getElementById('income').value);
+            let count = parseInt(document.getElementById('count').value);
+
+            if (!income || income <= 0) {
+                document.getElementById('result').style.display = 'none';
+                document.getElementById('detailsBox').style.display = 'none';
+                return;
+            }
+
+            // 1. Calculate Guaranteed Minimum
+            let totalGuaranteedMin = 0;
+            let totalRecMin = 0;
+            let totalMax = 0;
+
+            for (let i = 0; i < count; i++) {
+                let pm = (childAges[i] === 'small') ? PM_SMALL : PM_BIG;
+                totalGuaranteedMin += (pm * 0.5);
+                totalRecMin += pm;
+                totalMax += (pm * 10);
+            }
+
+            // 2. Determine Share
+            let share = 0.25;
+            let shareText = "Частка: 25% (1/4)";
+            if (count === 2) { share = 0.3333; shareText = "Частка: 33% (1/3)"; }
+            if (count >= 3)  { share = 0.50; shareText = "Частка: 50% (1/2)"; }
+
+            // 3. Values
+            let calculatedShare = income * share;
+            let finalAmount = calculatedShare;
+            let isBelowMin = calculatedShare < totalGuaranteedMin;
+
+            // Render
+            document.getElementById('result').style.display = 'block';
+            document.getElementById('detailsBox').style.display = 'block';
+            
+            const resBox = document.getElementById('result');
+            if (isBelowMin) {
+                resBox.style.background = "var(--red)";
+                document.getElementById('alertMin').style.display = 'block';
+            } else {
+                resBox.style.background = "linear-gradient(135deg, var(--blue) 0%, #0056b3 100%)";
+                document.getElementById('alertMin').style.display = 'none';
+            }
+
+            document.getElementById('resTotal').innerText = U.fmt(finalAmount);
+            document.getElementById('resShareText').innerText = shareText;
+
+            // Details
+            document.getElementById('detMin').innerText = U.fmt(totalGuaranteedMin);
+            document.getElementById('detRec').innerText = U.fmt(totalRecMin);
+            document.getElementById('detMax').innerText = U.fmt(totalMax);
+
+            tg.HapticFeedback.selectionChanged();
+        }
+    </script>
+</body>
+</html>

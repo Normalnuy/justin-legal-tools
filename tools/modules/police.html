@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Патрульний контроль</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #F2F2F7; --card: #FFFFFF; --text: #000; --sub: #8E8E93;
+            --police-blue: #1c2645; --police-red: #d62828; --green: #34C759;
+            --btn-bg: rgba(28, 38, 69, 0.05);
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root { --bg: #000; --card: #1C1C1E; --text: #FFF; --sub: #98989D; --btn-bg: rgba(255,255,255,0.1); }
+        }
+        body { margin: 0; padding: 20px; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        .header { margin-bottom: 20px; }
+        .title { font-size: 28px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+        .subtitle { font-size: 13px; color: var(--sub); font-weight: 600; text-transform: uppercase; margin-top: 5px; }
+
+        /* Navigation Grid */
+        .nav-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+        .nav-item { 
+            background: var(--card); padding: 12px 5px; border-radius: 14px; text-align: center; 
+            cursor: pointer; box-shadow: var(--shadow); transition: 0.2s; border: 2px solid transparent;
+        }
+        .nav-item.active { border-color: var(--police-blue); background: var(--btn-bg); }
+        .nav-icon { font-size: 24px; display: block; margin-bottom: 5px; }
+        .nav-lbl { font-size: 11px; font-weight: 700; line-height: 1.2; }
+
+        /* Content Area */
+        .content { display: none; background: var(--card); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); animation: fade 0.3s; }
+        
+        h3 { margin: 0 0 15px 0; font-size: 18px; }
+        
+        .check-item { display: flex; align-items: flex-start; margin-bottom: 12px; font-size: 14px; line-height: 1.4; }
+        .check-icon { margin-right: 10px; font-size: 16px; min-width: 20px; }
+        .law-ref { display: block; font-size: 11px; color: var(--sub); margin-top: 3px; font-weight: 500; }
+
+        /* Copy Buttons for Protocol */
+        .copy-block { 
+            background: var(--btn-bg); padding: 15px; border-radius: 12px; margin-bottom: 10px; 
+            cursor: pointer; position: relative; border: 1px solid rgba(0,0,0,0.05);
+        }
+        .copy-block:active { transform: scale(0.98); background: rgba(52, 199, 89, 0.1); }
+        .copy-text { font-size: 14px; font-weight: 500; font-style: italic; }
+        .copy-hint { 
+            position: absolute; top: 5px; right: 5px; font-size: 9px; 
+            background: var(--text); color: var(--card); padding: 2px 6px; border-radius: 4px; text-transform: uppercase;
+        }
+
+        .alert-box { 
+            background: rgba(214, 40, 40, 0.1); color: var(--police-red); 
+            padding: 12px; border-radius: 12px; margin-top: 15px; font-size: 13px; font-weight: 600;
+        }
+
+        @keyframes fade { from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:translateY(0)} }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="subtitle">Юридичний захист</div>
+        <div class="title">👮‍♂️ Патрульний контроль</div>
+    </div>  
+
+    <div class="nav-grid">
+        <div class="nav-item" onclick="show('trucam', this)">
+            <span class="nav-icon">📸</span>
+            <span class="nav-lbl">TruCAM</span>
+        </div>
+        <div class="nav-item" onclick="show('protocol', this)">
+            <span class="nav-icon">✍️</span>
+            <span class="nav-lbl">Протокол</span>
+        </div>
+        <div class="nav-item" onclick="show('insurance', this)">
+            <span class="nav-icon">📄</span>
+            <span class="nav-lbl">Страховка</span>
+        </div>
+        <div class="nav-item" onclick="show('stop', this)">
+            <span class="nav-icon">🛑</span>
+            <span class="nav-lbl">Зупинка</span>
+        </div>
+        <div class="nav-item" onclick="show('search', this)">
+            <span class="nav-icon">🔦</span>
+            <span class="nav-lbl">Огляд</span>
+        </div>
+        <div class="nav-item" onclick="show('diia', this)">
+            <span class="nav-icon">📱</span>
+            <span class="nav-lbl">Дія</span>
+        </div>
+    </div>
+
+    <div id="trucam" class="content">
+        <h3>Перевищення швидкості</h3>
+        <div class="check-item">
+            <span class="check-icon">⚠️</span>
+            <div><b>Знак 5.76</b><br>Чи встановлено знак фотофіксації перед постом? Якщо ні — замір незаконний.<span class="law-ref">ст. 40 ЗУ "Про Нацполіцію"</span></div>
+        </div>
+        <div class="check-item">
+            <span class="check-icon">🤏</span>
+            <div><b>Руки тремтять?</b><br>Зйомка "з рук" заборонена. Прилад має бути закріплений стаціонарно (тринога).<span class="law-ref">Рішення 8-го ААС № 157/703/20</span></div>
+        </div>
+        <div class="check-item">
+            <span class="check-icon">🔐</span>
+            <div><b>Пломби</b><br>Вимагайте показати непошкоджені пломби та свідоцтво про повірку приладу.</div>
+        </div>
+        <div class="alert-box">
+            Допустиме перевищення: +20 км/год (+2-3 км похибка приладу).
+        </div>
+    </div>
+
+    <div id="protocol" class="content">
+        <h3>Що писати в поясненнях?</h3>
+        <div style="font-size:12px; color:var(--sub); margin-bottom:15px">Натисніть на блок, щоб скопіювати текст і вставити в перекладач або планшет поліцейського.</div>
+
+        <div class="copy-block" onclick="copy(this)">
+            <div class="copy-hint">КОПІЮВАТИ</div>
+            <div class="copy-text">"З порушенням не згоден. Правил дорожнього руху не порушував. Доказів моєї вини поліцейським не надано."</div>
+        </div>
+
+        <div class="copy-block" onclick="copy(this)">
+            <div class="copy-hint">КОПІЮВАТИ</div>
+            <div class="copy-text">"Прошу відкласти розгляд справи для отримання правової допомоги адвоката згідно ст. 268 КУпАП."</div>
+        </div>
+
+        <div class="copy-block" onclick="copy(this)">
+            <div class="copy-hint">КОПІЮВАТИ</div>
+            <div class="copy-text">"Інспектор відмовився надати відеофіксацію порушення на місці розгляду справи."</div>
+        </div>
+    </div>
+
+    <div id="insurance" class="content">
+        <h3>Поліс (Автоцивілка)</h3>
+        <div class="check-item">
+            <span class="check-icon">⛔️</span>
+            <div><b>Просто так не показую</b><br>Поліцейський не має права вимагати страховку при звичайній перевірці документів.</div>
+        </div>
+        <div class="check-item">
+            <span class="check-icon">✅</span>
+            <div><b>Коли зобов'язаний?</b><br>1. При складанні протоколу про порушення ПДР.<br>2. При оформленні ДТП.<span class="law-ref">ст. 21.2 ЗУ "Про ОСЦПВ"</span></div>
+        </div>
+        <div class="check-item">
+            <span class="check-icon">📱</span>
+            <div><b>Електронний поліс</b><br>Має таку ж юридичну силу. Можна показувати з екрану телефона.<span class="law-ref">ПДР п. 2.1 (ґ)</span></div>
+        </div>
+    </div>
+
+    <div id="diia" class="content">
+        <h3>Електронні документи</h3>
+        <div class="check-item">
+            <span class="check-icon">🏛</span>
+            <div><b>Юридична сила</b><br>Цифрові права та техпаспорт у "Дії" є повними аналогами пластикових.<span class="law-ref">Постанова КМУ № 956</span></div>
+        </div>
+        <div class="check-item">
+            <span class="check-icon">📡</span>
+            <div><b>Як перевіряють?</b><br>Поліцейський сканує QR-код своїм планшетом. Ви не зобов'язані передавати йому свій телефон у руки.</div>
+        </div>
+        <div class="check-item">
+            <span class="check-icon">📶</span>
+            <div><b>Немає інтернету?</b><br>Документ все одно дійсний, якщо він завантажився раніше. QR-код працює офлайн (оновлюється).</div>
+        </div>
+    </div>
+
+    <div id="stop" class="content">
+        <h3>10 причин зупинки (ст. 35)</h3>
+        <div class="check-item">1️⃣ Порушення ПДР</div>
+        <div class="check-item">2️⃣ Очевидна несправність</div>
+        <div class="check-item">3️⃣ Причетність до ДТП</div>
+        <div class="check-item">4️⃣ Розшук транспортного засобу (попроси орієнтировку)</div>
+        <div class="check-item">5️⃣ Опитування як свідка</div>
+        <div class="check-item">6️⃣ Допомога іншим водіям</div>
+        <div class="check-item">7️⃣ Рішення про обмеження чи заборону руху (напр. перекриття дороги)</div>
+        <div class="check-item">8️⃣ Небезпечний вантаж</div>
+        <div class="check-item">9️⃣ Спец. сигнали</div>
+        <div class="check-item">🔟 Іноземні номери</div>
+        <div class="check-item">1️⃣1️⃣ Залишення місця утримання військовопололених</div>
+
+        <div class="alert-box">"Перевірка документів/Операція "Перехоплення" - не причина! *Якщо це не блок-пост.</div>
+    </div>
+
+    <div id="search" class="content">
+        <h3>Огляд чи Обшук?</h3>
+        <div class="check-item">
+            <span class="check-icon">👀</span>
+            <div><b>Поверхнева перевірка</b><br>Поліцейський може дивитися у салон, багажник. Ви самі відкриваєте двері. Він не торкається речей.<span class="law-ref">ст. 34 ЗУ "Про Нацполіцію"</span></div>
+        </div>
+        <div class="check-item">
+            <span class="check-icon">✋</span>
+            <div><b>Обшук</b><br>Детальне риття в речах. Тільки за ухвалою суду або у невідкладних випадках (з протоколом і понятими).<span class="law-ref">ст. 233 КПК</span></div>
+        </div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+
+        function show(id, el) {
+            // UI
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            el.classList.add('active');
+            
+            // Content
+            document.querySelectorAll('.content').forEach(c => c.style.display = 'none');
+            document.getElementById(id).style.display = 'block';
+            
+            tg.HapticFeedback.selectionChanged();
+        }
+
+        function copy(el) {
+            const text = el.querySelector('.copy-text').innerText.replace(/"/g, "");
+            navigator.clipboard.writeText(text);
+            
+            // Visual feedback
+            const originalColor = el.style.backgroundColor;
+            el.style.backgroundColor = "rgba(52, 199, 89, 0.2)"; // Flash green
+            el.querySelector('.copy-hint').innerText = "СКОПІЙОВАНО!";
+            
+            setTimeout(() => {
+                el.style.backgroundColor = originalColor;
+                el.querySelector('.copy-hint').innerText = "КОПІЮВАТИ";
+            }, 800);
+            
+            tg.HapticFeedback.notificationOccurred('success');
+        }
+        
+        // Open first tab by default
+        show('trucam', document.querySelector('.nav-item'));
+    </script>
+</body>
+</html>

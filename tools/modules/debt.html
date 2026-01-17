@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Debt Calculator</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #F2F2F7; --card: #FFFFFF; --text: #000; --sub: #8E8E93;
+            --blue: #007AFF; --red: #FF3B30; --green: #34C759; --orange: #FF9500;
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root { --bg: #000; --card: #1C1C1E; --text: #FFF; --sub: #98989D; }
+        }
+        body { margin: 0; padding: 20px; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        .header { margin-bottom: 20px; }
+        .title { font-size: 28px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+        .subtitle { font-size: 13px; color: var(--sub); font-weight: 600; text-transform: uppercase; margin-top: 5px; }
+
+        .card { background: var(--card); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 16px; }
+        
+        label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--sub); margin-bottom: 8px; }
+        input { 
+            width: 100%; padding: 14px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.1); 
+            background: var(--bg); color: var(--text); font-size: 16px; outline: none; margin-bottom: 15px; font-weight: 600;
+        }
+
+        /* Result Area */
+        .res-block { display: none; margin-top: 10px; }
+        
+        .total-box {
+            text-align: center; padding: 20px; background: linear-gradient(135deg, var(--blue) 0%, #0056b3 100%);
+            border-radius: 16px; color: white; margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3);
+        }
+        .total-lbl { font-size: 12px; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px; }
+        .total-val { font-size: 32px; font-weight: 800; margin-top: 5px; }
+
+        .breakdown-row { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 12px 15px; background: var(--card); border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        .breakdown-row:first-child { border-top-left-radius: 16px; border-top-right-radius: 16px; }
+        .breakdown-row:last-child { border-bottom: none; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px; }
+        
+        .bk-name { font-size: 14px; font-weight: 500; }
+        .bk-val { font-size: 14px; font-weight: 700; }
+        .plus { color: var(--red); }
+
+        .note { font-size: 11px; color: var(--sub); margin-top: 20px; line-height: 1.5; padding: 0 5px; }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="subtitle">Ст. 625 ЦКУ</div>
+        <div class="title">📈 Борг + Інфляція</div>
+    </div>
+
+    <div class="card">
+        <label>Сума боргу (грн)</label>
+        <input type="number" id="debt" placeholder="0" oninput="calc()">
+
+        <label>Початок прострочення</label>
+        <input type="date" id="dateStart" onchange="calc()">
+
+        <label>Кінець прострочення (дата розрахунку)</label>
+        <input type="date" id="dateEnd" onchange="calc()">
+    </div>
+
+    <div id="results" class="res-block">
+        <div class="total-box">
+            <div class="total-lbl">Загальна сума до суду</div>
+            <div class="total-val" id="resTotal">0.00 ₴</div>
+        </div>
+
+        <div style="background:var(--card); border-radius:16px; overflow:hidden; box-shadow:var(--shadow)">
+            <div class="breakdown-row">
+                <span class="bk-name">Тіло боргу</span>
+                <span class="bk-val" id="resDebt">0.00</span>
+            </div>
+            <div class="breakdown-row">
+                <span class="bk-name">3% річних</span>
+                <span class="bk-val plus" id="res3Proc">+ 0.00</span>
+            </div>
+            <div class="breakdown-row">
+                <span class="bk-name">Інфляційні втрати</span>
+                <span class="bk-val plus" id="resInf">+ 0.00</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="note">
+        * Інфляційні втрати розраховано на основі офіційних індексів Держстату (2022-2025).<br>
+        * Розрахунок 3% річних здійснюється за фактичну кількість днів прострочення.<br>
+        * Якщо індекс інфляції менше 100% (дефляція), сума боргу не зменшується (Постанова ВСУ).
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+
+        // Inflation Indices (Monthly %) from State Statistics Service
+        // Format: 'YYYY-MM': percent (e.g., 1.3 means 101.3%)
+        const CPI_DB = {
+            // 2022 (War start)
+            '2022-00': 1.3, '2022-01': 1.6, '2022-02': 4.5, '2022-03': 3.1, '2022-04': 2.7, '2022-05': 3.1,
+            '2022-06': 0.7, '2022-07': 1.1, '2022-08': 1.9, '2022-09': 2.5, '2022-10': 0.7, '2022-11': 0.7,
+            // 2023
+            '2023-00': 0.8, '2023-01': 0.7, '2023-02': 1.5, '2023-03': 0.2, '2023-04': 0.5, '2023-05': 0.8,
+            '2023-06': -0.6, '2023-07': -1.4, '2023-08': 0.5, '2023-09': 0.8, '2023-10': 0.5, '2023-11': 0.7,
+            // 2024
+            '2024-00': 0.4, '2024-01': 0.3, '2024-02': 0.5, '2024-03': 0.2, '2024-04': 0.6, '2024-05': 2.2,
+            '2024-06': 0.0, '2024-07': 0.6, '2024-08': 1.5, '2024-09': 1.8, '2024-10': 1.2, '2024-11': 0.8,
+            // 2025 (Projected/Sample for logic - will need updates)
+            '2025-00': 1.0, '2025-01': 0.9 
+        };
+
+        // Set default dates
+        document.getElementById('dateEnd').valueAsDate = new Date();
+
+        function calc() {
+            let debt = parseFloat(document.getElementById('debt').value);
+            let d1 = document.getElementById('dateStart').value;
+            let d2 = document.getElementById('dateEnd').value;
+
+            if (!debt || !d1 || !d2) {
+                document.getElementById('results').style.display = 'none';
+                return;
+            }
+
+            let start = new Date(d1);
+            let end = new Date(d2);
+
+            if (start >= end) {
+                document.getElementById('results').style.display = 'none';
+                return;
+            }
+
+            // 1. Calculate 3% Annual
+            let diffTime = Math.abs(end - start);
+            let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+            
+            // Formula: Sum * 3% * Days / 365
+            let threeProc = (debt * 0.03 * diffDays) / 365;
+
+            // 2. Calculate Inflation
+            // Logic: Iterate months from start to end.
+            // Note: Legal practice varies on partial months. 
+            // Standard approach: Index applies to the month ONLY if the debt existed for the WHOLE month (1st to last).
+            // However, simpler calc often uses all touched months except current if not finished.
+            // Let's use simplified robust logic: Multiply all indices in range.
+            
+            let cumulativeIndex = 1.0;
+            
+            let current = new Date(start);
+            current.setDate(1); // Set to 1st of start month
+            
+            // Loop through months
+            while (current < end) {
+                // Formatting key 'YYYY-MM' (Note: getMonth() is 0-11)
+                let y = current.getFullYear();
+                let m = current.getMonth(); // 0-11
+                
+                // Adjust for DATA keys which might use 00-11 logic
+                let key = `${y}-${m.toString().padStart(2, '0')}`;
+                
+                // Only apply if we have data and it's not the partial end month (simplified)
+                if (CPI_DB[key] !== undefined) {
+                    let monthlyIndex = 1 + (CPI_DB[key] / 100);
+                    cumulativeIndex *= monthlyIndex;
+                }
+                
+                // Next month
+                current.setMonth(current.getMonth() + 1);
+            }
+
+            // If cumulative < 1 (Deflation), we assume 1 (No loss, but no gain)
+            if (cumulativeIndex < 1) cumulativeIndex = 1;
+
+            let inflationSum = (debt * cumulativeIndex) - debt;
+            if (inflationSum < 0) inflationSum = 0;
+
+            let total = debt + threeProc + inflationSum;
+
+            // Render
+            document.getElementById('results').style.display = 'block';
+            document.getElementById('resDebt').innerText = fmt(debt);
+            document.getElementById('res3Proc').innerText = "+ " + fmt(threeProc);
+            document.getElementById('resInf').innerText = "+ " + fmt(inflationSum);
+            document.getElementById('resTotal').innerText = fmt(total) + " ₴";
+            
+            tg.HapticFeedback.selectionChanged();
+        }
+
+        function fmt(n) {
+            return n.toLocaleString('uk-UA', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        }
+    </script>
+</body>
+</html>

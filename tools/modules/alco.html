@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Алкоголь та проміле</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <script src="../config.js"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #F2F2F7; --card: #FFFFFF; --text: #000; --sub: #8E8E93;
+            --acc: #007AFF; --green: #34C759; --red: #FF3B30; --orange: #FF9500;
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root { --bg: #000; --card: #1C1C1E; --text: #FFF; --sub: #98989D; }
+        }
+        
+        body { margin: 0; padding: 20px; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        .header { margin-bottom: 20px; }
+        .title { font-size: 28px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+        .subtitle { font-size: 13px; color: var(--sub); font-weight: 600; text-transform: uppercase; margin-top: 5px; }
+
+        /* Card */
+        .card { background: var(--card); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 16px; }
+
+        /* Inputs */
+        label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--sub); margin-bottom: 8px; letter-spacing: 0.5px; }
+        input, select { 
+            width: 100%; padding: 14px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.1); 
+            background: var(--bg); color: var(--text); font-size: 16px; outline: none; appearance: none; font-weight: 500; margin-bottom: 15px;
+        }
+        
+        /* Segment Control (Gender) */
+        .seg-ctrl { display: flex; background: var(--bg); padding: 4px; border-radius: 12px; margin-bottom: 20px; }
+        .seg-btn { flex: 1; text-align: center; padding: 10px; font-size: 13px; font-weight: 600; border-radius: 9px; color: var(--sub); transition: 0.2s; cursor: pointer; }
+        .seg-btn.active { background: var(--card); color: var(--text); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+
+        /* Result Area */
+        .result-box { 
+            text-align: center; padding: 30px 20px; border-radius: 20px; color: white; 
+            transition: 0.3s; display: none; position: relative; overflow: hidden;
+        }
+        .res-big { font-size: 48px; font-weight: 800; line-height: 1; text-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .res-lbl { font-size: 14px; font-weight: 600; opacity: 0.9; margin-bottom: 5px; }
+        .res-status { 
+            background: rgba(0,0,0,0.2); padding: 6px 14px; border-radius: 20px; 
+            font-size: 12px; font-weight: 700; display: inline-block; margin-top: 10px; 
+        }
+
+        /* Sober Timer */
+        .timer-card { display: none; margin-top: 15px; background: var(--card); padding: 15px; border-radius: 16px; align-items: center; justify-content: space-between; box-shadow: var(--shadow); }
+        .timer-icon { font-size: 24px; margin-right: 15px; background: var(--bg); width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 10px; }
+        .timer-text { font-size: 13px; color: var(--sub); font-weight: 500; }
+        .timer-val { font-size: 18px; font-weight: 700; color: var(--text); }
+
+        /* Sliders / Grid */
+        .row { display: flex; gap: 12px; }
+        .col { flex: 1; }
+        
+        /* Drink Presets */
+        .drink-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 20px; }
+        .drink-item { background: var(--bg); border-radius: 12px; padding: 10px 5px; text-align: center; cursor: pointer; border: 2px solid transparent; transition: 0.2s; }
+        .drink-item.active { border-color: var(--acc); background: rgba(0,122,255,0.1); }
+        .di-icon { font-size: 24px; display: block; margin-bottom: 4px; }
+        .di-name { font-size: 10px; font-weight: 600; }
+
+        .fine-info { margin-top: 10px; font-size: 11px; opacity: 0.9; font-weight: 500; display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="subtitle">Судова медицина</div>
+        <div class="title">🍺 Алкоголь та проміле</div>
+    </div>
+
+    <div class="card">
+        <label>Стать</label>
+        <div class="seg-ctrl">
+            <div class="seg-btn active" onclick="setSex('m', this)">Чоловік (r=0.7)</div>
+            <div class="seg-btn" onclick="setSex('f', this)">Жінка (r=0.6)</div>
+        </div>
+
+        <label>Вага тіла (кг)</label>
+        <input type="number" id="weight" value="80" oninput="calc()">
+
+        <label>Що п'ємо?</label>
+        <div class="drink-grid">
+            <div class="drink-item active" onclick="setDrink(5, this)"><span class="di-icon">🍺</span><span class="di-name">Пиво</span></div>
+            <div class="drink-item" onclick="setDrink(12, this)"><span class="di-icon">🍷</span><span class="di-name">Вино</span></div>
+            <div class="drink-item" onclick="setDrink(40, this)"><span class="di-icon">🥃</span><span class="di-name">Горілка</span></div>
+            <div class="drink-item" onclick="setDrink(20, this)"><span class="di-icon">🍹</span><span class="di-name">Лікер</span></div>
+        </div>
+
+        <div class="row">
+            <div class="col">
+                <label>Об'єм (мл)</label>
+                <input type="number" id="volume" placeholder="500" oninput="calc()">
+            </div>
+            <div class="col">
+                <label>Міцність (%)</label>
+                <input type="number" id="percent" value="5" oninput="calc()">
+            </div>
+        </div>
+
+        <label>Час після вживання (год)</label>
+        <input type="number" id="time" value="0" placeholder="0" oninput="calc()">
+    </div>
+
+    <div id="resultBox" class="result-box">
+        <div class="res-lbl">Концентрація в крові</div>
+        <div class="res-big" id="resPromille">0.00‰</div>
+        <div class="res-status" id="resStatus">ТВЕРЕЗИЙ</div>
+        <div class="fine-info" id="fineInfo"></div>
+    </div>
+
+    <div id="timerBox" class="timer-card">
+        <div style="display:flex; align-items:center;">
+            <div class="timer-icon">🚗</div>
+            <div>
+                <div class="timer-text">Можна за кермо через</div>
+                <div class="timer-val" id="timeToSober">0 год 0 хв</div>
+            </div>
+        </div>
+    </div>
+
+    <div style="margin-top: 20px; font-size: 11px; color: var(--sub); line-height: 1.5; padding: 0 10px;">
+        * Розрахунок за формулою Відмарка.<br>
+        * Ліміт за кермом: <b>0.20‰</b>.<br>
+        * Штраф за ст. 130 КУпАП (1000 НМДГ): <b id="fineVal">17 000 ₴</b>.
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+
+        let sexFactor = 0.7; // Default Male
+        let eliminationRate = 0.15; // Average per hour
+
+        // Load dynamic fine from config if available
+        let FINE_AMOUNT = 17000;
+        
+        window.onload = function() {
+            if (typeof Config !== 'undefined') {
+                // 1000 NMDG
+                FINE_AMOUNT = Config.Data.base.nmdg * 1000;
+                document.getElementById('fineVal').innerText = Config.Utils.fmt(FINE_AMOUNT);
+            }
+        };
+
+        function setSex(s, el) {
+            sexFactor = (s === 'm') ? 0.7 : 0.6;
+            document.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+            calc();
+        }
+
+        function setDrink(p, el) {
+            document.getElementById('percent').value = p;
+            document.querySelectorAll('.drink-item').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+            calc();
+        }
+
+        function calc() {
+            let weight = parseFloat(document.getElementById('weight').value);
+            let volume = parseFloat(document.getElementById('volume').value);
+            let alcPercent = parseFloat(document.getElementById('percent').value);
+            let hoursPassed = parseFloat(document.getElementById('time').value) || 0;
+
+            const resBox = document.getElementById('resultBox');
+            const timerBox = document.getElementById('timerBox');
+            const fineInfo = document.getElementById('fineInfo');
+
+            if (!weight || !volume || !alcPercent) {
+                resBox.style.display = 'none';
+                timerBox.style.display = 'none';
+                return;
+            }
+
+            // Widmark Formula
+            // Mass (g) = Vol (ml) * (Percent/100) * 0.789
+            let alcoholMass = volume * (alcPercent / 100) * 0.789;
+            // Promille = Mass / (Weight * r)
+            let peakPromille = alcoholMass / (weight * sexFactor);
+            // Elimination
+            let eliminated = hoursPassed * eliminationRate;
+            let currentPromille = peakPromille - eliminated;
+
+            if (currentPromille < 0) currentPromille = 0;
+
+            // Render
+            resBox.style.display = 'block';
+            document.getElementById('resPromille').innerText = currentPromille.toFixed(2) + "‰";
+
+            let status = "ТВЕРЕЗИЙ";
+            let color = "var(--green)";
+            fineInfo.style.display = 'none';
+            
+            if (currentPromille >= 0.2) {
+                status = "СТ. 130 КУпАП";
+                color = "var(--red)";
+                fineInfo.style.display = 'block';
+                // Виводимо суму штрафу динамічно
+                let fmtFine = (typeof Config !== 'undefined') ? Config.Utils.fmt(FINE_AMOUNT) : "17 000 ₴";
+                fineInfo.innerText = `Штраф: ${fmtFine} + позбавлення прав на 1 рік`;
+            } else if (currentPromille > 0.0) {
+                status = "ДОПУСТИМА НОРМА";
+                color = "var(--green)";
+            }
+            
+            if (currentPromille > 1.5) status = "СЕРЕДНЄ СП'ЯНІННЯ";
+            if (currentPromille > 2.5) { status = "СИЛЬНЕ СП'ЯНІННЯ"; color = "#5856D6"; }
+            if (currentPromille > 3.5) { status = "КОМА / СМЕРТЬ"; color = "#000"; }
+
+            resBox.style.background = color;
+            document.getElementById('resStatus').innerText = status;
+
+            // Timer
+            if (currentPromille > 0) {
+                timerBox.style.display = 'flex';
+                let hoursNeeded = currentPromille / eliminationRate;
+                let h = Math.floor(hoursNeeded);
+                let m = Math.round((hoursNeeded - h) * 60);
+                document.getElementById('timeToSober').innerText = `${h} год ${m} хв`;
+            } else {
+                timerBox.style.display = 'none';
+            }
+            
+            tg.HapticFeedback.selectionChanged();
+        }
+    </script>
+</body>
+</html>

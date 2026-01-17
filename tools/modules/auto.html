@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Auto Detective</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #F2F2F7; --card: #FFFFFF; --text: #000; --sub: #8E8E93;
+            --blue: #0057B8; --yellow: #FFD700; --plate-border: #333;
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root { --bg: #000; --card: #1C1C1E; --text: #FFF; --sub: #98989D; --plate-border: #fff; }
+        }
+        body { margin: 0; padding: 20px; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        .header { margin-bottom: 20px; }
+        .title { font-size: 28px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+        .subtitle { font-size: 13px; color: var(--sub); font-weight: 600; text-transform: uppercase; margin-top: 5px; }
+
+        .card { background: var(--card); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 16px; }
+        
+        label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--sub); margin-bottom: 8px; }
+        input { 
+            width: 100%; padding: 16px; border-radius: 14px; border: 1px solid rgba(0,0,0,0.1); 
+            background: var(--bg); color: var(--text); font-size: 20px; outline: none; 
+            text-transform: uppercase; font-family: monospace; letter-spacing: 2px; font-weight: 700; text-align: center;
+        }
+
+        /* LICENSE PLATE VISUALIZER */
+        .plate-frame {
+            background: white; border: 2px solid black; border-radius: 8px;
+            height: 70px; display: flex; align-items: center; margin-top: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15); overflow: hidden; position: relative;
+            max-width: 300px; margin-left: auto; margin-right: auto;
+        }
+        
+        /* UA Blue Strip */
+        .plate-ua {
+            background: var(--blue); width: 40px; height: 100%; 
+            display: flex; flex-direction: column; justify-content: flex-end; 
+            align-items: center; padding-bottom: 5px;
+        }
+        .flag { display: flex; width: 20px; height: 12px; margin-bottom: 4px; }
+        .flag-top { background: var(--blue); width: 100%; height: 50%; }
+        .flag-bot { background: var(--yellow); width: 100%; height: 50%; }
+        .ua-text { color: white; font-size: 10px; font-weight: 700; letter-spacing: 1px; }
+
+        /* Plate Numbers */
+        .plate-content {
+            flex: 1; display: flex; justify-content: center; align-items: center;
+            font-family: 'Oswald', sans-serif; font-size: 36px; color: black; letter-spacing: 2px;
+            text-transform: uppercase; padding-right: 10px;
+        }
+        .green-plate .plate-content { color: #008000; } /* Electric */
+        
+        /* Result Info */
+        .info-box { margin-top: 20px; text-align: center; display: none; }
+        .region-name { font-size: 22px; font-weight: 800; margin-bottom: 5px; }
+        .region-old { font-size: 14px; color: var(--sub); font-weight: 500; }
+        .map-icon { font-size: 60px; margin: 10px 0; opacity: 0.1; }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="subtitle">Регіони та спецсерії</div>
+        <div class="title">🚗 Авто-Детектив</div>
+    </div>
+
+    <div class="card">
+        <label>Введіть перші літери номера (АА, КА, DP...)</label>
+        <input type="text" id="codeIn" placeholder="KA" maxlength="2" oninput="checkPlate()">
+
+        <div id="plateBox" class="plate-frame">
+            <div class="plate-ua">
+                <div style="background: linear-gradient(to bottom, #0057B8 50%, #FFD700 50%); width:20px; height:14px; margin-bottom:3px; border-radius:1px;"></div>
+                <span class="ua-text">UA</span>
+            </div>
+            <div class="plate-content" id="plateText">KA 1234 BC</div>
+        </div>
+
+        <div id="result" class="info-box">
+            <div class="map-icon" id="mapIcon">📍</div>
+            <div class="region-name" id="regName">Київ</div>
+            <div class="region-old" id="regCodes">Коди: AA, KA, TT, TA</div>
+        </div>
+    </div>
+
+    <div style="margin-top: 20px; padding: 0 10px; font-size: 11px; color: var(--sub); line-height: 1.5;">
+        * Підтримує коди 2004 року (АА), 2013 року (КА) та новітні серії для електромобілів (TV, TW, TZ, TY).<br>
+        * Розпізнає дипломатичні (DP) та транзитні номери.
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+
+        // Database: [Region Name, [Old Code, New Code, Electro Codes]]
+        const DB = {
+            "AA": ["м. Київ", "AA, KA, TT, TA (Електро)"],
+            "KA": ["м. Київ", "AA, KA, TT, TA (Електро)"],
+            "TT": ["м. Київ", "AA, KA, TT, TA (Електро)"],
+            "TA": ["м. Київ", "AA, KA, TT, TA (Електро)"],
+
+            "AI": ["Київська обл.", "AI, KI, TI, ME (Електро)"],
+            "KI": ["Київська обл.", "AI, KI, TI, ME (Електро)"],
+            "TI": ["Київська обл.", "AI, KI, TI, ME (Електро)"],
+            "ME": ["Київська обл.", "AI, KI, TI, ME (Електро)"],
+
+            "AB": ["Вінницька обл.", "AB, KB, MM"],
+            "KB": ["Вінницька обл.", "AB, KB, MM"],
+            "MM": ["Вінницька обл.", "AB, KB, MM"],
+
+            "AC": ["Волинська обл.", "AC, KC, CM"],
+            "KC": ["Волинська обл.", "AC, KC, CM"],
+            "CM": ["Волинська обл.", "AC, KC, CM"],
+
+            "AE": ["Дніпропетровська обл.", "AE, KE, PP"],
+            "KE": ["Дніпропетровська обл.", "AE, KE, PP"],
+            "PP": ["Дніпропетровська обл.", "AE, KE, PP"],
+
+            "AH": ["Донецька обл.", "AH, KH, TH"],
+            "KH": ["Донецька обл.", "AH, KH, TH"],
+            "TH": ["Донецька обл.", "AH, KH, TH"],
+
+            "AM": ["Житомирська обл.", "AM, KM, TM"],
+            "KM": ["Житомирська обл.", "AM, KM, TM"],
+            "TM": ["Житомирська обл.", "AM, KM, TM"],
+
+            "AO": ["Закарпатська обл.", "AO, KO, MT"],
+            "KO": ["Закарпатська обл.", "AO, KO, MT"],
+            "MT": ["Закарпатська обл.", "AO, KO, MT"],
+
+            "AP": ["Запорізька обл.", "AP, KP, TP"],
+            "KP": ["Запорізька обл.", "AP, KP, TP"],
+            "TP": ["Запорізька обл.", "AP, KP, TP"],
+
+            "AT": ["Івано-Франківська обл.", "AT, KT, TO"],
+            "KT": ["Івано-Франківська обл.", "AT, KT, TO"],
+            "TO": ["Івано-Франківська обл.", "AT, KT, TO"],
+
+            "BA": ["Кіровоградська обл.", "BA, HA, XA"],
+            "HA": ["Кіровоградська обл.", "BA, HA, XA"],
+            "XA": ["Кіровоградська обл.", "BA, HA, XA"],
+
+            "BB": ["Луганська обл.", "BB, HB, EE"],
+            "HB": ["Луганська обл.", "BB, HB, EE"],
+            "EE": ["Луганська обл.", "BB, HB, EE"],
+
+            "BC": ["Львівська обл.", "BC, HC, ES"],
+            "HC": ["Львівська обл.", "BC, HC, ES"],
+            "ES": ["Львівська обл.", "BC, HC, ES"],
+
+            "BE": ["Миколаївська обл.", "BE, HE, XE"],
+            "HE": ["Миколаївська обл.", "BE, HE, XE"],
+            "XE": ["Миколаївська обл.", "BE, HE, XE"],
+
+            "BH": ["Одеська обл.", "BH, HH, OO"],
+            "HH": ["Одеська обл.", "BH, HH, OO"],
+            "OO": ["Одеська обл.", "BH, HH, OO"],
+
+            "BI": ["Полтавська обл.", "BI, HI, XI"],
+            "HI": ["Полтавська обл.", "BI, HI, XI"],
+            "XI": ["Полтавська обл.", "BI, HI, XI"],
+
+            "BK": ["Рівненська обл.", "BK, HK, XK"],
+            "HK": ["Рівненська обл.", "BK, HK, XK"],
+            "XK": ["Рівненська обл.", "BK, HK, XK"],
+
+            "BM": ["Сумська обл.", "BM, HM, XM"],
+            "HM": ["Сумська обл.", "BM, HM, XM"],
+            "XM": ["Сумська обл.", "BM, HM, XM"],
+
+            "BO": ["Тернопільська обл.", "BO, HO, XO"],
+            "HO": ["Тернопільська обл.", "BO, HO, XO"],
+            "XO": ["Тернопільська обл.", "BO, HO, XO"],
+
+            "AX": ["Харківська обл.", "AX, KX, EX"],
+            "KX": ["Харківська обл.", "AX, KX, EX"],
+            "EX": ["Харківська обл.", "AX, KX, EX"],
+
+            "BT": ["Херсонська обл.", "BT, HT, XT"],
+            "HT": ["Херсонська обл.", "BT, HT, XT"],
+            "XT": ["Херсонська обл.", "BT, HT, XT"],
+
+            "BX": ["Хмельницька обл.", "BX, HX, PX"],
+            "HX": ["Хмельницька обл.", "BX, HX, PX"],
+            "PX": ["Хмельницька обл.", "BX, HX, PX"],
+
+            "CA": ["Черкаська обл.", "CA, IA, OA"],
+            "IA": ["Черкаська обл.", "CA, IA, OA"],
+            "OA": ["Черкаська обл.", "CA, IA, OA"],
+
+            "CB": ["Чернігівська обл.", "CB, IB, OB"],
+            "IB": ["Чернігівська обл.", "CB, IB, OB"],
+            "OB": ["Чернігівська обл.", "CB, IB, OB"],
+
+            "CE": ["Чернівецька обл.", "CE, IE, PE"],
+            "IE": ["Чернівецька обл.", "CE, IE, PE"],
+            "PE": ["Чернівецька обл.", "CE, IE, PE"],
+
+            "AK": ["АР Крим", "AK, KK, TK"],
+            "KK": ["АР Крим", "AK, KK, TK"],
+            "CH": ["м. Севастополь", "CH, IH, MH"],
+            "IH": ["м. Севастополь", "CH, IH, MH"],
+
+            // Special
+            "DP": ["Дипломатичний", "CDP, DP, S"],
+            "II": ["Загальнодержавний", "II (схожий на 11)"]
+        };
+
+        const ELECTRO_SUFFIXES = ['ZA', 'YA', 'TV', 'TW', 'TY', 'TZ'];
+
+        function checkPlate() {
+            let code = document.getElementById('codeIn').value.toUpperCase();
+            let plateBox = document.getElementById('plateBox');
+            let plateText = document.getElementById('plateText');
+            let result = document.getElementById('result');
+            
+            // Visual Update
+            if (code.length === 0) {
+                plateText.innerText = "AA 1234 BB";
+                result.style.display = 'none';
+                plateBox.classList.remove('green-plate');
+                return;
+            }
+            
+            plateText.innerText = code + " 1234 XX";
+
+            // Check Logic
+            if (code.length === 2) {
+                // Check if Electric (Green Plate Logic)
+                // Note: Electric cars have green text, usually denoted by suffix, 
+                // but some new series (like TT, TA) are specifically reserved.
+                let isElectro = ["TT","TA","TI","ME","MM","CM","PP","TH","TM","MT","TP","TO","XA","EE","ES","XE","OO","XI","XK","XM","XO","EX","XT","PX","OA","OB","PE"].includes(code);
+                
+                if (isElectro) {
+                    plateBox.classList.add('green-plate');
+                } else {
+                    plateBox.classList.remove('green-plate');
+                }
+
+                if (DB[code]) {
+                    document.getElementById('regName').innerText = DB[code][0];
+                    document.getElementById('regCodes').innerText = DB[code][1];
+                    document.getElementById('mapIcon').innerText = "🇺🇦";
+                    result.style.display = 'block';
+                    tg.HapticFeedback.notificationOccurred('success');
+                } else {
+                    document.getElementById('regName').innerText = "Невідомий код";
+                    document.getElementById('regCodes').innerText = "Перевірте правильність";
+                    document.getElementById('mapIcon').innerText = "❓";
+                    result.style.display = 'block';
+                }
+            }
+        }
+    </script>
+</body>
+</html>

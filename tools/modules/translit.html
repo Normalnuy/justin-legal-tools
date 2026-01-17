@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Translit Pro</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg: #F2F2F7; --card: #FFFFFF; --text: #000; --sub: #8E8E93;
+            --blue: #007AFF; --passport-bg: #f0f0f5;
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root { --bg: #000; --card: #1C1C1E; --text: #FFF; --sub: #98989D; --passport-bg: #2c2c2e; }
+        }
+        body { margin: 0; padding: 20px; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        .header { margin-bottom: 20px; }
+        .title { font-size: 28px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+        .subtitle { font-size: 13px; color: var(--sub); font-weight: 600; text-transform: uppercase; margin-top: 5px; }
+
+        .card { background: var(--card); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 16px; }
+        
+        label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--sub); margin-bottom: 8px; }
+        input { 
+            width: 100%; padding: 16px; border-radius: 14px; border: 1px solid rgba(0,0,0,0.1); 
+            background: var(--bg); color: var(--text); font-size: 18px; outline: none; margin-bottom: 15px; font-weight: 500;
+        }
+
+        /* Passport Visualizer */
+        .passport-card {
+            background: var(--passport-bg); border-radius: 16px; padding: 20px;
+            position: relative; overflow: hidden; border: 1px solid rgba(0,0,0,0.1);
+            margin-top: 20px; display: none;
+        }
+        
+        /* Holographic effect strip */
+        .holo-strip {
+            position: absolute; top: 0; bottom: 0; left: 30px; width: 100px;
+            background: linear-gradient(135deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0) 100%);
+            transform: skewX(-20deg); pointer-events: none;
+        }
+
+        .pp-label { font-size: 10px; text-transform: uppercase; color: var(--sub); margin-bottom: 2px; letter-spacing: 0.5px; }
+        .pp-val { font-family: 'Inter', sans-serif; font-size: 24px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text); margin-bottom: 15px; }
+        
+        .mrz-zone {
+            font-family: 'Share Tech Mono', monospace; font-size: 18px; color: #333;
+            background: rgba(255,255,255,0.5); padding: 10px; border-radius: 8px;
+            letter-spacing: 2px; word-break: break-all; line-height: 1.4;
+            text-transform: uppercase; margin-top: 10px;
+        }
+        @media (prefers-color-scheme: dark) {
+            .mrz-zone { color: #ddd; background: rgba(0,0,0,0.3); }
+        }
+
+        .copy-btn {
+            position: absolute; top: 15px; right: 15px;
+            background: var(--blue); color: white; border: none; border-radius: 20px;
+            padding: 6px 12px; font-size: 11px; font-weight: 700; cursor: pointer;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="subtitle">Постанова КМУ №55</div>
+        <div class="title">🔤 Паспортний Трансліт</div>
+    </div>
+
+    <div class="card">
+        <label>Прізвище та Ім'я (Кирилиця)</label>
+        <input type="text" id="cyrillic" placeholder="Яковенко Юлія" oninput="transliterate()">
+        
+        <div style="font-size:12px; color:var(--sub); line-height:1.4">
+            Автоматичне визначення "першої літери слова" для букв Я, Є, Ю, Й, Ї та обробка комбінації "зг".
+        </div>
+    </div>
+
+    <div id="result" class="passport-card">
+        <button class="copy-btn" onclick="copyRes()">КОПІЮВАТИ</button>
+        <div class="holo-strip"></div>
+        
+        <div class="pp-label">Surname / Прізвище</div>
+        <div class="pp-val" id="resSurname">-</div>
+        
+        <div class="pp-label">Given Names / Ім'я</div>
+        <div class="pp-val" id="resName">-</div>
+
+        <div class="mrz-zone" id="resMrz">
+            P&lt;UKR&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;<br>
+            &lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;
+        </div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+
+        // Official Mapping CMU 55
+        const MAP = {
+            'а':'a', 'б':'b', 'в':'v', 'г':'h', 'ґ':'g', 'д':'d', 'е':'e',
+            'ж':'zh', 'з':'z', 'и':'y', 'і':'i', 'к':'k', 'л':'l', 'м':'m',
+            'н':'n', 'о':'o', 'п':'p', 'р':'r', 'с':'s', 'т':'t', 'у':'u',
+            'ф':'f', 'х':'kh', 'ц':'ts', 'ч':'ch', 'ш':'sh', 'щ':'shch',
+            'ь':'', '\'':'' // Soft sign and apostrophe are ignored
+        };
+
+        // Context-dependent letters
+        const SPECIAL = {
+            'є': { start: 'ye', other: 'ie' },
+            'ї': { start: 'yi', other: 'i' },
+            'й': { start: 'y', other: 'i' },
+            'ю': { start: 'yu', other: 'iu' },
+            'я': { start: 'ya', other: 'ia' }
+        };
+
+        function transliterate() {
+            let input = document.getElementById('cyrillic').value.trim();
+            const box = document.getElementById('result');
+
+            if (!input) {
+                box.style.display = 'none';
+                return;
+            }
+            box.style.display = 'block';
+
+            // Split into Surname and Name (First word is Surname usually)
+            let parts = input.split(/\s+/);
+            let surnameUA = parts[0] || "";
+            let nameUA = parts.slice(1).join(" ") || "";
+
+            let surnameEN = processWord(surnameUA);
+            let nameEN = processWord(nameUA);
+
+            document.getElementById('resSurname').innerText = surnameEN;
+            document.getElementById('resName').innerText = nameEN;
+
+            // Generate MRZ (Machine Readable Zone) Mockup
+            // Line 1: P<UKRSURNAME<<NAME<<<<<<<<<<<<<
+            // Simplified logic for visual effect
+            let mrzSurname = surnameEN.replace(/ /g, '<').padEnd(39, '<'); // Very rough limit
+            let mrzName = nameEN.replace(/ /g, '<');
+            
+            let line1 = `P<UKR${surnameEN}<<${mrzName}`.toUpperCase();
+            // Truncate to 44 chars standard width
+            if (line1.length > 44) line1 = line1.substring(0, 44);
+            else line1 = line1.padEnd(44, '<');
+
+            // Line 2: Random ID + Birth + Sex (Mockup)
+            let line2 = "GB123456<8UKR9001015M3001015<<<<<<<<<<<<<<06"; // Static mockup
+
+            document.getElementById('resMrz').innerHTML = `${line1}<br>${line2}`;
+        }
+
+        function processWord(word) {
+            let res = "";
+            let w = word.toLowerCase();
+            
+            for (let i = 0; i < w.length; i++) {
+                let char = w[i];
+                let isStart = (i === 0);
+
+                // 1. Check "ЗГ" exception
+                if (char === 'з' && w[i+1] === 'г') {
+                    res += 'zgh';
+                    i++; // Skip next 'г'
+                    continue;
+                }
+
+                // 2. Check Special Letters (Ya, Yu, Ye, Yi, Y)
+                if (SPECIAL[char]) {
+                    res += isStart ? SPECIAL[char].start : SPECIAL[char].other;
+                } 
+                // 3. Standard Mapping
+                else if (MAP[char] !== undefined) {
+                    res += MAP[char];
+                } 
+                // 4. Keep others (dash, etc)
+                else {
+                    res += char;
+                }
+            }
+            return res.toUpperCase();
+        }
+
+        function copyRes() {
+            let s = document.getElementById('resSurname').innerText;
+            let n = document.getElementById('resName').innerText;
+            let full = `${s} ${n}`;
+            navigator.clipboard.writeText(full);
+            tg.HapticFeedback.notificationOccurred('success');
+        }
+    </script>
+</body>
+</html>

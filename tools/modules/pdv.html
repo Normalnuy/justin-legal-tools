@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>VAT Pro</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #F2F2F7; --card: #FFFFFF; --text: #000; --sub: #8E8E93;
+            --blue: #007AFF; --green: #34C759; --purple: #AF52DE; --orange: #FF9500;
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root { --bg: #000; --card: #1C1C1E; --text: #FFF; --sub: #98989D; }
+        }
+        body { margin: 0; padding: 20px; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        .header { margin-bottom: 20px; }
+        .title { font-size: 28px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+        .subtitle { font-size: 13px; color: var(--sub); font-weight: 600; text-transform: uppercase; margin-top: 5px; }
+
+        .card { background: var(--card); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 16px; }
+        
+        /* Segment Control */
+        .seg { display: flex; background: var(--bg); padding: 4px; border-radius: 14px; margin-bottom: 20px; }
+        .seg-btn { 
+            flex: 1; text-align: center; padding: 12px; font-size: 13px; font-weight: 600; 
+            border-radius: 10px; color: var(--sub); transition: 0.2s; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
+        }
+        .seg-btn.active { background: var(--card); color: var(--text); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .icon-btn { font-size: 16px; }
+
+        /* Input */
+        .input-wrap { position: relative; }
+        input { 
+            width: 100%; padding: 16px; padding-right: 50px; border-radius: 14px; border: 1px solid rgba(0,0,0,0.1); 
+            background: var(--bg); color: var(--text); font-size: 24px; outline: none; font-weight: 700;
+        }
+        .currency { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); font-weight: 600; color: var(--sub); }
+
+        /* Result Area */
+        .results { margin-top: 10px; }
+        .res-row { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 16px; background: var(--card); margin-bottom: 10px; 
+            border-radius: 16px; box-shadow: var(--shadow); cursor: pointer;
+            transition: 0.2s; border: 2px solid transparent;
+        }
+        .res-row:active { transform: scale(0.98); background: rgba(0,0,0,0.02); }
+        .res-row.highlight { border-color: var(--purple); background: rgba(175, 82, 222, 0.05); }
+
+        .lbl { font-size: 13px; color: var(--sub); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+        .val { font-size: 20px; font-weight: 700; }
+        
+        .copy-icon { font-size: 14px; opacity: 0; transition: 0.2s; margin-left: 10px; color: var(--purple); }
+        .res-row:hover .copy-icon { opacity: 1; }
+
+        /* Formula hint */
+        .hint { text-align: center; font-size: 12px; color: var(--sub); margin-top: 20px; opacity: 0.7; font-family: monospace; }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="subtitle">Податковий кодекс</div>
+        <div class="title">🧮 ПДВ Калькулятор</div>
+    </div>
+
+    <div class="card">
+        <div class="seg">
+            <div class="seg-btn active" id="btn-add" onclick="setMode('add')">
+                <span class="icon-btn">➕</span> Нарахувати
+            </div>
+            <div class="seg-btn" id="btn-ext" onclick="setMode('ext')">
+                <span class="icon-btn">➖</span> Витягнути
+            </div>
+        </div>
+
+        <div class="input-wrap">
+            <input type="number" id="amount" placeholder="0" oninput="calc()">
+            <span class="currency">₴</span>
+        </div>
+    </div>
+
+    <div class="results" id="resContainer" style="display:none">
+        
+        <div class="res-row" id="rowBase" onclick="copy(this)">
+            <div>
+                <div class="lbl">База (Без ПДВ)</div>
+                <div class="val" id="valBase">0.00</div>
+            </div>
+            <span class="copy-icon">📋</span>
+        </div>
+
+        <div class="res-row" id="rowTax" onclick="copy(this)">
+            <div>
+                <div class="lbl">Сума ПДВ (20%)</div>
+                <div class="val" id="valTax" style="color:var(--purple)">0.00</div>
+            </div>
+            <span class="copy-icon">📋</span>
+        </div>
+
+        <div class="res-row" id="rowTotal" onclick="copy(this)">
+            <div>
+                <div class="lbl">Загальна сума (З ПДВ)</div>
+                <div class="val" id="valTotal">0.00</div>
+            </div>
+            <span class="copy-icon">📋</span>
+        </div>
+
+        <div class="hint" id="formulaHint">Формула: Сума * 0.2</div>
+
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+
+        let mode = 'add'; // 'add' or 'ext'
+
+        function setMode(m) {
+            mode = m;
+            document.getElementById('btn-add').className = m === 'add' ? 'seg-btn active' : 'seg-btn';
+            document.getElementById('btn-ext').className = m === 'ext' ? 'seg-btn active' : 'seg-btn';
+            
+            // Highlight specific rows based on logic
+            document.getElementById('rowBase').className = m === 'add' ? 'res-row highlight' : 'res-row';
+            document.getElementById('rowTotal').className = m === 'ext' ? 'res-row highlight' : 'res-row';
+            
+            calc();
+        }
+
+        function calc() {
+            let input = parseFloat(document.getElementById('amount').value);
+            const container = document.getElementById('resContainer');
+
+            if (!input && input !== 0) {
+                container.style.display = 'none';
+                return;
+            }
+            container.style.display = 'block';
+
+            let base, tax, total, formula;
+
+            if (mode === 'add') {
+                // Input is BASE
+                base = input;
+                tax = base * 0.2;
+                total = base + tax;
+                formula = "База + (База × 20%)";
+            } else {
+                // Input is TOTAL
+                total = input;
+                base = total / 1.2;
+                tax = total - base;
+                formula = "Загальна / 1.2";
+            }
+
+            document.getElementById('valBase').innerText = fmt(base);
+            document.getElementById('valTax').innerText = fmt(tax);
+            document.getElementById('valTotal').innerText = fmt(total);
+            document.getElementById('formulaHint').innerText = formula;
+        }
+
+        function fmt(num) {
+            return num.toLocaleString('uk-UA', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function copy(el) {
+            let val = el.querySelector('.val').innerText;
+            // Remove spaces (non-breaking spaces from localeString) for clean copy
+            val = val.replace(/\s/g, '').replace(',', '.'); // Usually lawyers copy numbers for Excel or Banking
+            
+            // Or keep as text:
+            let textVal = el.querySelector('.val').innerText;
+            
+            navigator.clipboard.writeText(textVal);
+            
+            // Visual Flash
+            const originalBg = el.style.backgroundColor;
+            el.style.backgroundColor = "rgba(175, 82, 222, 0.15)";
+            setTimeout(() => {
+                el.style.backgroundColor = "";
+            }, 200);
+
+            tg.HapticFeedback.selectionChanged();
+        }
+    </script>
+</body>
+</html>

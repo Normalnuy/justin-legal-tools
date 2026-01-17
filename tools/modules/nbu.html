@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>NBU Archive</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #F2F2F7; --card: #FFFFFF; --text: #000; --sub: #8E8E93;
+            --blue: #007AFF; --green: #34C759; --search-bg: rgba(118, 118, 128, 0.12);
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root { --bg: #000; --card: #1C1C1E; --text: #FFF; --sub: #98989D; --search-bg: rgba(255, 255, 255, 0.1); }
+        }
+        body { margin: 0; padding: 20px; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        .header { margin-bottom: 20px; }
+        .title { font-size: 28px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+        .subtitle { font-size: 13px; color: var(--sub); font-weight: 600; text-transform: uppercase; margin-top: 5px; }
+
+        /* Controls */
+        .controls { background: var(--card); padding: 15px; border-radius: 20px; box-shadow: var(--shadow); margin-bottom: 20px; }
+        
+        label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--sub); margin-bottom: 8px; }
+        input[type="date"] { 
+            width: 100%; padding: 14px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.1); 
+            background: var(--bg); color: var(--text); font-size: 17px; outline: none; margin-bottom: 15px; font-weight: 600; appearance: none;
+        }
+
+        .search-box { 
+            background: var(--search-bg); padding: 10px 15px; border-radius: 12px; 
+            display: flex; align-items: center; 
+        }
+        .search-icon { font-size: 16px; margin-right: 8px; opacity: 0.5; }
+        input[type="text"] { 
+            width: 100%; background: transparent; border: none; font-size: 16px; 
+            color: var(--text); outline: none; font-weight: 500;
+        }
+
+        /* List */
+        .list-container { display: flex; flex-direction: column; gap: 10px; }
+        
+        .curr-item { 
+            background: var(--card); padding: 15px; border-radius: 16px; 
+            display: flex; justify-content: space-between; align-items: center;
+            transition: 0.2s; cursor: pointer; border: 1px solid transparent;
+        }
+        .curr-item:active { transform: scale(0.98); }
+        .curr-item.highlight { border-color: var(--blue); background: rgba(0, 122, 255, 0.05); }
+
+        .curr-left { display: flex; align-items: center; gap: 12px; }
+        .flag { font-size: 28px; line-height: 1; }
+        .code { font-size: 15px; font-weight: 700; }
+        .name { font-size: 12px; color: var(--sub); margin-top: 2px; max-width: 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        .rate { font-size: 18px; font-weight: 700; font-family: monospace; }
+
+        .loader { text-align: center; color: var(--sub); margin-top: 30px; display: none; }
+        
+        .copy-toast {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 20px;
+            font-size: 13px; font-weight: 600; opacity: 0; transition: 0.3s; pointer-events: none;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="subtitle">API Національного Банку</div>
+        <div class="title">🏦 Архів Курсів</div>
+    </div>
+
+    <div class="controls">
+        <label>Дата курсу</label>
+        <input type="date" id="datePicker" onchange="fetchRates()">
+
+        <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="searchIn" placeholder="USD, EUR, Фунт..." oninput="filter()">
+        </div>
+    </div>
+
+    <div id="loader" class="loader">Завантаження даних НБУ...</div>
+    <div id="list" class="list-container"></div>
+
+    <div id="toast" class="copy-toast">Скопійовано!</div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+
+        // Flag Mapping (Manual, as NBU doesn't provide flags)
+        const FLAGS = {
+            'USD': '🇺🇸', 'EUR': '🇪🇺', 'GBP': '🇬🇧', 'PLN': '🇵🇱', 'CAD': '🇨🇦',
+            'CHF': '🇨🇭', 'CZK': '🇨🇿', 'JPY': '🇯🇵', 'CNY': '🇨🇳', 'TRY': '🇹🇷',
+            'ILS': '🇮🇱', 'GEL': '🇬🇪', 'MDL': '🇲🇩', 'RON': '🇷🇴', 'HUF': '🇭🇺',
+            'AUD': '🇦🇺', 'AZN': '🇦🇿', 'BYN': '🇧🇾', 'DKK': '🇩🇰', 'KZT': '🇰🇿',
+            'NOK': '🇳🇴', 'SEK': '🇸🇪', 'XAU': '🥇', 'XAG': '🥈'
+        };
+
+        let currentData = [];
+
+        // Set default date to Today
+        document.getElementById('datePicker').valueAsDate = new Date();
+        
+        // Init load
+        fetchRates();
+
+        async function fetchRates() {
+            const dateVal = document.getElementById('datePicker').value;
+            if (!dateVal) return;
+
+            // Format YYYY-MM-DD -> YYYYMMDD for API
+            const formattedDate = dateVal.replace(/-/g, '');
+            const list = document.getElementById('list');
+            const loader = document.getElementById('loader');
+
+            list.innerHTML = '';
+            loader.style.display = 'block';
+
+            try {
+                // Official NBU API
+                const url = `https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?date=${formattedDate}&json`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                // Sort: USD, EUR, GBP, PLN first, then others alphabetically
+                const priority = ['USD', 'EUR', 'GBP', 'PLN'];
+                data.sort((a, b) => {
+                    let idxA = priority.indexOf(a.cc);
+                    let idxB = priority.indexOf(b.cc);
+                    if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+                    if (idxA !== -1) return -1;
+                    if (idxB !== -1) return 1;
+                    return a.cc.localeCompare(b.cc);
+                });
+
+                currentData = data;
+                render(data);
+
+            } catch (e) {
+                list.innerHTML = `<div style="text-align:center;color:red">Помилка з'єднання з НБУ</div>`;
+            } finally {
+                loader.style.display = 'none';
+            }
+        }
+
+        function render(data) {
+            const list = document.getElementById('list');
+            list.innerHTML = '';
+
+            if (data.length === 0) {
+                list.innerHTML = `<div style="text-align:center; opacity:0.6">Дані відсутні на цю дату</div>`;
+                return;
+            }
+
+            data.forEach(item => {
+                const flag = FLAGS[item.cc] || '🏳️';
+                const isMajor = ['USD', 'EUR'].includes(item.cc);
+                
+                const el = document.createElement('div');
+                el.className = `curr-item ${isMajor ? 'highlight' : ''}`;
+                el.onclick = () => copyRate(item.rate, item.cc);
+                
+                el.innerHTML = `
+                    <div class="curr-left">
+                        <div class="flag">${flag}</div>
+                        <div>
+                            <div class="code">${item.cc}</div>
+                            <div class="name">${item.txt}</div>
+                        </div>
+                    </div>
+                    <div class="rate">${item.rate.toFixed(4)}</div>
+                `;
+                list.appendChild(el);
+            });
+        }
+
+        function filter() {
+            const term = document.getElementById('searchIn').value.toLowerCase();
+            const filtered = currentData.filter(item => 
+                item.cc.toLowerCase().includes(term) || 
+                item.txt.toLowerCase().includes(term)
+            );
+            render(filtered);
+        }
+
+        function copyRate(rate, code) {
+            const text = `${rate.toFixed(4)}`;
+            navigator.clipboard.writeText(text);
+            
+            const toast = document.getElementById('toast');
+            toast.innerText = `${code}: ${text} скопійовано`;
+            toast.style.opacity = 1;
+            setTimeout(() => toast.style.opacity = 0, 1500);
+
+            tg.HapticFeedback.selectionChanged();
+        }
+    </script>
+</body>
+</html>

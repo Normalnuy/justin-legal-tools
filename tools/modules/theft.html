@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Theft Expert</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <script src="../config.js"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #F2F2F7; --card: #FFFFFF; --text: #000; --sub: #8E8E93;
+            --green: #34C759; --red: #FF3B30; --orange: #FF9500; --blue: #007AFF;
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root { --bg: #000; --card: #1C1C1E; --text: #FFF; --sub: #98989D; }
+        }
+        body { margin: 0; padding: 20px; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        .header { margin-bottom: 20px; }
+        .title { font-size: 28px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+        .subtitle { font-size: 13px; color: var(--sub); font-weight: 600; text-transform: uppercase; margin-top: 5px; }
+
+        .card { background: var(--card); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 16px; }
+        
+        label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--sub); margin-bottom: 8px; letter-spacing: 0.5px; }
+        input { 
+            width: 100%; padding: 16px; border-radius: 14px; border: 1px solid rgba(0,0,0,0.1); 
+            background: var(--bg); color: var(--text); font-size: 18px; outline: none; font-weight: 600; margin-bottom: 15px;
+        }
+
+        .toggle-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .toggle { position: relative; display: inline-block; width: 50px; height: 30px; }
+        .toggle input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--sub); transition: .4s; border-radius: 34px; opacity: 0.3; }
+        .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        input:checked + .slider { background-color: var(--red); opacity: 1; }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        .res-box { text-align: center; padding: 25px 20px; border-radius: 20px; color: white; display: none; transition: 0.3s; }
+        .res-icon { font-size: 40px; margin-bottom: 10px; display: block; }
+        .res-title { font-size: 24px; font-weight: 800; line-height: 1.1; margin-bottom: 5px; }
+        .res-sub { font-size: 14px; opacity: 0.9; font-weight: 500; margin-bottom: 15px; }
+        .res-det { background: rgba(0,0,0,0.2); padding: 12px; border-radius: 12px; text-align: left; font-size: 13px; line-height: 1.4; }
+
+        .scale-wrap { position: relative; height: 40px; margin-top: 20px; display: flex; align-items: center; }
+        .scale-line { width: 100%; height: 6px; background: linear-gradient(to right, var(--green) 50%, var(--red) 50%); border-radius: 3px; }
+        .scale-marker { position: absolute; top: -5px; transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform: translateX(-50%); }
+        .pin { width: 4px; height: 16px; background: var(--text); border-radius: 2px; margin: 0 auto; }
+        .pin-val { font-size: 10px; font-weight: 700; background: var(--card); padding: 2px 6px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-top: 4px; color: var(--text); }
+        
+        .limit-label { position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); font-size: 10px; color: var(--sub); font-weight: 600; white-space: nowrap; }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="subtitle" id="sub-year">ККУ vs КУпАП ...</div>
+        <div class="title">🚔 Крадіжка</div>
+    </div>
+
+    <div class="card">
+        <label>Вартість майна (грн)</label>
+        <input type="number" id="sum" placeholder="0" oninput="calc()">
+
+        <div class="toggle-row">
+            <span style="font-size:14px; font-weight:600">Воєнний стан</span>
+            <label class="toggle">
+                <input type="checkbox" id="martial" checked onchange="calc()">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div class="toggle-row">
+            <span style="font-size:14px; font-weight:600">Повторно (протягом року)</span>
+            <label class="toggle">
+                <input type="checkbox" id="repeat" onchange="calc()">
+                <span class="slider" style="background-color: var(--orange)"></span>
+            </label>
+        </div>
+
+        <div class="scale-wrap">
+            <div class="scale-line"></div>
+            <div class="limit-label" id="limitLabel">Межа: ... грн</div>
+            <div class="scale-marker" id="marker" style="left: 0%">
+                <div class="pin"></div>
+                <div class="pin-val" id="markerVal">0</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="result" class="res-box">
+        <span class="res-icon" id="icon">⚖️</span>
+        <div class="res-title" id="status">Введіть суму</div>
+        <div class="res-sub" id="article">-</div>
+        <div class="res-det" id="details">Санкція з'явиться тут</div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+
+        function calc() {
+            if (typeof Config === 'undefined') return;
+
+            const LIMIT = Config.Fin.crimeThreshold; // 0.2 ПСП
+            const NMDG = Config.Data.base.nmdg;
+
+            // Оновлюємо лейбл межі динамічно
+            document.getElementById('limitLabel').innerText = `Межа криміналу: ${LIMIT.toFixed(2)} грн`;
+
+            let sum = parseFloat(document.getElementById('sum').value);
+            let isMartial = document.getElementById('martial').checked;
+            let isRepeat = document.getElementById('repeat').checked;
+            let box = document.getElementById('result');
+            
+            // Візуалізація
+            let markerPos = 0;
+            if (sum > 0) {
+                // Ліво: 0-50% (від 0 до LIMIT)
+                // Право: 50-100% (від LIMIT до LIMIT*3)
+                if (sum <= LIMIT) {
+                    markerPos = (sum / LIMIT) * 50;
+                } else {
+                    markerPos = 50 + Math.min(((sum - LIMIT) / (LIMIT * 2)) * 50, 50);
+                }
+            }
+            document.getElementById('marker').style.left = `${markerPos}%`;
+            document.getElementById('markerVal').innerText = sum ? sum : "0";
+
+            if (!sum || sum <= 0) {
+                box.style.display = 'none';
+                return;
+            }
+            box.style.display = 'block';
+
+            // Логіка
+            if (sum <= LIMIT) {
+                // АДМІНІСТРАТИВНА
+                let art = "ст. 51 КУпАП";
+                let status = "ДРІБНА КРАДІЖКА";
+                let color = "var(--green)";
+                let icon = "🟢";
+                let sanction = "";
+
+                if (isRepeat) {
+                    // Частина 2
+                    art += " ч. 2 (Повторно)";
+                    status += " (ПОВТОРНО)";
+                    color = "var(--orange)";
+                    icon = "🟠";
+                    sanction = `Штраф: 510 - 850 грн\n(30-50 НМДГ)\nАбо виправні роботи / арешт 10-15 діб.`;
+                } else {
+                    // Частина 1
+                    art += " ч. 1";
+                    sanction = `Штраф: 170 - 510 грн\n(10-30 НМДГ)\nАбо виправні роботи / арешт 5-10 діб.`;
+                }
+
+                render(color, icon, status, art, sanction);
+
+            } else {
+                // КРИМІНАЛЬНА
+                let art = "ст. 185 ККУ";
+                let status = "КРИМІНАЛ";
+                let color = "var(--red)";
+                let icon = "🔴";
+                let sanction = "";
+
+                if (isMartial) {
+                    // Воєнний стан = ч. 4
+                    art += " ч. 4 (В умовах воєнного стану)";
+                    status = "ТЯЖКИЙ ЗЛОЧИН";
+                    icon = "👮‍♂️";
+                    sanction = `Увага! В умовах воєнного стану кваліфікується за ч.4 незалежно від суми.\n\nПокарання: Позбавлення волі від 5 до 8 років.`;
+                } else {
+                    art += " ч. 1";
+                    sanction = `Крадіжка (таємне викрадення чужого майна).\n\nПокарання: Штраф 17-51 тис. грн, або громадські роботи, або обмеження волі до 5 років.`;
+                }
+
+                render(color, icon, status, art, sanction);
+            }
+            
+            tg.HapticFeedback.selectionChanged();
+        }
+
+        function render(color, icon, title, sub, det) {
+            let box = document.getElementById('result');
+            box.style.background = color;
+            document.getElementById('icon').innerText = icon;
+            document.getElementById('status').innerText = title;
+            document.getElementById('article').innerText = sub;
+            document.getElementById('details').innerText = det;
+        }
+
+        window.onload = function() {
+            if (typeof Config !== 'undefined') {
+                document.getElementById('sub-year').innerText = "ККУ vs КУпАП (" + Config.Data.year + ")";
+                // Ініціалізація лейблу при старті
+                const LIMIT = Config.Fin.crimeThreshold;
+                document.getElementById('limitLabel').innerText = `Межа криміналу: ${LIMIT.toFixed(2)} грн`;
+            }
+        }
+    </script>
+</body>
+</html>

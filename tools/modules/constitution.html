@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Constitution Pro</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg: #F2F2F7; --card: #FFFFFF; --text: #000; --sub: #8E8E93;
+            --blue: #007AFF; --gold: #FFD700; --blue-soft: rgba(0,122,255,0.1);
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root { --bg: #000; --card: #1C1C1E; --text: #FFF; --sub: #98989D; }
+        }
+        body { margin: 0; padding: 20px; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        .header { margin-bottom: 20px; }
+        .title { font-size: 28px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+        .subtitle { font-size: 13px; color: var(--sub); font-weight: 600; text-transform: uppercase; margin-top: 5px; }
+
+        /* Search & Filter */
+        .search-box { 
+            position: sticky; top: 0; z-index: 10;
+            background: var(--card); padding: 12px; border-radius: 14px; 
+            box-shadow: var(--shadow); display: flex; align-items: center; margin-bottom: 15px;
+        }
+        .search-icon { font-size: 18px; margin-right: 10px; opacity: 0.5; }
+        input { 
+            width: 100%; background: transparent; border: none; font-size: 17px; 
+            color: var(--text); outline: none; font-weight: 500;
+        }
+
+        .chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; margin-bottom: 15px; scrollbar-width: none; }
+        .chip { 
+            background: var(--card); padding: 8px 16px; border-radius: 20px; 
+            font-size: 13px; font-weight: 600; white-space: nowrap; cursor: pointer; 
+            border: 1px solid transparent; transition: 0.2s; color: var(--sub);
+        }
+        .chip.active { background: var(--blue); color: white; box-shadow: 0 4px 10px rgba(0,122,255,0.3); }
+
+        /* Article Card */
+        .art-card { 
+            background: var(--card); border-radius: 16px; padding: 20px; 
+            margin-bottom: 12px; cursor: pointer; transition: 0.2s;
+            border-left: 4px solid var(--blue); position: relative;
+        }
+        .art-card:active { transform: scale(0.98); background: var(--blue-soft); }
+        
+        .art-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .art-num { font-size: 14px; font-weight: 800; color: var(--blue); text-transform: uppercase; letter-spacing: 0.5px; }
+        .art-icon { font-size: 20px; }
+        
+        .art-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; line-height: 1.3; }
+        .art-text { 
+            font-family: 'Merriweather', serif; font-size: 14px; line-height: 1.6; 
+            color: var(--text); opacity: 0.9;
+        }
+        .highlight { background: rgba(255, 215, 0, 0.2); border-radius: 4px; padding: 0 2px; }
+
+        .copy-toast {
+            position: absolute; right: 15px; top: 15px; background: var(--text); color: var(--bg);
+            padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 700;
+            opacity: 0; transition: 0.3s; pointer-events: none;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="subtitle">Основний Закон (28.06.96)</div>
+        <div class="title">📘 Конституція</div>
+    </div>
+
+    <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchIn" placeholder="Пошук (ст. 63, адвокат, обшук...)" oninput="render()">
+    </div>
+
+    <div class="chips">
+        <div class="chip active" onclick="filter('all', this)">Всі</div>
+        <div class="chip" onclick="filter('def', this)">🛡 Захист</div>
+        <div class="chip" onclick="filter('free', this)">🗽 Свободи</div>
+        <div class="chip" onclick="filter('duty', this)">⚖️ Обов'язки</div>
+    </div>
+
+    <div id="list">
+        </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+
+        const DB = [
+            {
+                id: 3, cat: 'free', icon: '💎', title: 'Людина - найвища цінність',
+                text: '<b>Людина, її життя і здоров\'я, честь і гідність, недоторканність і безпека</b> визнаються в Україні найвищою соціальною цінністю.'
+            },
+            {
+                id: 19, cat: 'def', icon: '📜', title: 'Правовий порядок',
+                text: 'Правовий порядок в Україні ґрунтується на засадах, відповідно до яких <b>ніхто не може бути примушений робити те, що не передбачено законодавством</b>.<br><br>Органи державної влади... зобов\'язані діяти лише на підставі... та у спосіб, що передбачені Конституцією.'
+            },
+            {
+                id: 28, cat: 'free', icon: '🚫', title: 'Гідність',
+                text: 'Кожен має право на повагу до його гідності. <b>Ніхто не може бути підданий катуванню</b>, жорстокому, нелюдському або такому, що принижує його гідність, поводженню чи покаранню.'
+            },
+            {
+                id: 29, cat: 'def', icon: '⛓', title: 'Свобода та недоторканність',
+                text: '<b>Ніхто не може бути заарештований або триманий під вартою інакше як за вмотивованим рішенням суду</b>...<br>Кожному заарештованому... має бути невідкладно повідомлено про мотиви арешту.'
+            },
+            {
+                id: 30, cat: 'def', icon: '🏠', title: 'Недоторканність житла',
+                text: '<b>Не допускається проникнення до житла</b> чи до іншого володіння особи, проведення в них огляду чи обшуку інакше як за вмотивованим рішенням суду.'
+            },
+            {
+                id: 34, cat: 'free', icon: '📹', title: 'Свобода слова',
+                text: 'Кожному гарантується право на свободу думки і слова, на вільне вираження своїх поглядів і переконань. (Підстава для відеозйомки поліції).'
+            },
+            {
+                id: 55, cat: 'def', icon: '⚖️', title: 'Судовий захист',
+                text: 'Права і свободи людини і громадянина захищаються судом. Кожному гарантується право на оскарження в суді рішень, дій чи бездіяльності органів державної влади.'
+            },
+            {
+                id: 59, cat: 'def', icon: '🤝', title: 'Правова допомога',
+                text: 'Кожен має право на професійну правничу допомогу. У випадках, передбачених законом, ця допомога надається безоплатно. <b>Кожен є вільним у виборі захисника своїх прав</b>.'
+            },
+            {
+                id: 60, cat: 'duty', icon: '⛔️', title: 'Злочинні накази',
+                text: 'Ніхто не зобов\'язаний виконувати явно злочинні розпорядження чи накази. За віддання і виконання явно злочинного розпорядження чи наказу настає юридична відповідальність.'
+            },
+            {
+                id: 62, cat: 'def', icon: '⚖️', title: 'Презумпція невинуватості',
+                text: 'Особа вважається невинуватою у вчиненні злочину і не може бути піддана кримінальному покаранню, доки її вину не буде доведено в законному порядку і встановлено обвинувальним вироком суду.<br><b>Ніхто не зобов\'язаний доводити свою невинуватість у вчиненні злочину</b>.'
+            },
+            {
+                id: 63, cat: 'def', icon: '🤐', title: 'Відмова від показів',
+                text: 'Особа не несе відповідальності за <b>відмову давати показання</b> або пояснення щодо себе, членів сім\'ї чи близьких родичів.'
+            },
+            {
+                id: 64, cat: 'duty', icon: '🚧', title: 'Обмеження прав (Воєнний стан)',
+                text: 'В умовах воєнного або надзвичайного стану можуть встановлюватися окремі обмеження прав і свобод із зазначенням строку дії цих обмежень.'
+            },
+            {
+                id: 65, cat: 'duty', icon: '🎖', title: 'Захист Вітчизни',
+                text: 'Захист Вітчизни, незалежності та територіальної цілісності України, шанування її державних символів є обов\'язком громадян України.'
+            },
+            {
+                id: 68, cat: 'duty', icon: '📘', title: 'Незнання законів',
+                text: 'Кожен зобов\'язаний неухильно додержуватися Конституції України та законів України... <b>Незнання законів не звільняє від юридичної відповідальності</b>.'
+            }
+        ];
+
+        let activeCat = 'all';
+
+        function filter(cat, el) {
+            activeCat = cat;
+            document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            render();
+        }
+
+        function render() {
+            const term = document.getElementById('searchIn').value.toLowerCase();
+            const list = document.getElementById('list');
+            list.innerHTML = "";
+
+            DB.forEach(art => {
+                // Filter Logic
+                const matchCat = activeCat === 'all' || art.cat === activeCat;
+                const matchSearch = art.title.toLowerCase().includes(term) || 
+                                    art.text.toLowerCase().includes(term) || 
+                                    String(art.id).includes(term);
+
+                if (matchCat && matchSearch) {
+                    const el = document.createElement('div');
+                    el.className = 'art-card';
+                    el.onclick = () => copyText(art.text, el);
+                    el.innerHTML = `
+                        <div class="art-header">
+                            <span class="art-num">Стаття ${art.id}</span>
+                            <span class="art-icon">${art.icon}</span>
+                        </div>
+                        <div class="art-title">${art.title}</div>
+                        <div class="art-text">${art.text}</div>
+                        <div class="copy-toast">СКОПІЙОВАНО</div>
+                    `;
+                    list.appendChild(el);
+                }
+            });
+        }
+
+        function copyText(text, el) {
+            // Strip HTML tags for clean copy
+            const tempDiv = document.createElement("div");
+            tempDiv.innerHTML = text;
+            const cleanText = tempDiv.textContent || tempDiv.innerText || "";
+            
+            navigator.clipboard.writeText(cleanText);
+            
+            // Animation
+            const toast = el.querySelector('.copy-toast');
+            toast.style.opacity = 1;
+            toast.style.top = '10px';
+            
+            setTimeout(() => {
+                toast.style.opacity = 0;
+                toast.style.top = '15px';
+            }, 1000);
+            
+            tg.HapticFeedback.notificationOccurred('success');
+        }
+
+        // Init
+        render();
+    </script>
+</body>
+</html>

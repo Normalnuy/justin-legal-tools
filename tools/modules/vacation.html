@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Vacation Calc</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #F2F2F7; --card: #FFFFFF; --text: #000; --sub: #8E8E93;
+            --blue: #007AFF; --green: #34C759; --orange: #FF9500; --red: #FF3B30;
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root { --bg: #000; --card: #1C1C1E; --text: #FFF; --sub: #98989D; }
+        }
+        body { margin: 0; padding: 20px; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        .header { margin-bottom: 20px; }
+        .title { font-size: 28px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+        .subtitle { font-size: 13px; color: var(--sub); font-weight: 600; text-transform: uppercase; margin-top: 5px; }
+
+        /* Tabs */
+        .tabs { display: flex; background: rgba(118, 118, 128, 0.12); padding: 2px; border-radius: 12px; margin-bottom: 20px; }
+        .tab { 
+            flex: 1; text-align: center; padding: 10px; font-size: 13px; font-weight: 600; 
+            border-radius: 10px; cursor: pointer; transition: 0.2s; color: var(--sub);
+        }
+        .tab.active { background: var(--card); color: var(--text); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+
+        .card { background: var(--card); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 16px; }
+
+        label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--sub); margin-bottom: 8px; }
+        input { 
+            width: 100%; padding: 14px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.1); 
+            background: var(--bg); color: var(--text); font-size: 17px; outline: none; margin-bottom: 15px; font-weight: 600; appearance: none;
+        }
+
+        /* Toggle Switch */
+        .toggle-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+        .toggle { position: relative; display: inline-block; width: 50px; height: 30px; }
+        .toggle input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--sub); transition: .4s; border-radius: 34px; opacity: 0.3; }
+        .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        input:checked + .slider { background-color: var(--red); opacity: 1; }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        /* Results */
+        .res-box { 
+            text-align: center; padding: 25px 20px; border-radius: 20px; color: white; 
+            background: linear-gradient(135deg, var(--green) 0%, #248a3d 100%);
+            display: none; transition: 0.3s;
+        }
+        .res-lbl { font-size: 13px; opacity: 0.8; text-transform: uppercase; margin-bottom: 5px; }
+        .res-val { font-size: 32px; font-weight: 800; margin-bottom: 5px; }
+        .res-sub { background: rgba(0,0,0,0.2); padding: 4px 10px; border-radius: 8px; font-size: 12px; display: inline-block; font-weight: 600; }
+
+        .note { font-size: 11px; color: var(--sub); margin-top: 15px; line-height: 1.4; }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="subtitle">КЗпП України</div>
+        <div class="title">🏖 Калькулятор Відпусток</div>
+    </div>
+
+    <div class="tabs">
+        <div class="tab active" onclick="switchMode('plan')">Планування</div>
+        <div class="tab" onclick="switchMode('earn')">Зароблено</div>
+    </div>
+
+    <div id="mode-plan">
+        <div class="card">
+            <div class="toggle-row">
+                <span style="font-weight:600">Воєнний стан?</span>
+                <label class="toggle">
+                    <input type="checkbox" id="warMode" checked onchange="calcPlan()">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div style="font-size:11px; color:var(--sub); margin-bottom:15px">
+                Увімкнено: святкові дні входять у відпустку.<br>Вимкнено: відпустка продовжується на свята.
+            </div>
+
+            <label>Дата початку відпустки</label>
+            <input type="date" id="startVac" onchange="calcPlan()">
+
+            <label>Кількість днів</label>
+            <input type="number" id="daysVac" placeholder="напр. 14" oninput="calcPlan()">
+        </div>
+
+        <div id="resPlan" class="res-box">
+            <div class="res-lbl">На роботу</div>
+            <div class="res-val" id="returnDate">-</div>
+            <div class="res-sub" id="lastVacDay">Останній день: -</div>
+        </div>
+    </div>
+
+    <div id="mode-earn" style="display:none">
+        <div class="card">
+            <label>Початок роботи / Періоду</label>
+            <input type="date" id="startWork" onchange="calcEarn()">
+            
+            <label>Кінець періоду (або сьогодні)</label>
+            <input type="date" id="endWork" onchange="calcEarn()">
+
+            <label>Днів відпустки на рік (стандарт 24)</label>
+            <input type="number" id="annualDays" value="24" oninput="calcEarn()">
+        </div>
+
+        <div id="resEarn" class="res-box" style="background: linear-gradient(135deg, var(--blue) 0%, #0056b3 100%);">
+            <div class="res-lbl">Накопичено</div>
+            <div class="res-val" id="earnedDays">0 днів</div>
+            <div class="res-sub">Приблизний розрахунок</div>
+        </div>
+        
+        <div class="note">
+            * Розрахунок пропорційний: (Відпрацьовано днів / 365) × Норма днів.<br>
+            * Не враховує відпустки за власний рахунок понад норму, які не входять у стаж.
+        </div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+
+        // Standard UA Holidays (Fixed dates for simplicity/peace time logic)
+        // In a real robust app, Easter/Trinity need dynamic calc.
+        // But under Martial Law, this array is ignored anyway.
+        const HOLIDAYS = [
+            "01-01", "03-08", "05-01", "05-08", "06-28", "07-15", "08-24", "10-01", "12-25"
+            // Easter and Trinity are dynamic, omitted for lightweight logic
+        ];
+
+        // Init Dates
+        document.getElementById('startVac').valueAsDate = new Date();
+        document.getElementById('startWork').valueAsDate = new Date(new Date().getFullYear(), 0, 1); // Jan 1st
+        document.getElementById('endWork').valueAsDate = new Date();
+
+        function switchMode(m) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.getElementById('mode-plan').style.display = (m === 'plan') ? 'block' : 'none';
+            document.getElementById('mode-earn').style.display = (m === 'earn') ? 'block' : 'none';
+        }
+
+        function calcPlan() {
+            let startVal = document.getElementById('startVac').value;
+            let duration = parseInt(document.getElementById('daysVac').value);
+            let isWar = document.getElementById('warMode').checked;
+
+            if (!startVal || !duration) {
+                document.getElementById('resPlan').style.display = 'none';
+                return;
+            }
+
+            let currentDate = new Date(startVal);
+            let vacationDaysCounted = 0;
+
+            // Loop day by day
+            while (vacationDaysCounted < duration) {
+                // Check if holiday
+                let m = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+                let d = currentDate.getDate().toString().padStart(2, '0');
+                let md = `${m}-${d}`;
+                
+                let isHoliday = HOLIDAYS.includes(md); 
+                // Note: Simplified. For full peace time accuracy, need dynamic Easter.
+                
+                if (isWar) {
+                    // War mode: Holidays are just normal days
+                    vacationDaysCounted++;
+                } else {
+                    // Peace mode: If holiday, we DON'T count it as a vacation day used
+                    // But time still moves forward.
+                    if (!isHoliday) {
+                        vacationDaysCounted++;
+                    }
+                }
+                
+                // Move to next day, BUT if it was the last counted day, we stop loop at end of it
+                if (vacationDaysCounted < duration) {
+                    currentDate.setDate(currentDate.getDate() + 1);
+                }
+            }
+
+            // CurrentDate is now the LAST day of vacation.
+            let lastDay = new Date(currentDate);
+            
+            // Return date is Next Day
+            let returnDay = new Date(currentDate);
+            returnDay.setDate(returnDay.getDate() + 1);
+
+            document.getElementById('resPlan').style.display = 'block';
+            document.getElementById('returnDate').innerText = returnDay.toLocaleDateString('uk-UA');
+            document.getElementById('lastVacDay').innerText = "Останній день відпустки: " + lastDay.toLocaleDateString('uk-UA');
+            
+            tg.HapticFeedback.selectionChanged();
+        }
+
+        function calcEarn() {
+            let d1 = new Date(document.getElementById('startWork').value);
+            let d2 = new Date(document.getElementById('endWork').value);
+            let norm = parseInt(document.getElementById('annualDays').value) || 24;
+
+            if (d1 >= d2) return;
+
+            let diffTime = Math.abs(d2 - d1);
+            let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+            
+            // Pro rata formula
+            let earned = (diffDays / 365) * norm;
+
+            document.getElementById('resEarn').style.display = 'block';
+            document.getElementById('earnedDays').innerText = earned.toFixed(1) + " дн.";
+            
+            tg.HapticFeedback.selectionChanged();
+        }
+    </script>
+</body>
+</html>

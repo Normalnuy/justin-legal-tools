@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Court Decoder</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #F2F2F7; --card: #FFFFFF; --text: #000; --sub: #8E8E93;
+            --blue: #007AFF; --indigo: #5856D6; --search-bg: rgba(118, 118, 128, 0.12);
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root { --bg: #000; --card: #1C1C1E; --text: #FFF; --sub: #98989D; --search-bg: rgba(255, 255, 255, 0.1); }
+        }
+        body { margin: 0; padding: 20px; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        .header { margin-bottom: 20px; }
+        .title { font-size: 28px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+        .subtitle { font-size: 13px; color: var(--sub); font-weight: 600; text-transform: uppercase; margin-top: 5px; }
+
+        /* Search Input */
+        .search-box { 
+            background: var(--card); padding: 10px 15px; border-radius: 14px; 
+            box-shadow: var(--shadow); display: flex; align-items: center; margin-bottom: 20px;
+        }
+        .search-icon { font-size: 20px; margin-right: 10px; opacity: 0.5; }
+        input { 
+            width: 100%; background: transparent; border: none; font-size: 18px; 
+            color: var(--text); outline: none; font-weight: 600;
+        }
+
+        /* Result Card (Top Match) */
+        .main-card {
+            background: linear-gradient(135deg, var(--blue) 0%, #0056b3 100%);
+            border-radius: 20px; padding: 25px; color: white;
+            display: none; margin-bottom: 20px; position: relative; overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0, 122, 255, 0.3);
+        }
+        .main-code { font-size: 48px; font-weight: 800; line-height: 1; opacity: 0.9; margin-bottom: 5px; }
+        .main-title { font-size: 20px; font-weight: 700; line-height: 1.3; margin-bottom: 5px; }
+        .main-type { font-size: 13px; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .action-btn {
+            margin-top: 15px; background: rgba(255,255,255,0.2); 
+            border: none; padding: 8px 16px; border-radius: 20px; 
+            color: white; font-size: 13px; font-weight: 600; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+
+        /* List for Search Results */
+        .list-container { display: flex; flex-direction: column; gap: 10px; }
+        .list-item { 
+            background: var(--card); padding: 15px; border-radius: 14px; 
+            display: flex; justify-content: space-between; align-items: center;
+            cursor: pointer; transition: 0.2s;
+        }
+        .list-item:active { transform: scale(0.98); background: var(--search-bg); }
+        .li-info { display: flex; flex-direction: column; }
+        .li-name { font-weight: 600; font-size: 15px; }
+        .li-desc { font-size: 12px; color: var(--sub); margin-top: 2px; }
+        .li-code { font-family: monospace; font-size: 16px; font-weight: 700; background: var(--search-bg); padding: 4px 8px; border-radius: 6px; color: var(--blue); }
+
+        .empty-state { text-align: center; color: var(--sub); font-size: 14px; margin-top: 40px; }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="subtitle">База кодів України</div>
+        <div class="title">🏛 Судовий Декодер</div>
+    </div>
+
+    <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchIn" placeholder="Код (757) або Назва (Печер)" oninput="search()">
+    </div>
+
+    <div id="mainResult" class="main-card">
+        <div class="main-code" id="mcCode">000</div>
+        <div class="main-title" id="mcName">Назва суду</div>
+        <div class="main-type" id="mcRegion">Регіон</div>
+        <button class="action-btn" onclick="openLink()">
+            🌐 Відкрити у "Судовій владі"
+        </button>
+    </div>
+
+    <div id="listResults" class="list-container"></div>
+
+    <div id="empty" class="empty-state" style="display:none">
+        Нічого не знайдено...<br>Спробуйте ввести код або місто.
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+
+        // COMPREHENSIVE DB (Major Courts)
+        const COURTS = [
+            // --- KYIV (General) ---
+            {c:"752", n:"Голосіївський райсуд", r:"м. Київ"},
+            {c:"753", n:"Дарницький райсуд", r:"м. Київ"},
+            {c:"754", n:"Деснянський райсуд", r:"м. Київ"},
+            {c:"755", n:"Дніпровський райсуд", r:"м. Київ"},
+            {c:"756", n:"Оболонський райсуд", r:"м. Київ"},
+            {c:"757", n:"Печерський райсуд", r:"м. Київ"},
+            {c:"758", n:"Подільський райсуд", r:"м. Київ"},
+            {c:"759", n:"Святошинський райсуд", r:"м. Київ"},
+            {c:"760", n:"Солом'янський райсуд", r:"м. Київ"},
+            {c:"761", n:"Шевченківський райсуд", r:"м. Київ"},
+            {c:"796", n:"Київський апеляційний суд", r:"м. Київ (Апеляція)"},
+
+            // --- KYIV OBLAST ---
+            {c:"359", n:"Бориспільський міськрайонний", r:"Київська обл."},
+            {c:"361", n:"Броварський міськрайонний", r:"Київська обл."},
+            {c:"362", n:"Васильківський міськрайонний", r:"Київська обл."},
+            {c:"363", n:"Вишгородський районний", r:"Київська обл."},
+            {c:"367", n:"Ірпінський міський", r:"Київська обл."},
+            {c:"369", n:"Києво-Святошинський районний", r:"Київська обл."},
+            {c:"357", n:"Білоцерківський міськрайонний", r:"Київська обл."},
+
+            // --- HIGH COURTS ---
+            {c:"9901", n:"Верховний Суд (Касаційний адмін)", r:"Вища інстанція"},
+            {c:"990", n:"Верховний Суд (Велика Палата)", r:"Вища інстанція"},
+            {c:"910", n:"Господарський суд м. Києва", r:"Господарський"},
+            {c:"911", n:"Господарський суд Київської обл.", r:"Господарський"},
+            {c:"320", n:"Київський окружний адмінсуд (КОАС)", r:"Адміністративний"},
+            {c:"640", n:"Окружний адмінсуд м. Києва (ОАСК/Ліквід)", r:"Адміністративний"},
+
+            // --- LVIV ---
+            {c:"461", n:"Галицький райсуд", r:"м. Львів"},
+            {c:"462", n:"Залізничний райсуд", r:"м. Львів"},
+            {c:"463", n:"Личаківський райсуд", r:"м. Львів"},
+            {c:"464", n:"Сихівський райсуд", r:"м. Львів"},
+            {c:"465", n:"Франківський райсуд", r:"м. Львів"},
+            {c:"466", n:"Шевченківський райсуд", r:"м. Львів"},
+            {c:"480", n:"Львівський апеляційний суд", r:"Львівська обл."},
+
+            // --- ODESA ---
+            {c:"520", n:"Київський райсуд", r:"м. Одеса"},
+            {c:"521", n:"Малиновський райсуд", r:"м. Одеса"},
+            {c:"522", n:"Приморський райсуд", r:"м. Одеса"},
+            {c:"523", n:"Суворовський райсуд", r:"м. Одеса"},
+            {c:"815", n:"Одеський окружний адмінсуд", r:"м. Одеса"},
+
+            // --- KHARKIV ---
+            {c:"638", n:"Дзержинський райсуд", r:"м. Харків"},
+            {c:"640", n:"Київський райсуд", r:"м. Харків"},
+            {c:"641", n:"Комінтернівський райсуд", r:"м. Харків"},
+            {c:"642", n:"Ленінський райсуд", r:"м. Харків"},
+            {c:"643", n:"Московський райсуд", r:"м. Харків"},
+            {c:"644", n:"Орджонікідзевський райсуд", r:"м. Харків"},
+
+            // --- DNIPRO ---
+            {c:"201", n:"Жовтневий райсуд", r:"м. Дніпро"},
+            {c:"200", n:"Бабушкінський райсуд", r:"м. Дніпро"},
+            {c:"204", n:"Красногвардійський райсуд", r:"м. Дніпро"},
+            {c:"203", n:"Кіровський райсуд", r:"м. Дніпро"},
+
+            // --- OTHER REGIONAL ---
+            {c:"265", n:"Маріупольський (Жовтневий)", r:"Донецька обл."},
+            {c:"295", n:"Богунський райсуд", r:"м. Житомир"},
+            {c:"296", n:"Корольовський райсуд", r:"м. Житомир"},
+            {c:"335", n:"Орджонікідзевський райсуд", r:"м. Запоріжжя"},
+            {c:"334", n:"Ленінський райсуд", r:"м. Запоріжжя"},
+            {c:"344", n:"Івано-Франківський міський", r:"м. Івано-Франківськ"},
+            {c:"552", n:"Київський райсуд", r:"м. Полтава"},
+            {c:"554", n:"Октябрський райсуд", r:"м. Полтава"},
+            {c:"569", n:"Рівненський міський", r:"м. Рівне"},
+            {c:"591", n:"Зарічний райсуд", r:"м. Суми"},
+            {c:"592", n:"Ковпаківський райсуд", r:"м. Суми"},
+            {c:"607", n:"Тернопільський міськрайонний", r:"м. Тернопіль"},
+            {c:"686", n:"Хмельницький міськрайонний", r:"м. Хмельницький"},
+            {c:"712", n:"Соснівський райсуд", r:"м. Черкаси"},
+            {c:"711", n:"Придніпровський райсуд", r:"м. Черкаси"},
+            {c:"727", n:"Шевченківський райсуд", r:"м. Чернівці"},
+            {c:"725", n:"Першотравневий райсуд", r:"м. Чернівці"},
+            {c:"750", n:"Деснянський райсуд", r:"м. Чернігів"},
+            {c:"751", n:"Новозаводський райсуд", r:"м. Чернігів"}
+        ];
+
+        function search() {
+            const input = document.getElementById('searchIn').value.toLowerCase().trim();
+            const mainCard = document.getElementById('mainResult');
+            const listDiv = document.getElementById('listResults');
+            const empty = document.getElementById('empty');
+
+            mainCard.style.display = 'none';
+            listDiv.innerHTML = '';
+            empty.style.display = 'none';
+
+            if (input.length === 0) return;
+
+            // 1. Exact Code Match
+            const exact = COURTS.find(x => x.c === input);
+            if (exact) {
+                document.getElementById('mcCode').innerText = exact.c;
+                document.getElementById('mcName').innerText = exact.n;
+                document.getElementById('mcRegion').innerText = exact.r;
+                mainCard.style.display = 'block';
+                return;
+            }
+
+            // 2. Filter List
+            const results = COURTS.filter(x => 
+                x.n.toLowerCase().includes(input) || 
+                x.r.toLowerCase().includes(input) ||
+                x.c.startsWith(input)
+            );
+
+            if (results.length === 0) {
+                empty.style.display = 'block';
+                return;
+            }
+
+            results.forEach(court => {
+                const el = document.createElement('div');
+                el.className = 'list-item';
+                el.onclick = () => selectCourt(court);
+                el.innerHTML = `
+                    <div class="li-info">
+                        <div class="li-name">${court.n}</div>
+                        <div class="li-desc">${court.r}</div>
+                    </div>
+                    <div class="li-code">${court.c}</div>
+                `;
+                listDiv.appendChild(el);
+            });
+        }
+
+        function selectCourt(court) {
+            // Fill Input with Code and trigger exact match view
+            document.getElementById('searchIn').value = court.c;
+            search();
+        }
+
+        function openLink() {
+            const code = document.getElementById('mcCode').innerText;
+            // Generate link to court.gov.ua
+            // Usually format is https://[code].court.gov.ua/sud[code]/
+            const url = `https://court.gov.ua/sud${code}/`;
+            tg.openLink(url);
+        }
+    </script>
+</body>
+</html>

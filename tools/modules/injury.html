@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Injury Expert</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #F2F2F7; --card: #FFFFFF; --text: #000; --sub: #8E8E93;
+            --green: #34C759; --yellow: #FFCC00; --orange: #FF9500; --red: #FF3B30;
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root { --bg: #000; --card: #1C1C1E; --text: #FFF; --sub: #98989D; }
+        }
+        
+        body { margin: 0; padding: 20px; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        .header { margin-bottom: 20px; }
+        .title { font-size: 28px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+        .subtitle { font-size: 13px; color: var(--sub); font-weight: 600; text-transform: uppercase; margin-top: 5px; }
+
+        .card { background: var(--card); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 16px; }
+        
+        label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--sub); margin-bottom: 8px; letter-spacing: 0.5px; }
+        input, select { 
+            width: 100%; padding: 14px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.1); 
+            background: var(--bg); color: var(--text); font-size: 16px; outline: none; margin-bottom: 15px; font-weight: 500;
+        }
+
+        /* Tabs */
+        .tabs { display: flex; background: var(--bg); padding: 4px; border-radius: 12px; margin-bottom: 20px; }
+        .tab { flex: 1; text-align: center; padding: 10px; font-size: 13px; font-weight: 600; border-radius: 9px; color: var(--sub); cursor: pointer; transition: 0.2s; }
+        .tab.active { background: var(--card); color: var(--text); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+
+        /* Result */
+        .res-box { 
+            text-align: center; padding: 25px; border-radius: 20px; color: white; 
+            display: none; transition: 0.3s; position: relative; overflow: hidden;
+        }
+        .res-val { font-size: 28px; font-weight: 800; margin: 5px 0; line-height: 1.1; }
+        .res-art { font-size: 14px; opacity: 0.9; margin-top: 5px; font-weight: 600; background: rgba(0,0,0,0.2); padding: 4px 10px; border-radius: 20px; display: inline-block; }
+        .res-days { font-size: 12px; opacity: 0.8; margin-top: 10px; text-transform: uppercase; letter-spacing: 1px; }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="subtitle">СМЕ Експертиза</div>
+        <div class="title">🤕 Тілесні Ушкодження</div>
+    </div>
+
+    <div class="card">
+        <div class="tabs">
+            <div class="tab active" onclick="setMode('days', this)">📅 По днях</div>
+            <div class="tab" onclick="setMode('symptom', this)">🩻 За наслідками</div>
+        </div>
+
+        <div id="blockDays">
+            <label>Дата отримання травми</label>
+            <input type="date" id="dateStart" onchange="calcDays()">
+            
+            <label>Дата закінчення лікування</label>
+            <input type="date" id="dateEnd" onchange="calcDays()">
+            
+            <div style="font-size:12px; color:var(--sub); margin-top:-5px">
+                Враховується період стаціонарного та амбулаторного лікування (лікарняний).
+            </div>
+        </div>
+
+        <div id="blockSymptom" class="hidden">
+            <label>Характер ушкодження</label>
+            <select id="symptomSelect" onchange="calcSymptom()">
+                <option value="none" selected disabled>Оберіть зі списку...</option>
+                <option value="scratch">Садна, синці (без лікарняного)</option>
+                <option value="nose">Перелом носа (лікування 14 днів)</option>
+                <option value="rib">Перелом ребра (лікування 25 днів)</option>
+                <option value="concussion_light">Струсу мозку (легкий)</option>
+                <option value="pregnant">Переривання вагітності</option>
+                <option value="face">Невиправне спотворення обличчя</option>
+                <option value="organ">Втрата органу або його функції</option>
+                <option value="life">Небезпека для життя (проникаючі)</option>
+                <option value="psych">Психічна хвороба</option>
+                <option value="capacity_10">Втрата працездатності 10-33%</option>
+                <option value="capacity_33">Втрата працездатності >33%</option>
+            </select>
+        </div>
+    </div>
+
+    <div id="result" class="res-box">
+        <div class="res-val" id="resTitle">Легкі</div>
+        <div class="res-art" id="resArt">ст. 125 ч. 1</div>
+        <div class="res-days" id="resDesc">...</div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+
+        let mode = 'days';
+
+        function setMode(m, el) {
+            mode = m;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+            
+            document.getElementById('blockDays').classList.toggle('hidden', m !== 'days');
+            document.getElementById('blockSymptom').classList.toggle('hidden', m !== 'symptom');
+            document.getElementById('result').style.display = 'none';
+        }
+
+        // --- Logic: By Days (Sud-Med Rules) ---
+        function calcDays() {
+            let d1 = new Date(document.getElementById('dateStart').value);
+            let d2 = new Date(document.getElementById('dateEnd').value);
+
+            if (isNaN(d1) || isNaN(d2)) return;
+
+            // Diff in days (inclusive +1 day usually counts in medical terms, but strict diff is standard)
+            // Let's use standard difference in milliseconds
+            let diffTime = Math.abs(d2 - d1);
+            let days = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+            
+            // Logic according to "Rules for Forensic Medical Determination..."
+            // Up to 6 days: Light (Simple)
+            // 7 - 21 days: Light (With health disorder)
+            // > 21 days: Moderate (Long-term disorder)
+            
+            let title = "", art = "", color = "", desc = "";
+
+            if (days <= 6) {
+                title = "ЛЕГКІ (Прості)";
+                art = "ст. 125 ч. 1 ККУ";
+                color = "var(--green)";
+                desc = `Короткочасних розладів здоров'я немає (синець, садно). Термін: ${days} дн.`;
+            } else if (days <= 21) {
+                title = "ЛЕГКІ (З розладом)";
+                art = "ст. 125 ч. 2 ККУ";
+                color = "var(--yellow)"; // Or Light Green
+                desc = `Короткочасний розлад здоров'я (від 6 до 21 дня). Термін: ${days} дн.`;
+            } else {
+                title = "СЕРЕДНЬОЇ ТЯЖКОСТІ";
+                art = "ст. 122 ККУ";
+                color = "var(--orange)";
+                desc = `Тривалий розлад здоров'я (понад 21 день). Термін: ${days} дн.`;
+            }
+
+            render(title, art, color, desc);
+        }
+
+        // --- Logic: By Symptoms ---
+        function calcSymptom() {
+            let val = document.getElementById('symptomSelect').value;
+            let title = "", art = "", color = "", desc = "";
+
+            switch (val) {
+                case 'scratch':
+                    title = "ЛЕГКІ (Прості)"; art = "ст. 125 ч. 1"; color = "var(--green)";
+                    desc = "Ушкодження без розладу здоров'я.";
+                    break;
+                case 'concussion_light':
+                    title = "ЛЕГКІ (З розладом)"; art = "ст. 125 ч. 2"; color = "#FFD700"; // Gold
+                    desc = "Зазвичай лікування триває 10-14 днів.";
+                    break;
+                case 'nose':
+                    title = "ЛЕГКІ (З розладом)"; art = "ст. 125 ч. 2"; color = "#FFD700";
+                    desc = "Якщо лікування до 21 дня.";
+                    break;
+                case 'rib':
+                    title = "СЕРЕДНЬОЇ ТЯЖКОСТІ"; art = "ст. 122"; color = "var(--orange)";
+                    desc = "Зазвичай зростання триває понад 21 день.";
+                    break;
+                case 'capacity_10':
+                    title = "СЕРЕДНЬОЇ ТЯЖКОСТІ"; art = "ст. 122"; color = "var(--orange)";
+                    desc = "Стійка втрата працездатності від 10% до 33%.";
+                    break;
+                
+                // SEVERE (Article 121)
+                case 'life':
+                case 'organ':
+                case 'pregnant':
+                case 'face':
+                case 'psych':
+                case 'capacity_33':
+                    title = "ТЯЖКІ УШКОДЖЕННЯ"; 
+                    art = "ст. 121 ККУ"; 
+                    color = "var(--red)";
+                    desc = "Небезпека для життя, втрата органу, переривання вагітності або непоправне спотворення обличчя.";
+                    break;
+            }
+
+            render(title, art, color, desc);
+        }
+
+        function render(t, a, c, d) {
+            const box = document.getElementById('result');
+            box.style.display = 'block';
+            box.style.background = c;
+            
+            // Text color adjustment for yellow background
+            box.style.color = (c === 'var(--yellow)' || c === '#FFD700') ? '#000' : '#fff';
+            
+            document.getElementById('resTitle').innerText = t;
+            document.getElementById('resArt').innerText = a;
+            document.getElementById('resDesc').innerText = d;
+            
+            tg.HapticFeedback.selectionChanged();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Court Fee Pro</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <script src="../config.js"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #F2F2F7; --card: #FFFFFF; --text: #000; --sub: #8E8E93;
+            --blue: #007AFF; --indigo: #5856D6; --orange: #FF9500;
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root { --bg: #000; --card: #1C1C1E; --text: #FFF; --sub: #98989D; }
+        }
+        body { margin: 0; padding: 20px; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        .header { margin-bottom: 20px; }
+        .title { font-size: 28px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+        .subtitle { font-size: 13px; color: var(--sub); font-weight: 600; text-transform: uppercase; margin-top: 5px; }
+
+        .card { background: var(--card); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 16px; }
+        
+        label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--sub); margin-bottom: 8px; letter-spacing: 0.5px; }
+        input, select { 
+            width: 100%; padding: 16px; border-radius: 14px; border: 1px solid rgba(0,0,0,0.1); 
+            background: var(--bg); color: var(--text); font-size: 16px; outline: none; margin-bottom: 15px; font-weight: 500; appearance: none;
+        }
+        
+        .seg { display: flex; background: var(--bg); padding: 4px; border-radius: 12px; margin-bottom: 20px; }
+        .seg-btn { flex: 1; text-align: center; padding: 10px; font-size: 13px; font-weight: 600; border-radius: 9px; color: var(--sub); transition: 0.2s; cursor: pointer; }
+        .seg-btn.active { background: var(--card); color: var(--text); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+
+        .res-box { 
+            text-align: center; padding: 25px 20px; border-radius: 20px; color: white; 
+            background: linear-gradient(135deg, var(--blue) 0%, #0056b3 100%);
+            display: none; transition: 0.3s; position: relative; overflow: hidden;
+        }
+        .res-val { font-size: 40px; font-weight: 800; line-height: 1; margin-bottom: 5px; text-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .res-sub { font-size: 14px; opacity: 0.9; font-weight: 500; margin-bottom: 15px; }
+        
+        .formula-box { background: rgba(0,0,0,0.15); padding: 10px; border-radius: 10px; font-size: 12px; text-align: left; line-height: 1.4; }
+        .formula-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .formula-row:last-child { margin-bottom: 0; font-weight: 700; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 4px; }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="subtitle" id="sub-year">ЗУ "Про судовий збір" ...</div>
+        <div class="title">⚖️ Судовий Збір</div>
+    </div>
+
+    <div class="card">
+        <label>Хто позивач?</label>
+        <div class="seg">
+            <div class="seg-btn active" id="segPhys" onclick="setPerson('phys')">Фізична особа</div>
+            <div class="seg-btn" id="segJur" onclick="setPerson('jur')">Юридична особа</div>
+        </div>
+
+        <label>Інстанція</label>
+        <div class="seg">
+            <div class="seg-btn active" id="inst1" onclick="setInst(1)">1-ша</div>
+            <div class="seg-btn" id="inst2" onclick="setInst(1.5)">Апеляція</div>
+            <div class="seg-btn" id="inst3" onclick="setInst(2)">Касація</div>
+        </div>
+
+        <label>Тип позову</label>
+        <div style="position:relative">
+            <select id="claimType" onchange="togglePrice()">
+                <option value="money">Майновий (Стягнення, борг...)</option>
+                <option value="non_money">Немайновий (Визнання права...)</option>
+                <option value="divorce">Розірвання шлюбу</option>
+                <option value="moral">Моральна шкода</option>
+            </select>
+            <div style="position:absolute; right:15px; top:40%; transform:translateY(-50%); pointer-events:none; opacity:0.5">▼</div>
+        </div>
+
+        <div id="priceBlock">
+            <label>Ціна позову (грн)</label>
+            <input type="number" id="price" placeholder="Сума вимог" oninput="calc()">
+        </div>
+    </div>
+
+    <div id="result" class="res-box">
+        <div class="res-sub">До сплати</div>
+        <div class="res-val" id="resTotal">0 ₴</div>
+        
+        <div class="formula-box">
+            <div class="formula-row">
+                <span>База (1-ша інст):</span>
+                <span id="resBase">0</span>
+            </div>
+            <div class="formula-row">
+                <span>Коефіцієнт:</span>
+                <span id="resCoef">x1</span>
+            </div>
+            <div class="formula-row">
+                <span>Формула:</span>
+                <span id="resDesc">-</span>
+            </div>
+        </div>
+    </div>
+
+    <div style="margin-top: 20px; padding: 0 10px; font-size: 11px; color: var(--sub); line-height: 1.5;">
+        * Розрахунок за ЗУ "Про судовий збір".<br>
+        * Прожитковий мінімум (ПМ): <b id="ui-pm">...</b>.<br>
+        * Апеляція: 150% від ставки 1-ї інстанції.<br>
+        * Касація: 200% від ставки 1-ї інстанції.
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+
+        let personType = 'phys'; 
+        let instanceCoef = 1;
+
+        function setPerson(t) {
+            personType = t;
+            document.getElementById('segPhys').className = t === 'phys' ? 'seg-btn active' : 'seg-btn';
+            document.getElementById('segJur').className = t === 'jur' ? 'seg-btn active' : 'seg-btn';
+            calc();
+        }
+
+        function setInst(c) {
+            instanceCoef = c;
+            document.getElementById('inst1').className = c === 1 ? 'seg-btn active' : 'seg-btn';
+            document.getElementById('inst2').className = c === 1.5 ? 'seg-btn active' : 'seg-btn';
+            document.getElementById('inst3').className = c === 2 ? 'seg-btn active' : 'seg-btn';
+            calc();
+        }
+
+        function togglePrice() {
+            let type = document.getElementById('claimType').value;
+            let show = (type === 'money' || type === 'moral');
+            document.getElementById('priceBlock').classList.toggle('hidden', !show);
+            calc();
+        }
+
+        function calc() {
+            if (typeof Config === 'undefined') return;
+
+            const PM = Config.Data.base.livingWage.able; // ПМ для працездатних
+            const U = Config.Utils;
+
+            let type = document.getElementById('claimType').value;
+            let price = parseFloat(document.getElementById('price').value) || 0;
+            let baseFee = 0;
+            let formulaDesc = "";
+
+            if (type === 'money') {
+                if (personType === 'phys') {
+                    // Фізики: 1% ціни, але не менше 0.4 ПМ і не більше 5 ПМ
+                    let min = PM * 0.4;
+                    let max = PM * 5;
+                    let calc = price * 0.01;
+                    
+                    if (calc < min) { baseFee = min; formulaDesc = "0.4 розміру ПМ (мін)"; }
+                    else if (calc > max) { baseFee = max; formulaDesc = "5 розмірів ПМ (макс)"; }
+                    else { baseFee = calc; formulaDesc = "1% ціни позову"; }
+                } else {
+                    // Юрики: 1.5% ціни, але не менше 1 ПМ і не більше 350 ПМ
+                    let min = PM * 1;
+                    let max = PM * 350;
+                    let calc = price * 0.015;
+
+                    if (calc < min) { baseFee = min; formulaDesc = "1 розмір ПМ (мін)"; }
+                    else if (calc > max) { baseFee = max; formulaDesc = "350 розмірів ПМ (макс)"; }
+                    else { baseFee = calc; formulaDesc = "1.5% ціни позову"; }
+                }
+            } 
+            else if (type === 'non_money') {
+                if (personType === 'phys') {
+                    baseFee = PM * 0.4;
+                    formulaDesc = "0.4 розміру ПМ";
+                } else {
+                    baseFee = PM * 1;
+                    formulaDesc = "1 розмір ПМ";
+                }
+            }
+            else if (type === 'divorce') {
+                baseFee = PM * 0.4;
+                formulaDesc = "0.4 розміру ПМ";
+            }
+            else if (type === 'moral') {
+                let calc = price * 0.015; // 1.5%
+                let min = PM * 1; 
+                if (calc < PM) { baseFee = PM; formulaDesc = "1 розмір ПМ (мін)"; }
+                else { baseFee = calc; formulaDesc = "1.5% ціни позову"; }
+            }
+
+            // Коефіцієнт інстанції
+            let totalFee = baseFee * instanceCoef;
+
+            // Вивід
+            document.getElementById('result').style.display = 'block';
+            document.getElementById('resTotal').innerText = U.fmt(totalFee);
+            document.getElementById('resBase').innerText = U.fmt(baseFee);
+            document.getElementById('resCoef').innerText = (instanceCoef === 1) ? "1-ша інстанція" : (instanceCoef === 1.5 ? "Апеляція (150%)" : "Касація (200%)");
+            document.getElementById('resDesc').innerText = formulaDesc;
+            
+            tg.HapticFeedback.selectionChanged();
+        }
+
+        window.onload = function() {
+            if (typeof Config !== 'undefined') {
+                document.getElementById('sub-year').innerText = 'ЗУ "Про судовий збір" ' + Config.Data.year;
+                document.getElementById('ui-pm').innerText = Config.Utils.fmt(Config.Data.base.livingWage.able);
+            }
+        }
+    </script>
+</body>
+</html>

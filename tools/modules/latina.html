@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Legal Latin</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg: #F2F2F7; --card: #FFFFFF; --text: #000; --sub: #8E8E93;
+            --gold: #C0A062; --blue: #007AFF; --crim: #FF3B30; --civ: #34C759;
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root { --bg: #000; --card: #1C1C1E; --text: #FFF; --sub: #98989D; }
+        }
+        body { margin: 0; padding: 20px; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        .header { margin-bottom: 20px; }
+        .title { font-size: 28px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+        .subtitle { font-size: 13px; color: var(--sub); font-weight: 600; text-transform: uppercase; margin-top: 5px; }
+
+        /* Search */
+        .search-box { 
+            position: sticky; top: 0; z-index: 10;
+            background: var(--card); padding: 12px; border-radius: 14px; 
+            box-shadow: var(--shadow); display: flex; align-items: center; margin-bottom: 15px;
+        }
+        .search-icon { font-size: 18px; margin-right: 10px; opacity: 0.5; }
+        input { 
+            width: 100%; background: transparent; border: none; font-size: 17px; 
+            color: var(--text); outline: none; font-weight: 500;
+        }
+
+        /* Filters */
+        .chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; margin-bottom: 15px; scrollbar-width: none; }
+        .chip { 
+            background: var(--card); padding: 8px 16px; border-radius: 20px; 
+            font-size: 13px; font-weight: 600; white-space: nowrap; cursor: pointer; 
+            border: 1px solid transparent; transition: 0.2s; color: var(--sub);
+        }
+        .chip.active { background: var(--text); color: var(--bg); }
+
+        /* Dictionary List */
+        .dict-item { 
+            background: var(--card); border-radius: 16px; padding: 16px; 
+            margin-bottom: 12px; box-shadow: var(--shadow); cursor: pointer;
+            transition: 0.2s; position: relative; overflow: hidden;
+            border-left: 4px solid transparent;
+        }
+        .dict-item:active { transform: scale(0.98); background: rgba(0,0,0,0.02); }
+
+        .dict-item.cat-gen { border-left-color: var(--gold); }
+        .dict-item.cat-crim { border-left-color: var(--crim); }
+        .dict-item.cat-civ { border-left-color: var(--civ); }
+        .dict-item.cat-proc { border-left-color: var(--blue); }
+
+        .lat-term { 
+            font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; 
+            color: var(--text); margin-bottom: 4px; 
+        }
+        .ukr-trans { font-size: 14px; font-weight: 600; color: var(--sub); margin-bottom: 8px; }
+        .desc { font-size: 12px; line-height: 1.4; opacity: 0.8; }
+
+        .copy-hint {
+            position: absolute; top: 10px; right: 10px; opacity: 0; transition: 0.2s;
+            font-size: 12px; color: var(--sub);
+        }
+        .dict-item:hover .copy-hint { opacity: 1; }
+
+        .badge {
+            display: inline-block; padding: 2px 6px; border-radius: 4px; 
+            font-size: 9px; font-weight: 700; text-transform: uppercase; 
+            margin-top: 8px; opacity: 0.7;
+        }
+        .bg-gen { background: rgba(192, 160, 98, 0.2); color: #8a6d3b; }
+        .bg-crim { background: rgba(255, 59, 48, 0.15); color: var(--crim); }
+        .bg-civ { background: rgba(52, 199, 89, 0.15); color: var(--civ); }
+        .bg-proc { background: rgba(0, 122, 255, 0.15); color: var(--blue); }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="subtitle">Lingua Latina Legalis</div>
+        <div class="title">🏛 Словник Латині</div>
+    </div>
+
+    <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchIn" placeholder="Pacta, corpus, злочин..." oninput="render()">
+    </div>
+
+    <div class="chips">
+        <div class="chip active" onclick="filter('all', this)">Всі</div>
+        <div class="chip" onclick="filter('gen', this)">📜 Основи</div>
+        <div class="chip" onclick="filter('crim', this)">🔪 Кримінал</div>
+        <div class="chip" onclick="filter('civ', this)">🤝 Цивільне</div>
+        <div class="chip" onclick="filter('proc', this)">⚖️ Процес</div>
+    </div>
+
+    <div id="list"></div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+
+        // Database
+        const DB = [
+            // --- GENERAL / PRINCIPLES ---
+            { l: "Ab initio", u: "З самого початку", d: "Юридична дія, яка є нікчемною з моменту вчинення.", c: "gen" },
+            { l: "Ad hoc", u: "Для цього випадку", d: "Спеціально створений для вирішення конкретної задачі (напр., трибунал ad hoc).", c: "gen" },
+            { l: "Bona fide", u: "Добросовісно", d: "Чесно, без наміру обманути. Принцип добросовісності.", c: "gen" },
+            { l: "Contra legem", u: "Проти закону", d: "Дія або рішення, що суперечить нормам права.", c: "gen" },
+            { l: "De facto", u: "Фактично", d: "Як є насправді, на відміну від De jure (юридично).", c: "gen" },
+            { l: "De jure", u: "Юридично", d: "Згідно з правом, формально закріплено.", c: "gen" },
+            { l: "Dura lex, sed lex", u: "Закон суворий, але це закон", d: "Закон треба виконувати, навіть якщо він здається несправедливим.", c: "gen" },
+            { l: "Ex post facto", u: "Задня дата", d: "Дія, вчинена після того, як подія відбулася (зворотна сила).", c: "gen" },
+            { l: "Ignorantia juris non excusat", u: "Незнання закону не звільняє", d: "Фундаментальний принцип відповідальності.", c: "gen" },
+            { l: "Ipso facto", u: "В силу самого факту", d: "Наслідок настає автоматично (напр., втрата повноважень).", c: "gen" },
+            { l: "Jus cogens", u: "Імперативна норма", d: "Норма права, яку не можна змінити угодою сторін (напр., заборона тортур).", c: "gen" },
+            { l: "Lex specialis derogat generali", u: "Спеціальний закон скасовує загальний", d: "Колізійний принцип пріоритету норм.", c: "gen" },
+            { l: "Persona non grata", u: "Небажана особа", d: "Дипломат, чиє перебування в країні заборонено.", c: "gen" },
+            { l: "Pro bono", u: "Заради добра", d: "Безкоштовна юридична допомога.", c: "gen" },
+            { l: "Status quo", u: "Існуючий стан", d: "Повернення до попереднього стану речей.", c: "gen" },
+            { l: "Sui generis", u: "Своєрідний / Унікальний", d: "Правовий феномен, який не вписується в існуючі класифікації.", c: "gen" },
+            { l: "Ultima ratio", u: "Останній довід", d: "Крайній захід (часто про застосування сили або кримінального покарання).", c: "gen" },
+            { l: "Veto", u: "Я забороняю", d: "Право заблокувати прийняття рішення.", c: "gen" },
+
+            // --- CRIMINAL ---
+            { l: "Alibi", u: "В іншому місці", d: "Доказ невинуватості: підозрюваний був в іншому місці.", c: "crim" },
+            { l: "Corpus delicti", u: "Склад злочину", d: "Сукупність ознак: об'єкт, суб'єкт, об'єктивна/суб'єктивна сторони.", c: "crim" },
+            { l: "Culpa", u: "Вина (необережність)", d: "Форма вини.", c: "crim" },
+            { l: "Dolus", u: "Умисел", d: "Намір вчинити злочин (Dolus directus - прямий, Dolus eventualis - непрямий).", c: "crim" },
+            { l: "In dubio pro reo", u: "Сумніви на користь обвинуваченого", d: "Принцип презумпції невинуватості.", c: "crim" },
+            { l: "Modus operandi", u: "Спосіб дії", d: "Характерний \"почерк\" злочинця.", c: "crim" },
+            { l: "Non bis in idem", u: "Не двічі за одне й те саме", d: "Ніхто не може бути покараний двічі за одне правопорушення (ст. 61 КУ).", c: "crim" },
+            { l: "Nullum crimen sine lege", u: "Немає злочину без закону", d: "Тільки закон визначає, що є злочином.", c: "crim" },
+            { l: "Presumptio innocentiae", u: "Презумпція невинуватості", d: "Особа невинна, доки вина не доведена судом.", c: "crim" },
+
+            // --- CIVIL ---
+            { l: "Act of God", u: "Дія непереборної сили", d: "(Англ/Лат термін) Форс-мажор природного характеру.", c: "civ" },
+            { l: "Casus belli", u: "Привід для війни", d: "Формальний привід для розірвання відносин чи спору.", c: "civ" },
+            { l: "Conditio sine qua non", u: "Необхідна умова", d: "Умова, без якої угода не відбулася б.", c: "civ" },
+            { l: "Damnum emergens", u: "Реальні збитки", d: "Прямі втрати майна.", c: "civ" },
+            { l: "Lucrum cessans", u: "Упущена вигода", d: "Доходи, які особа могла б отримати, якби її право не порушили.", c: "civ" },
+            { l: "Force majeure", u: "Вища сила", d: "Обставини, що звільняють від відповідальності.", c: "civ" },
+            { l: "Pacta sunt servanda", u: "Угоди повинні виконуватися", d: "Фундамент договірного права.", c: "civ" },
+            { l: "Restitutio in integrum", u: "Повна реституція", d: "Повернення сторін у початковий стан (як до порушення).", c: "civ" },
+            { l: "Vis major", u: "Непереборна сила", d: "Стихійне лихо, війна тощо.", c: "civ" },
+
+            // --- PROCESS ---
+            { l: "Audiatur et altera pars", u: "Хай буде вислухана інша сторона", d: "Принцип змагальності сторін.", c: "proc" },
+            { l: "Habeas corpus", u: "Надай тіло", d: "Вимога доставити затриманого до суду для перевірки законності арешту.", c: "proc" },
+            { l: "Lis pendens", u: "Справа в процесі розгляду", d: "Спір ще не вирішено судом.", c: "proc" },
+            { l: "Onus probandi", u: "Тягар доказування", d: "Обов'язок довести свої твердження (зазвичай лежить на позивачі/обвинуваченні).", c: "proc" },
+            { l: "Prima facie", u: "На перший погляд", d: "Докази, достатні для початку справи, поки їх не спростовано.", c: "proc" },
+            { l: "Res judicata", u: "Вирішена справа", d: "Справа, по якій є остаточне рішення суду (не можна судитися знову).", c: "proc" },
+            { l: "Testis unus, testis nullus", u: "Один свідок - не свідок", d: "Старий принцип (зараз не діє буквально, але натякає на недостатність доказів).", c: "proc" }
+        ];
+
+        let activeCat = 'all';
+
+        function filter(cat, btn) {
+            activeCat = cat;
+            document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+            render();
+        }
+
+        function render() {
+            const list = document.getElementById('list');
+            const search = document.getElementById('searchIn').value.toLowerCase();
+            list.innerHTML = '';
+
+            DB.forEach(item => {
+                // Category Filter
+                if (activeCat !== 'all' && item.c !== activeCat) return;
+
+                // Search Filter
+                const match = item.l.toLowerCase().includes(search) || 
+                              item.u.toLowerCase().includes(search) ||
+                              item.d.toLowerCase().includes(search);
+                
+                if (!match) return;
+
+                // Render Card
+                const el = document.createElement('div');
+                el.className = `dict-item cat-${item.c}`;
+                el.onclick = () => copyText(item.l, item.u);
+                
+                // Badge Logic
+                let bText = "", bClass = "";
+                if(item.c === 'gen') { bText = "Основи"; bClass = "bg-gen"; }
+                if(item.c === 'crim') { bText = "Кримінал"; bClass = "bg-crim"; }
+                if(item.c === 'civ') { bText = "Цивільне"; bClass = "bg-civ"; }
+                if(item.c === 'proc') { bText = "Процес"; bClass = "bg-proc"; }
+
+                el.innerHTML = `
+                    <div class="copy-hint">📋</div>
+                    <div class="lat-term">${item.l}</div>
+                    <div class="ukr-trans">${item.u}</div>
+                    <div class="desc">${item.d}</div>
+                    <div class="badge ${bClass}">${bText}</div>
+                `;
+                list.appendChild(el);
+            });
+        }
+
+        function copyText(lat, ukr) {
+            const text = `${lat} - ${ukr}`;
+            navigator.clipboard.writeText(text);
+            tg.HapticFeedback.selectionChanged();
+            tg.showAlert(`Скопійовано: ${lat}`);
+        }
+
+        // Init
+        render();
+    </script>
+</body>
+</html>

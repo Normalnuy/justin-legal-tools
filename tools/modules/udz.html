@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>UDZ Calculator</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #F2F2F7; --card: #FFFFFF; --text: #000; --sub: #8E8E93;
+            --blue: #007AFF; --green: #34C759; --orange: #FF9500; --red: #FF3B30; --purple: #AF52DE;
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root { --bg: #000; --card: #1C1C1E; --text: #FFF; --sub: #98989D; }
+        }
+        body { margin: 0; padding: 20px; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        .header { margin-bottom: 20px; }
+        .title { font-size: 28px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+        .subtitle { font-size: 13px; color: var(--sub); font-weight: 600; text-transform: uppercase; margin-top: 5px; }
+
+        .card { background: var(--card); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 16px; }
+        
+        label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--sub); margin-bottom: 8px; letter-spacing: 0.5px; }
+        input, select { 
+            width: 100%; padding: 16px; border-radius: 14px; border: 1px solid rgba(0,0,0,0.1); 
+            background: var(--bg); color: var(--text); font-size: 16px; outline: none; margin-bottom: 15px; font-weight: 500; appearance: none;
+        }
+        .row { display: flex; gap: 12px; } .col { flex: 1; }
+
+        /* Result Box */
+        .res-box { 
+            text-align: center; padding: 25px 20px; border-radius: 20px; color: white; 
+            display: none; transition: 0.3s; position: relative; overflow: hidden;
+        }
+        .res-lbl { font-size: 13px; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+        .res-val { font-size: 36px; font-weight: 800; line-height: 1.1; margin-bottom: 5px; text-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .res-sub { font-size: 15px; font-weight: 500; opacity: 0.95; margin-bottom: 20px; }
+        
+        /* Stats Grid */
+        .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px; }
+        .stat-item { background: rgba(0,0,0,0.2); padding: 10px; border-radius: 12px; text-align: left; }
+        .stat-l { font-size: 10px; opacity: 0.7; text-transform: uppercase; }
+        .stat-v { font-size: 14px; font-weight: 700; margin-top: 2px; }
+
+        /* Progress Bar */
+        .bar-bg { height: 8px; background: rgba(0,0,0,0.2); border-radius: 4px; overflow: hidden; margin-top: 15px; position: relative; }
+        .bar-fill { height: 100%; background: #fff; width: 0%; border-radius: 4px; transition: 1s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        .bar-marker { position: absolute; top:0; bottom:0; width: 2px; background: rgba(255,255,255,0.5); z-index: 2; }
+        .bar-label { position: absolute; top: -18px; font-size: 10px; opacity: 0.8; transform: translateX(-50%); }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="subtitle">Ст. 81 ККУ</div>
+        <div class="title">⛓ УДЗ Калькулятор</div>
+    </div>
+
+    <div class="card">
+        <label>Категорія засудженого (ст. 81)</label>
+        <div style="position:relative">
+            <select id="udSev" onchange="calc()">
+                <option value="0.5">1/2 — Невеликої/Середньої тяжкості</option>
+                <option value="0.6666">2/3 — Умисний тяжкий злочин</option>
+                <option value="0.6666_rec">2/3 — Раніше відбували покарання</option>
+                <option value="0.75">3/4 — Особливо тяжкий злочин</option>
+                <option value="0.75_drug">3/4 — Наркозлочини (організатори)</option>
+            </select>
+            <div style="position:absolute; right:15px; top:50%; transform:translateY(-50%); pointer-events:none; font-size:12px">▼</div>
+        </div>
+
+        <label>Початок строку</label>
+        <input type="date" id="udStart" onchange="calc()">
+
+        <div class="row">
+            <div class="col">
+                <label>Років</label>
+                <input type="number" id="udY" placeholder="0" oninput="calc()">
+            </div>
+            <div class="col">
+                <label>Місяців</label>
+                <input type="number" id="udM" placeholder="0" oninput="calc()">
+            </div>
+        </div>
+    </div>
+
+    <div id="result" class="res-box">
+        <div class="res-lbl">Дата права на УДЗ</div>
+        <div class="res-val" id="resDate">dd.mm.yyyy</div>
+        <div class="res-sub" id="resLeft">Залишилось: ...</div>
+
+        <div style="position:relative; margin-top:25px">
+            <div class="bar-label" style="left:0%">Початок</div>
+            <div class="bar-label" id="lblTarget" style="left:50%">УДЗ</div>
+            <div class="bar-label" style="left:100%">Кінець</div>
+            
+            <div class="bar-bg">
+                <div class="bar-fill" id="progBar"></div>
+                <div class="bar-marker" id="markTarget" style="left: 50%"></div>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-l">Кінець строку</div>
+                <div class="stat-v" id="statEnd">-</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-l">Всього днів</div>
+                <div class="stat-v" id="statDays">-</div>
+            </div>
+        </div>
+    </div>
+
+    <div style="margin-top: 20px; padding: 0 10px; font-size: 11px; color: var(--sub); line-height: 1.5;">
+        * Розрахунок проводиться відповідно до ч. 3 ст. 81 Кримінального кодексу України.<br>
+        * Для неповнолітніх застосовуються пільгові коефіцієнти (1/3, 1/2, 2/3) згідно ст. 107 ККУ.
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+
+        // Default to some logical date (e.g. today minus 1 year)
+        // document.getElementById('udStart').valueAsDate = new Date(new Date().setFullYear(new Date().getFullYear() - 1));
+
+        function calc() {
+            let ratioStr = document.getElementById('udSev').value;
+            let ratio = parseFloat(ratioStr); // 0.5, 0.6666, 0.75
+            
+            let startDateVal = document.getElementById('udStart').value;
+            let years = parseInt(document.getElementById('udY').value) || 0;
+            let months = parseInt(document.getElementById('udM').value) || 0;
+
+            if (!startDateVal || (years === 0 && months === 0)) {
+                document.getElementById('result').style.display = 'none';
+                return;
+            }
+
+            let start = new Date(startDateVal);
+            
+            // 1. Calculate Full End Date
+            let end = new Date(start);
+            end.setFullYear(end.getFullYear() + years);
+            end.setMonth(end.getMonth() + months);
+
+            // 2. Calculate Total Duration in MS and Days
+            let totalMs = end - start;
+            if (totalMs <= 0) return; // Invalid input
+
+            // 3. Calculate Required Time
+            let requiredMs = totalMs * ratio;
+            
+            // 4. Calculate UDZ Date
+            let udzDate = new Date(start.getTime() + requiredMs);
+
+            // 5. Logic: Time Remaining
+            let today = new Date();
+            // Reset hours to avoid timezone glitches affecting day diff
+            today.setHours(0,0,0,0); 
+            udzDate.setHours(0,0,0,0);
+
+            let diffMs = udzDate - today;
+            let isEligible = diffMs <= 0;
+
+            // --- Render ---
+            const box = document.getElementById('result');
+            box.style.display = 'block';
+            
+            // Color Logic
+            if (isEligible) {
+                box.style.background = "var(--green)";
+                document.getElementById('resLeft').innerText = "Можна подавати клопотання!";
+            } else {
+                box.style.background = "var(--blue)"; // "In progress" color
+                // Calculate nice text "1 year 2 months left"
+                let daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+                
+                // Approximate Y/M/D for display
+                let yL = Math.floor(daysLeft / 365);
+                let mL = Math.floor((daysLeft % 365) / 30);
+                let dL = (daysLeft % 365) % 30;
+                
+                let leftText = "Ще ";
+                if (yL > 0) leftText += `${yL}р `;
+                if (mL > 0) leftText += `${mL}м `;
+                leftText += `${dL}дн`;
+                
+                document.getElementById('resLeft').innerText = leftText;
+            }
+
+            document.getElementById('resDate').innerText = udzDate.toLocaleDateString('uk-UA');
+            document.getElementById('statEnd').innerText = end.toLocaleDateString('uk-UA');
+            
+            // Total days of sentence
+            let totalDays = Math.ceil(totalMs / (1000 * 60 * 60 * 24));
+            document.getElementById('statDays').innerText = totalDays;
+
+            // --- Visual Bar Logic ---
+            // Marker position (The goal line)
+            let ratioPercent = ratio * 100;
+            document.getElementById('markTarget').style.left = `${ratioPercent}%`;
+            document.getElementById('lblTarget').style.left = `${ratioPercent}%`;
+            document.getElementById('lblTarget').innerText = (ratio === 0.5 ? "1/2" : (ratio < 0.7 ? "2/3" : "3/4"));
+
+            // Fill based on Today
+            let servedMs = today - start;
+            let percentServed = (servedMs / totalMs) * 100;
+            
+            // Cap at 100%
+            if (percentServed > 100) percentServed = 100;
+            if (percentServed < 0) percentServed = 0;
+
+            document.getElementById('progBar').style.width = `${percentServed}%`;
+            
+            // If eligible, make bar green/full style, otherwise white
+            document.getElementById('progBar').style.background = isEligible ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.7)";
+
+            tg.HapticFeedback.selectionChanged();
+        }
+    </script>
+</body>
+</html>

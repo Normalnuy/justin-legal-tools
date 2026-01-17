@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Legal Explainer</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #F2F2F7; --card: #FFFFFF; --text: #000; --sub: #8E8E93;
+            --blue: #007AFF; --indigo: #5856D6; --orange: #FF9500; --red: #FF3B30; --green: #34C759;
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root { --bg: #000; --card: #1C1C1E; --text: #FFF; --sub: #98989D; }
+        }
+        body { margin: 0; padding: 20px; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        .header { margin-bottom: 20px; }
+        .title { font-size: 28px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+        .subtitle { font-size: 13px; color: var(--sub); font-weight: 600; text-transform: uppercase; margin-top: 5px; }
+
+        /* Filter Chips */
+        .chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; margin-bottom: 15px; scrollbar-width: none; }
+        .chip { 
+            background: var(--card); padding: 8px 16px; border-radius: 20px; 
+            font-size: 13px; font-weight: 600; white-space: nowrap; cursor: pointer; 
+            border: 1px solid transparent; transition: 0.2s; color: var(--sub);
+        }
+        .chip.active { background: var(--blue); color: white; box-shadow: 0 4px 10px rgba(0,122,255,0.3); }
+
+        /* Comparison Card */
+        .vs-card { 
+            background: var(--card); border-radius: 20px; padding: 0; margin-bottom: 16px; 
+            box-shadow: var(--shadow); overflow: hidden; position: relative;
+        }
+
+        .vs-header {
+            padding: 15px 20px; background: linear-gradient(135deg, rgba(0,0,0,0.03) 0%, rgba(0,0,0,0.01) 100%);
+            border-bottom: 1px solid rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;
+        }
+        .topic { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--sub); letter-spacing: 1px; }
+        .icon { font-size: 20px; }
+
+        .vs-body { display: grid; grid-template-columns: 1fr 1fr; position: relative; }
+        
+        /* Vertical Separator Line */
+        .vs-body::after {
+            content: "VS"; position: absolute; left: 50%; top: 50%; 
+            transform: translate(-50%, -50%); 
+            background: var(--card); border: 2px solid rgba(0,0,0,0.1); 
+            color: var(--sub); font-size: 10px; font-weight: 800; padding: 4px; border-radius: 50%;
+            z-index: 2;
+        }
+
+        .side { padding: 15px; display: flex; flex-direction: column; height: 100%; }
+        .side-left { border-right: 1px solid rgba(0,0,0,0.05); }
+        
+        .term { font-size: 16px; font-weight: 700; margin-bottom: 8px; line-height: 1.2; }
+        .desc { font-size: 12px; color: var(--sub); line-height: 1.4; flex-grow: 1; }
+        
+        .example { 
+            margin-top: 10px; background: rgba(0,122,255,0.05); padding: 8px; border-radius: 8px; 
+            font-size: 11px; color: var(--text); font-weight: 500;
+        }
+        .example b { color: var(--blue); }
+
+        .side.danger .example { background: rgba(255, 59, 48, 0.05); }
+        .side.danger .example b { color: var(--red); }
+        .side.danger .term { color: var(--red); }
+
+        /* Expandable Details */
+        .more-info {
+            padding: 12px 20px; font-size: 12px; color: var(--sub); border-top: 1px solid rgba(0,0,0,0.05);
+            background: rgba(0,0,0,0.01); display: none;
+        }
+        .vs-card.expanded .more-info { display: block; }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="subtitle">Пояснюємо на пальцях</div>
+        <div class="title">🎓 Юр. Тлумач</div>
+    </div>
+
+    <div class="chips">
+        <div class="chip active" onclick="filter('all', this)">Всі</div>
+        <div class="chip" onclick="filter('crim', this)">🔪 Кримінал</div>
+        <div class="chip" onclick="filter('civ', this)">🏠 Цивільне</div>
+        <div class="chip" onclick="filter('adm', this)">👮‍♂️ Адмін</div>
+    </div>
+
+    <div id="container"></div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+
+        const DATA = [
+            // --- КРИМІНАЛЬНЕ ПРАВО (Особлива частина) ---
+            {
+                cat: 'crim', icon: '🥷', topic: 'Власність',
+                t1: 'Крадіжка', d1: 'Таємне викрадення. Ніхто не бачить.',
+                e1: 'Витягнув телефон з кишені у метро. Жертва не помітила.',
+                t2: 'Грабіж', d2: 'Відкрите викрадення. Жертва бачить і розуміє.',
+                e2: 'Вирвав телефон з рук на вулиці і втік. Жертва кричала.', // Виправлено
+                info: 'Грабіж (ст. 186) карається суворіше, ніж крадіжка (ст. 185), бо злочинець діє нахабно.'
+            },
+            {
+                cat: 'crim', icon: '👊', topic: 'Насильство',
+                t1: 'Грабіж', d1: 'Без насильства або з "легким" насильством.',
+                e1: 'Штовхнув, щоб вирвати сумку. Синців немає, життя в безпеці.',
+                t2: 'Розбій', d2: 'Напад з насильством, НЕБЕЗПЕЧНИМ для життя/здоров\'я.',
+                e2: 'Вдарив ножем, кастетом або погрожував пістолетом.', // Виправлено
+                info: 'Розбій вважається закінченим з моменту НАПАДУ. Навіть якщо злочинець нічого не забрав — це вже тюрма.'
+            },
+            
+            // --- ТЕОРІЯ ПРАВА / ЗАГАЛЬНА ЧАСТИНА ---
+            {
+                cat: 'crim', icon: '🧠', topic: 'Вина (Умисел)',
+                t1: 'Прямий умисел', d1: 'Особа усвідомлює і БАЖАЄ настання наслідків.',
+                e1: 'Кілер стріляє в голову жертві. Ціль — смерть.',
+                t2: 'Непрямий умисел', d2: 'Особа передбачає наслідки, але ставиться БАЙДУЖЕ.',
+                e2: 'Кидає цеглу з даху в натовп. "Вб\'ю так вб\'ю, ні так ні".', // Виправлено
+                info: 'Це важливо для кваліфікації вбивств. При непрямому умислі часто кваліфікують як "Тяжкі тілесні, що спричинили смерть".'
+            },
+
+            // --- КРИМІНАЛЬНИЙ ПРОЦЕС (Статуси) ---
+            {
+                cat: 'crim', icon: '⚖️', topic: 'Статус особи',
+                t1: 'Підозрюваний', d1: 'Особа, якій вручили "Повідомлення про підозру".',
+                e1: 'Слідчий вважає, що це зробив ти, але слідство ще триває.',
+                t2: 'Обвинувачений', d2: 'Особа, щодо якої обвинувальний акт ПЕРЕДАНО ДО СУДУ.',
+                e2: 'Слідство завершено. Тепер твоя доля в руках судді, а не слідчого.', // Виправлено
+                info: 'У суді немає "підозрюваних", там є "обвинувачені". А "підсудний" — це застарілий термін, якого немає в КПК.'
+            },
+
+            // --- ЦИВІЛЬНЕ ПРАВО ---
+            {
+                cat: 'civ', icon: '📃', topic: 'Передоплата',
+                t1: 'Завдаток', d1: 'Штрафна функція. Якщо передумав покупець — гроші втрачає.',
+                e1: 'Дав 100$ за квартиру. Відмовився — 100$ лишаються продавцю.',
+                t2: 'Аванс', d2: 'Просто попередня оплата. Повертається завжди.',
+                e2: 'Дав 100$. Відмовився — продавець мусить повернути 100$.', // ВИПРАВЛЕНО (було e1)
+                info: 'Щоб це був завдаток, у розписці має бути ЧІТКО написано слово "ЗАВДАТОК". Якщо сумніваєтесь — суд вважає це авансом.'
+            },
+            {
+                cat: 'civ', icon: '🏠', topic: 'Речові права',
+                t1: 'Власник', d1: 'Має "Тріаду прав": Володіння, Користування, Розпорядження.',
+                e1: 'Можеш продати квартиру, подарувати або спалити її.',
+                t2: 'Володілець', d2: 'Має тільки фактичний контроль над річчю.',
+                e2: 'Орендар квартири. Живе в ній, але продати не може.', // ВИПРАВЛЕНО (було e1)
+                info: 'Володілець може бути законним (орендар) і незаконним (крадій, який вкрав телефон і користується ним).'
+            },
+            {
+                cat: 'civ', icon: '🚫', topic: 'Недійсність угод',
+                t1: 'Нікчемний', d1: 'Недійсний автоматично, в силу закону. Суд не потрібен.',
+                e1: 'Продаж квартири за усною домовленістю (без нотаріуса).',
+                t2: 'Оспорюваний', d2: 'Дійсний, поки суд не визнає його недійсним.',
+                e2: 'Договір, підписаний під впливом погроз або обману.', // ВИПРАВЛЕНО (було e1)
+                info: 'Нікчемний договір не створює юридичних наслідків з моменту підписання. Оспорюваний — створює, поки його не скасує суд.'
+            },
+
+            // --- АДМІНІСТРАТИВНЕ ПРАВО ---
+            {
+                cat: 'adm', icon: '👮‍♂️', topic: 'Затримання',
+                t1: 'Адмін. затримання', d1: 'Короткочасне (до 3 годин) для складання протоколу.',
+                e1: 'П\'яний дебош. Забрали у відділок встановити особу.',
+                t2: 'Арешт', d2: 'Вид покарання за вироком суду.',
+                e2: 'Суд дав "15 діб" за хуліганство або кримінальний арешт.', // ВИПРАВЛЕНО (було e1)
+                info: 'Строк затримання рахується з моменту фактичного обмеження руху (коли поліцейський сказав "стій"), а не з моменту приводу у відділок!'
+            },
+            {
+                cat: 'adm', icon: '💰', topic: 'Стягнення',
+                t1: 'Штраф', d1: 'Грошове стягнення в дохід держави.',
+                e1: 'Заплатив 340 грн за перевищення швидкості.',
+                t2: 'Конфіскація', d2: 'Безоплатне вилучення предмета у власність держави.',
+                e2: 'Забрали мисливську рушницю за порушення правил полювання.', // ВИПРАВЛЕНО (було e1)
+                info: 'Конфіскувати можна лише той предмет, який є власністю порушника і був знаряддям правопорушення.'
+            }
+        ];
+
+        function filter(cat, btn) {
+            document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+            render(cat);
+        }
+
+        function render(filterCat) {
+            const container = document.getElementById('container');
+            container.innerHTML = '';
+
+            DATA.forEach(item => {
+                if (filterCat !== 'all' && item.cat !== filterCat) return;
+
+                const el = document.createElement('div');
+                el.className = 'vs-card';
+                el.onclick = () => el.classList.toggle('expanded');
+
+                el.innerHTML = `
+                    <div class="vs-header">
+                        <span class="topic">${item.topic}</span>
+                        <span class="icon">${item.icon}</span>
+                    </div>
+                    <div class="vs-body">
+                        <div class="side side-left">
+                            <div class="term">${item.t1}</div>
+                            <div class="desc">${item.d1}</div>
+                            <div class="example"><b>Приклад:</b><br>${item.e1}</div>
+                        </div>
+                        <div class="side danger">
+                            <div class="term">${item.t2}</div>
+                            <div class="desc">${item.d2}</div>
+                            <div class="example"><b>Приклад:</b><br>${item.e2}</div>
+                        </div>
+                    </div>
+                    <div class="more-info">
+                        💡 <b>Нюанс:</b> ${item.info}
+                    </div>
+                `;
+                container.appendChild(el);
+            });
+        }
+
+        // Init
+        render('all');
+    </script>
+</body>
+</html>

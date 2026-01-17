@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Drug Calc PRO</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #F2F2F7; --card: #FFFFFF; --text: #000; --sub: #8E8E93;
+            --acc: #007AFF; --green: #34C759; --orange: #FF9500; --red: #FF3B30;
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root { --bg: #000; --card: #1C1C1E; --text: #FFF; --sub: #98989D; }
+        }
+        
+        body { margin: 0; padding: 20px; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        .header { margin-bottom: 20px; }
+        .title { font-size: 28px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+        .subtitle { font-size: 13px; color: var(--sub); font-weight: 600; text-transform: uppercase; margin-top: 5px; }
+
+        /* Card Styles */
+        .card { background: var(--card); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 16px; }
+        
+        /* Inputs */
+        label { display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--sub); margin-bottom: 8px; }
+        .select-wrapper { position: relative; margin-bottom: 16px; }
+        select, input { 
+            width: 100%; padding: 16px; border-radius: 14px; border: 1px solid rgba(0,0,0,0.1); 
+            background: var(--bg); color: var(--text); font-size: 17px; outline: none; appearance: none; font-family: inherit; font-weight: 500;
+        }
+        select { padding-right: 40px; }
+        .select-arrow { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); pointer-events: none; opacity: 0.5; }
+        
+        /* Dynamic Result */
+        .result-box { 
+            text-align: center; padding: 24px; border-radius: 20px; color: white; 
+            transition: 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); display: none; margin-top: 10px;
+        }
+        .res-status { font-size: 14px; font-weight: 600; opacity: 0.9; text-transform: uppercase; letter-spacing: 1px; }
+        .res-val { font-size: 32px; font-weight: 800; margin: 5px 0 10px; line-height: 1.1; }
+        .res-article { background: rgba(0,0,0,0.2); padding: 6px 12px; border-radius: 100px; font-size: 13px; display: inline-block; font-weight: 600; }
+
+        /* Threshold Visualizer */
+        .thresholds { display: flex; justify-content: space-between; margin-top: 20px; font-size: 11px; color: var(--sub); position: relative; padding: 0 5px; }
+        .bar-container { height: 8px; background: rgba(0,0,0,0.1); border-radius: 10px; margin: 10px 0 5px; position: relative; overflow: hidden; }
+        .bar-fill { height: 100%; background: var(--text); width: 0%; transition: 0.5s ease; border-radius: 10px; }
+        .marker { position: absolute; top: -5px; bottom: -5px; width: 2px; background: rgba(0,0,0,0.2); z-index: 2; }
+        
+        /* Info Grid */
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .info-item { background: rgba(0,0,0,0.05); padding: 10px; border-radius: 12px; text-align: center; }
+        .info-val { font-weight: 700; font-size: 15px; display: block; }
+        .info-lbl { font-size: 10px; color: var(--sub); text-transform: uppercase; }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="subtitle">МОЗ Наказ №188</div>
+        <div class="title">💊 Нарко-Експерт</div>
+    </div>
+
+    <div class="card">
+        <label>Оберіть речовину</label>
+        <div class="select-wrapper">
+            <select id="drugType" onchange="calc()">
+                </select>
+            <div class="select-arrow">▼</div>
+        </div>
+
+        <label>Чиста вага (грами)</label>
+        <input type="number" id="weight" placeholder="0.00" step="0.01" oninput="calc()">
+        
+        <div id="visualizer" style="opacity: 0.5; transition: 0.3s; margin-top: 20px;">
+            <div class="thresholds">
+                <span>0 г</span>
+                <span id="lblSmall">...</span>
+                <span id="lblLarge">...</span>
+            </div>
+            <div class="bar-container">
+                <div class="bar-fill" id="progBar"></div>
+                <div class="marker" style="left: 33%"></div>
+                <div class="marker" style="left: 66%"></div>
+            </div>
+            <div class="thresholds" style="margin-top: 2px;">
+                <span style="flex:1; text-align:center; color:var(--green)">АДМІН</span>
+                <span style="flex:1; text-align:center; color:var(--orange)">КРИМІНАЛ</span>
+                <span style="flex:1; text-align:center; color:var(--red)">ВЕЛИКИЙ</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="result" class="result-box">
+        <div class="res-status" id="resStatus">Статус</div>
+        <div class="res-val" id="resText">...</div>
+        <div class="res-article" id="resArt">ст. ...</div>
+        
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-val" id="limitSmall">-</span>
+                <span class="info-lbl">Поріг криміналу</span>
+            </div>
+            <div class="info-item">
+                <span class="info-val" id="limitLarge">-</span>
+                <span class="info-lbl">Поріг великого</span>
+            </div>
+        </div>
+    </div>
+
+    <div style="margin-top: 20px; padding: 0 10px; font-size: 11px; color: var(--sub); line-height: 1.5;">
+        * Розрахунок базується на таблицях невеликих, великих та особливо великих розмірів наркотичних засобів (Наказ МОЗ України №188). 
+        Для рідин враховується вага сухого залишку.
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+
+        // Database from MOZ Order 188
+        const DB = {
+            'cannabis': { name: 'Канабіс (Марихуана)', icon: '🌿', small: 5.0, large: 500.0, extra: 2500.0 },
+            'heroin':   { name: 'Героїн', icon: '💉', small: 0.005, large: 1.0, extra: 10.0 },
+            'cocaine':  { name: 'Кокаїн', icon: '🍚', small: 0.02, large: 1.0, extra: 10.0 },
+            'amph':     { name: 'Амфетамін', icon: '💊', small: 0.15, large: 1.5, extra: 15.0 },
+            'meth':     { name: 'Метамфетамін', icon: '🧪', small: 0.15, large: 1.5, extra: 15.0 },
+            'mdma':     { name: 'MDMA (Екстазі)', icon: '🍬', small: 0.15, large: 1.5, extra: 15.0 },
+            'meta':     { name: 'Метадон', icon: '🧊', small: 0.02, large: 1.5, extra: 15.0 },
+            'pvp':      { name: 'PVP (Солі)', icon: '🧂', small: 0.15, large: 1.5, extra: 15.0 }, // Analog psychotropic
+            'lsd':      { name: 'LSD', icon: '👅', small: 0.0001, large: 0.001, extra: 0.01 },
+            'opium':    { name: 'Опій (ацетильований)', icon: '🏺', small: 0.005, large: 1.0, extra: 10.0 },
+            'deso':     { name: 'Дезоморфін', icon: '🐊', small: 0.005, large: 0.1, extra: 1.0 },
+            'psilo':    { name: 'Плодові тіла грибів', icon: '🍄', small: 0.01, large: 0.25, extra: 10.0 } // Active substance recalc usually needed
+        };
+
+        // Init Select
+        const sel = document.getElementById('drugType');
+        for (let key in DB) {
+            let opt = document.createElement('option');
+            opt.value = key;
+            opt.innerHTML = `${DB[key].icon} ${DB[key].name}`;
+            sel.appendChild(opt);
+        }
+
+        function calc() {
+            const key = document.getElementById('drugType').value;
+            const w = parseFloat(document.getElementById('weight').value);
+            const data = DB[key];
+            const box = document.getElementById('result');
+            const vis = document.getElementById('visualizer');
+
+            // Update Labels
+            document.getElementById('lblSmall').innerText = data.small + 'г';
+            document.getElementById('lblLarge').innerText = data.large + 'г';
+            document.getElementById('limitSmall').innerText = "> " + data.small + " г";
+            document.getElementById('limitLarge').innerText = "≥ " + data.large + " г";
+
+            if (!w || w < 0) {
+                box.style.display = 'none';
+                vis.style.opacity = '0.5';
+                document.getElementById('progBar').style.width = '0%';
+                return;
+            }
+
+            box.style.display = 'block';
+            vis.style.opacity = '1';
+
+            // Logic Core
+            let status = "";
+            let desc = "";
+            let art = "";
+            let color = "";
+            let percent = 0;
+
+            if (w <= data.small) {
+                // Admin
+                status = "АДМІНІСТРАТИВНА";
+                desc = "Зберігання без мети збуту";
+                art = "ст. 44 КУпАП";
+                color = "var(--green)";
+                // Bar: 0-33%
+                percent = (w / data.small) * 33;
+            } else if (w < data.large) {
+                // Criminal (Small/Regular)
+                status = "КРИМІНАЛЬНА";
+                desc = "Невеликий розмір (Зберігання)";
+                art = "ст. 309 ч. 1 ККУ";
+                color = "var(--orange)";
+                // Bar: 33-66%
+                percent = 33 + ((w - data.small) / (data.large - data.small)) * 33;
+            } else if (w < data.extra) {
+                // Criminal (Large)
+                status = "КРИМІНАЛЬНА (ТЯЖКА)";
+                desc = "Великий розмір";
+                art = "ст. 309 ч. 2 / 307 ККУ";
+                color = "var(--red)";
+                // Bar: 66-90%
+                percent = 66 + ((w - data.large) / (data.extra - data.large)) * 24;
+            } else {
+                // Criminal (Extra Large)
+                status = "ОСОБЛИВО ТЯЖКА";
+                desc = "Особливо великий розмір";
+                art = "ст. 307 ч. 3 ККУ";
+                color = "#8E24AA"; // Deep Purple
+                percent = 100;
+            }
+
+            // Render
+            box.style.background = color;
+            document.getElementById('resStatus').innerText = status;
+            document.getElementById('resText').innerText = desc;
+            document.getElementById('resArt').innerText = art;
+            
+            document.getElementById('progBar').style.width = Math.min(percent, 100) + "%";
+            document.getElementById('progBar').style.background = color;
+            
+            tg.HapticFeedback.selectionChanged();
+        }
+    </script>
+</body>
+</html>

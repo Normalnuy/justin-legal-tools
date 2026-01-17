@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Ballistics Pro</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #F2F2F7; --card: #FFFFFF; --text: #000; --sub: #8E8E93;
+            --metal: #636366; --gold: #FFD700; --copper: #B87333;
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root { --bg: #000; --card: #1C1C1E; --text: #FFF; --sub: #98989D; --metal: #8E8E93; }
+        }
+        body { margin: 0; padding: 20px; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        .header { margin-bottom: 20px; }
+        .title { font-size: 28px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+        .subtitle { font-size: 13px; color: var(--sub); font-weight: 600; text-transform: uppercase; margin-top: 5px; }
+
+        .card { background: var(--card); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 16px; }
+        
+        label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--sub); margin-bottom: 8px; }
+        select { 
+            width: 100%; padding: 16px; border-radius: 14px; border: 1px solid rgba(0,0,0,0.1); 
+            background: var(--bg); color: var(--text); font-size: 18px; outline: none; margin-bottom: 15px; font-weight: 600; appearance: none;
+        }
+
+        /* Result Box */
+        .res-box { 
+            text-align: center; padding: 25px 20px; border-radius: 20px; color: white; 
+            background: #2C2C2E; /* Dark Gunmetal */
+            display: block; transition: 0.3s; position: relative; overflow: hidden;
+        }
+        .res-val { font-size: 40px; font-weight: 800; line-height: 1; margin-bottom: 5px; font-variant-numeric: tabular-nums; }
+        .res-sub { font-size: 16px; opacity: 0.8; font-weight: 500; color: #AEAEB2; }
+        
+        /* Stats Grid */
+        .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+        .stat { background: rgba(255,255,255,0.1); padding: 10px; border-radius: 12px; text-align: left; }
+        .stat-l { font-size: 10px; text-transform: uppercase; opacity: 0.6; }
+        .stat-v { font-size: 15px; font-weight: 700; margin-top: 4px; }
+
+        /* Bullet Visualization */
+        .bullet-stage {
+            height: 100px; background: rgba(255,255,255,0.05); margin-top: 20px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center; position: relative;
+        }
+        .bullet-group { display: flex; align-items: center; transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        
+        .casing { 
+            background: linear-gradient(to bottom, #D4AF37, #AA8c2c, #D4AF37); 
+            border-radius: 4px 0 0 4px; border: 1px solid rgba(0,0,0,0.3);
+        }
+        .projectile { 
+            background: linear-gradient(to bottom, #B87333, #8c5626, #B87333); 
+            border-radius: 0 100% 100% 0; border: 1px solid rgba(0,0,0,0.3); margin-left: -1px;
+        }
+        
+        /* Ruler */
+        .ruler { position: absolute; bottom: 5px; right: 10px; font-size: 10px; opacity: 0.3; font-family: monospace; }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="subtitle">Балістика (Ст. 263 ККУ)</div>
+        <div class="title">🔫 Калібр Майстер</div>
+    </div>
+
+    <div class="card">
+        <label>Оберіть маркування (Дюйми / ММ)</label>
+        <div style="position:relative">
+            <select id="calSelect" onchange="calc()">
+                <optgroup label="Пістолетні">
+                    <option value="9mm">9mm Luger / Para (9x19)</option>
+                    <option value="45acp">.45 ACP (11.43mm)</option>
+                    <option value="pm">9mm Makarov (9x18)</option>
+                    <option value="tt">7.62 TT (7.62x25)</option>
+                </optgroup>
+                <optgroup label="Гвинтівкові (Проміжні)">
+                    <option value="22lr">.22 LR (5.6mm)</option>
+                    <option value="223">.223 Rem / 5.56 NATO</option>
+                    <option value="545">5.45x39 (AK-74)</option>
+                    <option value="762ak">7.62x39 (AKM)</option>
+                    <option value="300blk">.300 Blackout (7.62x35)</option>
+                </optgroup>
+                <optgroup label="Гвинтівкові (Потужні)">
+                    <option value="308" selected>.308 Win / 7.62 NATO</option>
+                    <option value="54r">7.62x54R (SVD/PKM)</option>
+                    <option value="338">.338 Lapua Mag (8.6mm)</option>
+                    <option value="50bmg">.50 BMG (12.7x99)</option>
+                </optgroup>
+            </select>
+            <div style="position:absolute; right:15px; top:50%; transform:translateY(-50%); pointer-events:none; opacity:0.5">▼</div>
+        </div>
+    </div>
+
+    <div class="res-box">
+        <div class="res-val" id="resName">7.62x51 mm</div>
+        <div class="res-sub" id="resType">NATO Standard Rifle</div>
+
+        <div class="bullet-stage">
+            <div class="bullet-group" id="bulletVisual">
+                <div class="casing" id="visCase"></div>
+                <div class="projectile" id="visProj"></div>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-l">Енергія</div>
+                <div class="stat-v" id="resJoule">~3500 Дж</div>
+            </div>
+            <div class="stat">
+                <div class="stat-l">Застосування</div>
+                <div class="stat-v" id="resUse">Військ/Мислив</div>
+            </div>
+            <div class="stat">
+                <div class="stat-l">Швидкість</div>
+                <div class="stat-v" id="resSpeed">830 м/с</div>
+            </div>
+            <div class="stat">
+                <div class="stat-l">Діаметр</div>
+                <div class="stat-v" id="resDia">7.82 мм</div>
+            </div>
+        </div>
+    </div>
+
+    <div style="margin-top: 20px; padding: 0 10px; font-size: 11px; color: var(--sub); line-height: 1.5;">
+        * Наведено усереднені балістичні дані для стандартних армійських або мисливських набоїв (FMJ).<br>
+        * Відповідно до методики МВС, боєприпасами визнаються патрони, що мають достатню вражаючу здатність.
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+
+        // Database: [Metric Name, Type, Joules, Speed(m/s), CaseLength(px), ProjLength(px), Diameter(px multiplier), Usage]
+        // Visual sizing: 1mm ~= 3px for display
+        const DB = {
+            "22lr":   ["5.6 x 15 mm", "Rimfire Small", "140", "330", 45, 15, 5.6, "Спорт / Полювання"],
+            "9mm":    ["9 x 19 mm", "Parabellum / Luger", "500", "360", 57, 18, 9, "Поліція / Пістолет"],
+            "45acp":  ["11.43 x 23 mm", "Automatic Colt Pistol", "550", "250", 69, 20, 11.4, "Поліція / США"],
+            "pm":     ["9 x 18 mm", "Makarov", "300", "315", 54, 15, 9.2, "Поліція / СРСР"],
+            "tt":     ["7.62 x 25 mm", "Tokarev", "500", "430", 75, 18, 7.62, "Військовий (Старий)"],
+            
+            "223":    ["5.56 x 45 mm", "NATO / .223 Rem", "1800", "960", 135, 25, 5.56, "AR-15 / ЗСУ"],
+            "545":    ["5.45 x 39 mm", "Soviet / M74", "1300", "900", 117, 30, 5.45, "AK-74 / ЗСУ"],
+            "762ak":  ["7.62 x 39 mm", "Soviet / M43", "2100", "715", 117, 35, 7.62, "AKM / РПК"],
+            "300blk": ["7.62 x 35 mm", "Blackout", "1800", "675", 105, 45, 7.62, "Спецпідрозділи"],
+            
+            "308":    ["7.62 x 51 mm", "NATO / .308 Win", "3500", "830", 153, 40, 7.8, "Снайпінг / Кулемет"],
+            "54r":    ["7.62 x 54 mm R", "Russian (Rimed)", "3500", "820", 162, 42, 7.9, "СВД / ПКМ"],
+            "338":    ["8.6 x 70 mm", "Lapua Magnum", "6500", "900", 210, 50, 8.6, "Далекобійний"],
+            "50bmg":  ["12.7 x 99 mm", "NATO Heavy", "18000", "900", 297, 65, 12.7, "Антиматеріальний"]
+        };
+
+        function calc() {
+            const k = document.getElementById('calSelect').value;
+            const d = DB[k];
+
+            // Text Update
+            document.getElementById('resName').innerText = d[0];
+            document.getElementById('resType').innerText = d[1];
+            document.getElementById('resJoule').innerText = `~${d[2]} Дж`;
+            document.getElementById('resSpeed').innerText = `${d[3]} м/с`;
+            document.getElementById('resDia').innerText = d[0].split(' ')[0]; // Extract first part
+            document.getElementById('resUse').innerText = d[7];
+
+            // Visual Update
+            const scale = 2.5; // pixel multiplier
+            const casing = document.getElementById('visCase');
+            const proj = document.getElementById('visProj');
+            
+            // Width = Length of cartridge part
+            casing.style.width = (d[4] * (scale/3)) + 'px'; // DB values are roughly mm*3
+            proj.style.width = (d[5] * (scale/3)) + 'px';
+            
+            // Height = Diameter
+            const h = d[6] * scale;
+            casing.style.height = h + 'px';
+            proj.style.height = h + 'px';
+
+            // Animation effect
+            const group = document.getElementById('bulletVisual');
+            group.style.opacity = 0;
+            group.style.transform = "translateX(-20px)";
+            
+            setTimeout(() => {
+                group.style.opacity = 1;
+                group.style.transform = "translateX(0)";
+            }, 50);
+
+            tg.HapticFeedback.selectionChanged();
+        }
+
+        // Init
+        calc();
+    </script>
+</body>
+</html>

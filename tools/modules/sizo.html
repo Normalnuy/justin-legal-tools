@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>SIZO Calculator</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #F2F2F7; --card: #FFFFFF; --text: #000; --sub: #8E8E93;
+            --blue: #007AFF; --green: #34C759; --orange: #FF9500; --indigo: #5856D6;
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root { --bg: #000; --card: #1C1C1E; --text: #FFF; --sub: #98989D; }
+        }
+        body { margin: 0; padding: 20px; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        .header { margin-bottom: 20px; }
+        .title { font-size: 28px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+        .subtitle { font-size: 13px; color: var(--sub); font-weight: 600; text-transform: uppercase; margin-top: 5px; }
+
+        .card { background: var(--card); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 16px; }
+        
+        label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--sub); margin-bottom: 8px; letter-spacing: 0.5px; }
+        input { 
+            width: 100%; padding: 16px; border-radius: 14px; border: 1px solid rgba(0,0,0,0.1); 
+            background: var(--bg); color: var(--text); font-size: 16px; outline: none; margin-bottom: 15px; font-weight: 500;
+        }
+
+        /* Result Box */
+        .res-box { 
+            text-align: center; padding: 25px 20px; border-radius: 20px; color: white; 
+            display: none; transition: 0.3s; position: relative; overflow: hidden;
+        }
+        .res-lbl { font-size: 13px; opacity: 0.9; font-weight: 600; margin-bottom: 5px; }
+        .res-val { font-size: 40px; font-weight: 800; line-height: 1; text-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .res-sub { font-size: 14px; opacity: 0.8; margin-top: 5px; font-family: monospace; }
+
+        /* Breakdown Timeline */
+        .timeline { margin-top: 20px; background: rgba(0,0,0,0.05); border-radius: 12px; padding: 15px; }
+        .tl-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; }
+        .tl-row:last-child { margin-bottom: 0; padding-top: 8px; border-top: 1px solid rgba(0,0,0,0.1); font-weight: 700; }
+        .tag { padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; color: #fff; }
+        .tag-1 { background: var(--sub); } /* 1:1 */
+        .tag-2 { background: var(--orange); } /* 1:2 Savchenko */
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="subtitle">Попереднє ув'язнення</div>
+        <div class="title">🏢 СІЗО Експерт</div>
+    </div>
+
+    <div class="card">
+        <label>Дата затримання (Взяття під варту)</label>
+        <input type="date" id="dateStart" onchange="calc()">
+
+        <label>Дата вироку (Набрання сили)</label>
+        <input type="date" id="dateEnd" onchange="calc()">
+        
+        <div style="font-size:11px; color:var(--sub); line-height:1.4; margin-top:-5px">
+            Автоматичне врахування ч. 5 ст. 72 ККУ (Закон Савченко) у період з 24.12.2015 по 20.06.2017.
+        </div>
+    </div>
+
+    <div id="result" class="res-box">
+        <div class="res-lbl">Зараховується у строк</div>
+        <div class="res-val" id="resCredit">0 днів</div>
+        <div class="res-sub" id="resHuman">-</div>
+
+        <div class="timeline" id="breakdown">
+            </div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+
+        // Savchenko Law Window (Inclusive)
+        const SAV_START = new Date('2015-12-24');
+        const SAV_END = new Date('2017-06-20');
+
+        function calc() {
+            let d1 = document.getElementById('dateStart').value;
+            let d2 = document.getElementById('dateEnd').value;
+
+            if (!d1 || !d2) {
+                document.getElementById('result').style.display = 'none';
+                return;
+            }
+
+            let start = new Date(d1);
+            let end = new Date(d2);
+
+            if (start > end) {
+                document.getElementById('result').style.display = 'none';
+                return;
+            }
+
+            // Logic: Intersection of intervals
+            // Interval 1: User's stay [start, end]
+            // Interval 2: Savchenko Law [SAV_START, SAV_END]
+
+            // Find overlap start and end
+            let overlapStart = new Date(Math.max(start, SAV_START));
+            let overlapEnd = new Date(Math.min(end, SAV_END));
+
+            let daysSavchenko = 0;
+            let daysNormal = 0;
+
+            // Check if there is an overlap
+            if (overlapStart <= overlapEnd) {
+                // There is a period under Savchenko Law
+                let overlapMs = overlapEnd - overlapStart;
+                daysSavchenko = Math.floor(overlapMs / (1000 * 60 * 60 * 24)) + 1; // +1 to include last day
+                
+                // Calculate total days
+                let totalMs = end - start;
+                let totalDays = Math.floor(totalMs / (1000 * 60 * 60 * 24)) + 1;
+                
+                daysNormal = totalDays - daysSavchenko;
+            } else {
+                // No overlap, all normal
+                let totalMs = end - start;
+                daysNormal = Math.floor(totalMs / (1000 * 60 * 60 * 24)) + 1;
+            }
+
+            // Calculations
+            let creditSavchenko = daysSavchenko * 2;
+            let creditNormal = daysNormal * 1;
+            let totalCredit = creditSavchenko + creditNormal;
+            let totalReal = daysSavchenko + daysNormal;
+
+            // Render
+            const box = document.getElementById('result');
+            const bd = document.getElementById('breakdown');
+            
+            box.style.display = 'block';
+            
+            // Color based on "Profit"
+            if (daysSavchenko > 0) {
+                box.style.background = "linear-gradient(135deg, #FF9500 0%, #FF5E3A 100%)"; // Orange/Red for Savchenko active
+            } else {
+                box.style.background = "linear-gradient(135deg, #007AFF 0%, #0056b3 100%)"; // Standard Blue
+            }
+
+            document.getElementById('resCredit').innerText = `${totalCredit} днів`;
+            document.getElementById('resHuman').innerText = formatDuration(totalCredit);
+
+            // Breakdown HTML
+            let html = '';
+            
+            if (daysNormal > 0 && daysSavchenko === 0) {
+                html += row("Стандартний режим", daysNormal, "1:1", "tag-1");
+            } else {
+                if (daysSavchenko > 0) {
+                    html += row("Період Савченко", daysSavchenko, "1:2", "tag-2");
+                }
+                if (daysNormal > 0) {
+                    html += row("Інші періоди", daysNormal, "1:1", "tag-1");
+                }
+            }
+            
+            html += `<div class="tl-row">
+                        <span>Фактично відбуто:</span>
+                        <span>${totalReal} днів</span>
+                     </div>`;
+            
+            if (daysSavchenko > 0) {
+                 html += `<div class="tl-row" style="color:white; opacity:0.9; margin-top:5px; font-size:11px; font-weight:400">
+                        🎁 Бонус: +${daysSavchenko} днів
+                     </div>`;
+            }
+
+            bd.innerHTML = html;
+            tg.HapticFeedback.selectionChanged();
+        }
+
+        function row(label, val, tagText, tagClass) {
+            return `<div class="tl-row">
+                        <span style="display:flex; align-items:center; gap:6px">
+                            ${label} <span class="tag ${tagClass}">${tagText}</span>
+                        </span>
+                        <span>${val} дн.</span>
+                    </div>`;
+        }
+
+        function formatDuration(days) {
+            if (days < 30) return "";
+            let y = Math.floor(days / 365);
+            let m = Math.floor((days % 365) / 30);
+            let d = (days % 365) % 30;
+            
+            let parts = [];
+            if (y > 0) parts.push(y + " р.");
+            if (m > 0) parts.push(m + " міс.");
+            if (d > 0) parts.push(d + " дн.");
+            return "= " + parts.join(" ");
+        }
+    </script>
+</body>
+</html>

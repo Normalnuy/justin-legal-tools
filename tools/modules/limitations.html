@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Statute Limits</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #F2F2F7; --card: #FFFFFF; --text: #000; --sub: #8E8E93;
+            --green: #34C759; --red: #FF3B30; --orange: #FF9500; --blue: #007AFF;
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root { --bg: #000; --card: #1C1C1E; --text: #FFF; --sub: #98989D; }
+        }
+        body { margin: 0; padding: 20px; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        .header { margin-bottom: 20px; }
+        .title { font-size: 28px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+        .subtitle { font-size: 13px; color: var(--sub); font-weight: 600; text-transform: uppercase; margin-top: 5px; }
+
+        .card { background: var(--card); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 16px; }
+        
+        label { display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--sub); margin-bottom: 8px; }
+        input, select { 
+            width: 100%; padding: 16px; border-radius: 14px; border: 1px solid rgba(0,0,0,0.1); 
+            background: var(--bg); color: var(--text); font-size: 16px; outline: none; margin-bottom: 15px; font-weight: 500;
+        }
+
+        /* Result Box */
+        .res-box { 
+            text-align: center; padding: 25px; border-radius: 20px; color: white; 
+            display: none; transition: 0.3s; position: relative; overflow: hidden;
+        }
+        .res-status { font-size: 13px; text-transform: uppercase; font-weight: 700; opacity: 0.9; letter-spacing: 1px; }
+        .res-date { font-size: 32px; font-weight: 800; margin: 10px 0; }
+        .res-timer { background: rgba(0,0,0,0.2); padding: 8px 16px; border-radius: 12px; display: inline-block; font-family: monospace; font-size: 16px; }
+
+        /* Progress Bar */
+        .progress-track { height: 10px; background: rgba(0,0,0,0.1); border-radius: 10px; margin-top: 20px; overflow: hidden; }
+        .progress-fill { height: 100%; background: #fff; width: 0%; transition: 1s ease; border-radius: 10px; }
+
+        /* Toggle */
+        .toggle-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .toggle { position: relative; display: inline-block; width: 50px; height: 28px; }
+        .toggle input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--sub); transition: .4s; border-radius: 34px; opacity: 0.3; }
+        .slider:before { position: absolute; content: ""; height: 24px; width: 24px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        input:checked + .slider { background-color: var(--orange); opacity: 1; }
+        input:checked + .slider:before { transform: translateX(22px); }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="subtitle">Ст. 49 ККУ</div>
+        <div class="title">⏳ Строки давності</div>
+    </div>
+
+    <div class="card">
+        <label>Тяжкість злочину</label>
+        <select id="severity" onchange="calc()">
+            <option value="2">Проступок (покарання менше обмеження волі) - 2 роки</option>
+            <option value="3">Проступок/Нетяжкий (покарання обмеж. волі) - 3 роки</option>
+            <option value="5">Нетяжкий злочин (штраф/позбавлення волі) - 5 років</option>
+            <option value="10">Тяжкий злочин - 10 років</option>
+            <option value="15">Особливо тяжкий злочин - 15 років</option>
+        </select>
+
+        <label>Дата вчинення</label>
+        <input type="date" id="dateCrime" onchange="calc()">
+
+        <div class="toggle-row">
+            <span style="font-size:14px; font-weight:600">Особа ухилялася (Розшук)</span>
+            <label class="toggle">
+                <input type="checkbox" id="evasion" onchange="calc()">
+                <span class="slider"></span>
+            </label>
+        </div>
+        <div id="evasionBlock" style="display:none; margin-top:10px; border-top:1px solid rgba(0,0,0,0.1); padding-top:10px;">
+            <label>Період ухилення (днів)</label>
+            <input type="number" id="evasionDays" placeholder="Напр: 365" oninput="calc()">
+        </div>
+    </div>
+
+    <div id="result" class="res-box">
+        <div class="res-status" id="resStatus">ЗВІЛЬНЕННЯ ВІД ВІДПОВІДАЛЬНОСТІ</div>
+        <div class="res-date" id="resDate">dd.mm.yyyy</div>
+        <div class="res-timer" id="resLeft">Залишилось: ...</div>
+        
+        <div class="progress-track">
+            <div class="progress-fill" id="progBar"></div>
+        </div>
+        <div style="font-size:11px; margin-top:5px; opacity:0.8; display:flex; justify-content:space-between">
+            <span>Вчинення</span>
+            <span>Закриття</span>
+        </div>
+    </div>
+
+    <div style="margin-top: 20px; font-size: 11px; color: var(--sub); padding: 0 10px;">
+        * Перебіг давності зупиняється, якщо особа ухилялася від слідства (ч. 3 ст. 49 ККУ).<br>
+        * До злочинів проти миру та безпеки, катувань строки давності не застосовуються (ч. 5 ст. 49).
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+
+        // Set today as default max
+        document.getElementById('dateCrime').max = new Date().toISOString().split("T")[0];
+
+        function calc() {
+            let years = parseInt(document.getElementById('severity').value);
+            let dateStr = document.getElementById('dateCrime').value;
+            let isEvasion = document.getElementById('evasion').checked;
+            
+            // Show/Hide Evasion Input
+            document.getElementById('evasionBlock').style.display = isEvasion ? 'block' : 'none';
+            let evasionDays = isEvasion ? (parseInt(document.getElementById('evasionDays').value) || 0) : 0;
+
+            if (!dateStr) {
+                document.getElementById('result').style.display = 'none';
+                return;
+            }
+
+            let crimeDate = new Date(dateStr);
+            let today = new Date();
+            
+            // Calculate Target Date
+            let targetDate = new Date(crimeDate);
+            targetDate.setFullYear(targetDate.getFullYear() + years);
+            
+            // Add Evasion Days
+            if (evasionDays > 0) {
+                targetDate.setDate(targetDate.getDate() + evasionDays);
+            }
+
+            // Logic Check
+            let isExpired = today >= targetDate;
+            
+            // Visuals
+            const box = document.getElementById('result');
+            const status = document.getElementById('resStatus');
+            const dateDisplay = document.getElementById('resDate');
+            const leftDisplay = document.getElementById('resLeft');
+            const bar = document.getElementById('progBar');
+
+            box.style.display = 'block';
+            dateDisplay.innerText = targetDate.toLocaleDateString('uk-UA');
+
+            if (isExpired) {
+                box.style.background = "var(--green)";
+                status.innerText = "СТРОКИ ВИЙШЛИ";
+                leftDisplay.innerText = "Особа звільняється";
+                bar.style.width = "100%";
+            } else {
+                box.style.background = "var(--red)";
+                status.innerText = "СТРОКИ ТРИВАЮТЬ";
+                
+                // Calculate time left
+                let diff = targetDate - today;
+                let daysLeft = Math.floor(diff / (1000 * 60 * 60 * 24));
+                let yearsLeft = Math.floor(daysLeft / 365);
+                let monthsLeft = Math.floor((daysLeft % 365) / 30);
+                let dLeft = (daysLeft % 365) % 30;
+
+                let txt = "";
+                if (yearsLeft > 0) txt += `${yearsLeft}р `;
+                if (monthsLeft > 0) txt += `${monthsLeft}м `;
+                txt += `${dLeft}д`;
+
+                leftDisplay.innerText = `Залишилось: ${txt}`;
+
+                // Progress Bar Logic
+                let totalDuration = targetDate - crimeDate;
+                let passed = today - crimeDate;
+                let percent = (passed / totalDuration) * 100;
+                bar.style.width = `${Math.max(0, Math.min(100, percent))}%`;
+            }
+            
+            tg.HapticFeedback.selectionChanged();
+        }
+    </script>
+</body>
+</html>
