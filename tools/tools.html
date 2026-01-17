@@ -72,19 +72,6 @@
         }
         #viewer.active { transform: translateX(0); }
 
-        .viewer-nav {
-            padding: 10px 15px; background: var(--card); 
-            display: flex; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.05);
-            padding-top: 15px;
-        }
-        .btn-back {
-            border: none; background: transparent; color: var(--blue);
-            font-size: 17px; font-weight: 600; display: flex; align-items: center; gap: 5px; cursor: pointer;
-        }
-        .viewer-title {
-            margin-left: auto; margin-right: auto; font-weight: 700; font-size: 17px; transform: translateX(-20px);
-        }
-
         iframe { flex: 1; border: none; width: 100%; height: 100%; }
 
     </style>
@@ -104,37 +91,37 @@
 
         <div class="category-title">💰 Фінанси та Податки</div>
         <div class="grid" id="grid-fin">
-            <div class="card" onclick="openApp('modules/standarts.html', 'Стандарти Pro')">
+            <div class="card" onclick="openApp('modules/standarts.html')">
                 <div class="icon-box c-blue">🇺🇦</div>
                 <div class="card-title">Стандарти</div>
                 <div class="card-desc">МЗП, ПМ, Ліміти</div>
             </div>
-            <div class="card" onclick="openApp('modules/nbu.html', 'Архів НБУ')">
+            <div class="card" onclick="openApp('modules/nbu.html')">
                 <div class="icon-box c-green">🏦</div>
                 <div class="card-title">Архів НБУ</div>
                 <div class="card-desc">Курси валют</div>
             </div>
-            <div class="card" onclick="openApp('modules/fop.html', 'Податки ФОП')">
+            <div class="card" onclick="openApp('modules/fop.html')">
                 <div class="icon-box c-orange">💼</div>
                 <div class="card-title">Податки ФОП</div>
                 <div class="card-desc">ЄП, ЄСВ, ВЗ</div>
             </div>
-            <div class="card" onclick="openApp('modules/debt.html', 'Борг + Інфляція')">
+            <div class="card" onclick="openApp('modules/debt.html')">
                 <div class="icon-box c-red">📈</div>
                 <div class="card-title">Борг та 3%</div>
                 <div class="card-desc">Ст. 625 ЦКУ</div>
             </div>
-            <div class="card" onclick="openApp('modules/pdv.html', 'ПДВ Майстер')">
+            <div class="card" onclick="openApp('modules/pdv.html')">
                 <div class="icon-box c-purple">🧮</div>
                 <div class="card-title">ПДВ Майстер</div>
                 <div class="card-desc">20% та База</div>
             </div>
-             <div class="card" onclick="openApp('modules/iban.html', 'IBAN Сканер')">
+             <div class="card" onclick="openApp('modules/iban.html')">
                 <div class="icon-box c-indigo">💳</div>
                 <div class="card-title">IBAN Сканер</div>
                 <div class="card-desc">Валідація та QR</div>
             </div>
-            <div class="card" onclick="openApp('modules/vacation.html', 'Калькулятор відпусток')">
+            <div class="card" onclick="openApp('modules/vacation.html')">
                 <div class="icon-box c-green">🏖</div>
                 <div class="card-title">Відпустки</div>
                 <div class="card-desc">Розрахунок днів</div>
@@ -143,32 +130,32 @@
 
         <div class="category-title">⚖️ Суд та Процес</div>
         <div class="grid" id="grid-law">
-            <div class="card" onclick="openApp('modules/court_fee.html', 'Судовий збір')">
+            <div class="card" onclick="openApp('modules/court_fee.html')">
                 <div class="icon-box c-blue">🏛</div>
                 <div class="card-title">Судовий збір</div>
                 <div class="card-desc">Калькулятор</div>
             </div>
-            <div class="card" onclick="openApp('modules/deadline.html', 'Процесуальні строки')">
+            <div class="card" onclick="openApp('modules/deadline.html')">
                 <div class="icon-box c-red">⏳</div>
                 <div class="card-title">Строки</div>
                 <div class="card-desc">ЦПК/КПК/КАС</div>
             </div>
-            <div class="card" onclick="openApp('modules/limitations.html', 'Строки давності')">
+            <div class="card" onclick="openApp('modules/limitations.html')">
                 <div class="icon-box c-orange">🕰</div>
                 <div class="card-title">Давність</div>
                 <div class="card-desc">Позовна давність</div>
             </div>
-            <div class="card" onclick="openApp('modules/court_codes.html', 'Реєстр Судів')">
+            <div class="card" onclick="openApp('modules/court_codes.html')">
                 <div class="icon-box c-indigo">📍</div>
                 <div class="card-title">Реєстр Судів</div>
                 <div class="card-desc">Коди та контакти</div>
             </div>
-            <div class="card" onclick="openApp('modules/constitution.html', 'Конституція')">
+            <div class="card" onclick="openApp('modules/constitution.html')">
                 <div class="icon-box c-blue">📘</div>
                 <div class="card-title">Конституція</div>
                 <div class="card-desc">Кишенькова</div>
             </div>
-            <div class="card" onclick="openApp('modules/latina.html', 'Юридична Латина')">
+            <div class="card" onclick="openApp('modules/latina.html')">
                 <div class="icon-box c-purple">📜</div>
                 <div class="card-title">Юр. Латина</div>
                 <div class="card-desc">Словник термінів</div>
@@ -177,42 +164,42 @@
 
         <div class="category-title">🚔 Кримінал та Поліція</div>
         <div class="grid" id="grid-crim">
-            <div class="card" onclick="openApp('modules/police.html', 'Зупинила поліція')">
+            <div class="card" onclick="openApp('modules/police.html')">
                 <div class="icon-box c-blue">👮‍♂️</div>
                 <div class="card-title">Патрульний контроль</div>
                 <div class="card-desc">Зупинка, Драгер</div>
             </div>
-            <div class="card" onclick="openApp('modules/alco.html', 'Алкоголь та проміле')">
+            <div class="card" onclick="openApp('modules/alco.html')">
                 <div class="icon-box c-purple">🍺</div>
                 <div class="card-title">Драгер</div>
                 <div class="card-desc">Проміле та час</div>
             </div>
-            <div class="card" onclick="openApp('modules/theft.html', 'Крадіжка')">
+            <div class="card" onclick="openApp('modules/theft.html')">
                 <div class="icon-box c-red">🔦</div>
                 <div class="card-title">Крадіжка</div>
                 <div class="card-desc">ККУ vs Адмін</div>
             </div>
-            <div class="card" onclick="openApp('modules/udz.html', 'УДЗ Таймер')">
+            <div class="card" onclick="openApp('modules/udz.html')">
                 <div class="icon-box c-orange">⛓</div>
                 <div class="card-title">УДЗ Таймер</div>
                 <div class="card-desc">Ст. 81 ККУ</div>
             </div>
-             <div class="card" onclick="openApp('modules/sizo.html', 'Закон Савченко')">
+             <div class="card" onclick="openApp('modules/sizo.html')">
                 <div class="icon-box c-indigo">🏢</div>
                 <div class="card-title">СІЗО</div>
                 <div class="card-desc">Закон Савченко</div>
             </div>
-            <div class="card" onclick="openApp('modules/drugs.html', 'Розміри наркотиків')">
+            <div class="card" onclick="openApp('modules/drugs.html')">
                 <div class="icon-box c-green">💊</div>
                 <div class="card-title">Наркотики</div>
                 <div class="card-desc">Таблиці розмірів</div>
             </div>
-            <div class="card" onclick="openApp('modules/injury.html', 'Тілесні ушкодження')">
+            <div class="card" onclick="openApp('modules/injury.html')">
                 <div class="icon-box c-red">🩹</div>
                 <div class="card-title">Тілесні</div>
                 <div class="card-desc">Легкі, середні, тяжкі</div>
             </div>
-            <div class="card" onclick="openApp('modules/ammo.html', 'Зброя та Калібри')">
+            <div class="card" onclick="openApp('modules/ammo.html')">
                 <div class="icon-box c-orange">🔫</div>
                 <div class="card-title">Зброя</div>
                 <div class="card-desc">Калібри та типи</div>
@@ -221,12 +208,12 @@
 
         <div class="category-title">🏠 Цивільне та Сімейне</div>
         <div class="grid" id="grid-fam">
-            <div class="card" onclick="openApp('modules/aliments.html', 'Аліменти')">
+            <div class="card" onclick="openApp('modules/aliments.html')">
                 <div class="icon-box c-green">👶</div>
                 <div class="card-title">Аліменти</div>
                 <div class="card-desc">Калькулятор</div>
             </div>
-            <div class="card" onclick="openApp('modules/spadok.html', 'Спадщина')">
+            <div class="card" onclick="openApp('modules/spadok.html')">
                 <div class="icon-box c-purple">🍰</div>
                 <div class="card-title">Спадщина</div>
                 <div class="card-desc">Черги спадкування</div>
@@ -235,27 +222,27 @@
 
         <div class="category-title">🛠 Утиліти</div>
         <div class="grid" id="grid-tool">
-            <div class="card" onclick="openApp('modules/calc_days.html', 'Часомір')">
+            <div class="card" onclick="openApp('modules/calc_days.html')">
                 <div class="icon-box c-blue">📅</div>
                 <div class="card-title">Часомір</div>
                 <div class="card-desc">Калькулятор дат</div>
             </div>
-            <div class="card" onclick="openApp('modules/translit.html', 'Трансліт')">
+            <div class="card" onclick="openApp('modules/translit.html')">
                 <div class="icon-box c-indigo">🔤</div>
                 <div class="card-title">Трансліт</div>
                 <div class="card-desc">Паспортний</div>
             </div>
-            <div class="card" onclick="openApp('modules/auto.html', 'Автономери')">
+            <div class="card" onclick="openApp('modules/auto.html')">
                 <div class="icon-box c-orange">🚗</div>
                 <div class="card-title">Автономери</div>
                 <div class="card-desc">Регіони</div>
             </div>
-             <div class="card" onclick="openApp('modules/explainer.html', 'Юр. Тлумач')">
+             <div class="card" onclick="openApp('modules/explainer.html')">
                 <div class="icon-box c-green">🎓</div>
                 <div class="card-title">Тлумач</div>
                 <div class="card-desc">Простими словами</div>
             </div>
-             <div class="card" onclick="openApp('modules/alphabet.html', 'NATO Абетка')">
+             <div class="card" onclick="openApp('modules/alphabet.html')">
                 <div class="icon-box c-red">📡</div>
                 <div class="card-title">NATO Абетка</div>
                 <div class="card-desc">Радіообмін</div>
@@ -266,13 +253,6 @@
     </div>
 
     <div id="viewer">
-        <div class="viewer-nav">
-            <button class="btn-back" onclick="closeApp()">
-                <svg width="12" height="20" viewBox="0 0 12 20" fill="none"><path d="M10 1L2 10L10 19" stroke="#007AFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                Назад
-            </button>
-            <div class="viewer-title" id="viewerTitle">Інструмент</div>
-        </div>
         <iframe id="appFrame" src=""></iframe>
     </div>
 
@@ -282,15 +262,14 @@
         tg.expand();
 
         // Navigation
-        function openApp(url, title) {
+        function openApp(url) {
             const viewer = document.getElementById('viewer');
             const frame = document.getElementById('appFrame');
-            const tit = document.getElementById('viewerTitle');
 
-            tit.innerText = title;
             frame.src = url;
             viewer.classList.add('active');
             
+            // Використовуємо нативну кнопку Telegram
             tg.BackButton.show();
             tg.BackButton.onClick(closeApp);
         }
